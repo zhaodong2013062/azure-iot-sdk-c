@@ -166,24 +166,27 @@ EXECUTE_COMMAND_RESULT actionName(modelName* model, arg1Type arg1Name, arg2Type 
 ```
 
 
-## WITH_METHOD(methodName, arg1Type, arg1, arg2Type, arg2, ...)
+## WITH_METHOD([returnType ,] methodName, arg1Type, arg1, arg2Type, arg2, ...)
 
 `WITH_METHOD` introduces a Device Method in the model. `WITH_METHOD` is similar to `WITH_ACTION`: it will result in a user-supplied C function being called.
-The main difference is in return value (Methods return a number and a JSON value, Actions return values of an enum).
+The main difference is in return value (Methods return either a type or a number + JSON value, Actions return values of an enum).
 
 Arguments:
+-   returnType - specifies the returnType of the method. This needs to be one of the types defined before. If it is not specified, the method will return a METHODRETURN_HANDLE.
 -	`methodName` - specifies the method name.
 -	`argXtype`, `argXName` - defines the type and name for the Xth argument of the method. The type can be any of the primitive types or a struct type.
 
+
+### Example WITH_METHOD that returns a METHODRETURN_HANDLE
 ```c
 DECLARE_MODEL(FunkyTV,
     ...
-    WITH_METHOD(channelChange, ascii_char_ptr, Property1),
+    WITH_METHOD(channelChange, ascii_char_ptr, Property1)
     ...
 );
 ```
 
-The following is the C function definition of a method:
+The following is the C function definition of the above model method:
 
 ```c
 METHODRETURN_HANDLE methodName(modelName* model, arg1Type arg1, arg2Type arg2)
@@ -193,6 +196,24 @@ METHODRETURN_HANDLE methodName(modelName* model, arg1Type arg1, arg2Type arg2)
 -   int statusCode; /\*the result of the method call\*/
 -   char* jsonValue; /\*the JSON value to be returned, can be `NULL`. \*/
 
+### Example WITH_METHOD that returns a type
+```c
+DECLARE_MODEL(FunkyTV,
+    ...
+    WITH_METHOD(int, channelChange, ascii_char_ptr, Property1)
+    ...
+);
+```
+
+The following is the C function definition of a method with return type:
+
+```c
+returnType methodName(modelName* model, arg1Type arg1, arg2Type arg2)
+```
+
+This is how the `METHODRETURN_HANDLE` corresponding to the above call is constructed:
+- the numeric result will always be 200
+- the JSON value will be the serialization to JSON of `returnType`.
 
 
 ## GET_MODEL_HANDLE(schemaNamespace, modelName)

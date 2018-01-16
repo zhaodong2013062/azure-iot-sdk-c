@@ -126,6 +126,46 @@ std::ostream& operator<<(std::ostream& left, const EDM_BINARY edmBinary)
     return left;
 }
 
+std::ostream& operator<<(std::ostream& left, const EDM_TIMESPAN edmTimespan)
+{
+    left << "Begin Time = " << edmTimespan.beginTime <<
+            " End Time = " << edmTimespan.endTime;
+    return left;
+}
+
+std::ostream& operator<<(std::ostream& left, const EDM_GEOGRAPHY_POINT edmGeographyPoint)
+{
+    return left << "longitude = " << edmGeographyPoint.longitude << "," <<
+                   "latitude = " << edmGeographyPoint.latitude << "," <<
+                   "altitudeSet = " << edmGeographyPoint.altitudeSet << "," <<
+                   "altitude = " << edmGeographyPoint.altitude;
+}
+
+std::ostream& operator<<(std::ostream& left, const EDM_DURATION edmDuration)
+{
+    return left << "edmDurationSign = " << edmDuration.edmDurationSign << "," <<
+                   "days = " << edmDuration.days << "," <<
+                   "hours = " << edmDuration.hours << "," <<
+                   "minutes = " << edmDuration.minutes << "," <<
+                   "seconds = " << edmDuration.seconds;
+}
+
+static bool operator==(EDM_TIMESPAN left, EDM_TIMESPAN right)
+{
+    return memcmp(&left, &right, sizeof(left)) == 0;
+}
+
+static bool operator==(EDM_GEOGRAPHY_POINT left, EDM_GEOGRAPHY_POINT right)
+{
+    return memcmp(&left, &right, sizeof(left)) == 0;
+}
+
+static bool operator==(EDM_DURATION left, EDM_DURATION right)
+{
+    return memcmp(&left, &right, sizeof(left)) == 0;
+}
+
+
 std::wostream& operator<<(std::wostream& left, const EDM_GUID edmGuid)
 {
     return left << std::hex <<
@@ -357,6 +397,14 @@ public:
     MOCK_METHOD_END(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK);
     MOCK_STATIC_METHOD_2(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_BINARY, AGENT_DATA_TYPE*, agentData, EDM_BINARY, v)
     MOCK_METHOD_END(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK);
+    MOCK_STATIC_METHOD_2(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_charz_secret, AGENT_DATA_TYPE*, agentData, const char*, v)
+    MOCK_METHOD_END(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK);
+    MOCK_STATIC_METHOD_2(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_DURATION, AGENT_DATA_TYPE*, agentData, EDM_DURATION, v)
+    MOCK_METHOD_END(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK);
+    MOCK_STATIC_METHOD_2(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT, AGENT_DATA_TYPE*, agentData, EDM_GEOGRAPHY_POINT, v)
+    MOCK_METHOD_END(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK);    
+    MOCK_STATIC_METHOD_2(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN, AGENT_DATA_TYPE*, agentData, EDM_TIMESPAN, v)
+    MOCK_METHOD_END(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK);
 
     /* BufferProcess mocks */
     MOCK_STATIC_METHOD_1(, void, BufferProcess_SetRetryInterval, uint64_t,  milliseconds)
@@ -396,11 +444,16 @@ DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT
 DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_FLOAT, AGENT_DATA_TYPE*, agentData, float, v);
 DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_charz, AGENT_DATA_TYPE*, agentData, const char*, v);
 DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_charz_no_quotes, AGENT_DATA_TYPE*, agentData, const char*, v);
+DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_charz_secret, AGENT_DATA_TYPE*, agentData, const char*, v);
 DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubSchemaClientMocks, , void, Destroy_AGENT_DATA_TYPE, AGENT_DATA_TYPE*, agentData);
 DECLARE_GLOBAL_MOCK_METHOD_5(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_Members, AGENT_DATA_TYPE*, agentData, const char*, typeName, size_t, nMembers, const char* const *, memberNames, const AGENT_DATA_TYPE*, memberValues);
 DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET, AGENT_DATA_TYPE*, agentData, EDM_DATE_TIME_OFFSET, v);
 DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_GUID, AGENT_DATA_TYPE*, agentData, EDM_GUID, v);
 DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_BINARY, AGENT_DATA_TYPE*, agentData, EDM_BINARY, v);
+DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN, AGENT_DATA_TYPE*, agentData, EDM_TIMESPAN, v);
+DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT, AGENT_DATA_TYPE*, agentData, EDM_GEOGRAPHY_POINT, v);
+DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubSchemaClientMocks, , AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_DURATION, AGENT_DATA_TYPE*, agentData, EDM_DURATION, v);
+
 DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubSchemaClientMocks, , void, BufferProcess_SetRetryInterval, uint64_t, milliseconds);
 DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubSchemaClientMocks, , void, DataMarshaller_SetMaxBufferSize, size_t, bytes);
 DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubSchemaClientMocks, , void, DataPublisher_SetMaxBufferSize, size_t, bytes);

@@ -2995,12 +2995,16 @@ BEGIN_TEST_SUITE(CodeFirst_ut_Dummy_Data_Provider)
         STRICT_EXPECTED_CALL(Schema_AddModelProperty(TEST_TRUCKTYPE_MODEL_HANDLE, "this_is_int_Property", "int"));
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "double")).SetReturn(NULL);
         STRICT_EXPECTED_CALL(Schema_AddModelProperty(TEST_TRUCKTYPE_MODEL_HANDLE, "this_is_double_Property", "double"));
+        STRICT_EXPECTED_CALL(Schema_AddModelInformation(TEST_TRUCKTYPE_MODEL_HANDLE, "", "00000000-0000-0000-0000-000000000000", "", ""))
+            .SetReturn(SCHEMA_OK);
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "truckType_Model")).SetReturn(TEST_MODEL_HANDLE);
         STRICT_EXPECTED_CALL(Schema_CreateModelAction(TEST_MODEL_HANDLE, "setSpeed_Action"))
             .SetReturn(SETSPEED_ACTION_HANDLE);
         STRICT_EXPECTED_CALL(Schema_AddModelActionArgument(SETSPEED_ACTION_HANDLE, "theSpeed", "double"));
         STRICT_EXPECTED_CALL(Schema_CreateModelAction(TEST_MODEL_HANDLE, "reset_Action"))
             .SetReturn(RESET_ACTION_HANDLE);
+        STRICT_EXPECTED_CALL(Schema_AddModelInformation(TEST_MODEL_HANDLE, "", "00000000-0000-0000-0000-000000000000", "", ""))
+            .SetReturn(SCHEMA_OK);
 
         ///act
         
@@ -3036,6 +3040,8 @@ BEGIN_TEST_SUITE(CodeFirst_ut_Dummy_Data_Provider)
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "InnerType"))
             .SetReturn(TEST_INNERTYPE_MODEL_HANDLE);
         STRICT_EXPECTED_CALL(Schema_AddModelModel(TEST_OUTERTYPE_MODEL_HANDLE, "Inner", TEST_INNERTYPE_MODEL_HANDLE, 8, NULL));
+        STRICT_EXPECTED_CALL(Schema_AddModelInformation(TEST_OUTERTYPE_MODEL_HANDLE, "", "00000000-0000-0000-0000-000000000000", "", ""))
+            .SetReturn(SCHEMA_OK);
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "InnerType"))
             .SetReturn(TEST_INNERTYPE_MODEL_HANDLE);
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "int"));
@@ -3051,6 +3057,8 @@ BEGIN_TEST_SUITE(CodeFirst_ut_Dummy_Data_Provider)
         STRICT_EXPECTED_CALL(Schema_AddModelProperty(TEST_INNERTYPE_MODEL_HANDLE, "this_is_double2", "double"));
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "int"));
         STRICT_EXPECTED_CALL(Schema_AddModelProperty(TEST_INNERTYPE_MODEL_HANDLE, "this_is_int2", "int"));
+        STRICT_EXPECTED_CALL(Schema_AddModelInformation(TEST_INNERTYPE_MODEL_HANDLE, "", "00000000-0000-0000-0000-000000000000", "", ""))
+            .SetReturn(SCHEMA_OK);
         
         ///act
         SCHEMA_HANDLE result = CodeFirst_RegisterSchema("TestSchema", &ALL_REFLECTED(testModelInModelReflected));
@@ -3958,6 +3966,8 @@ BEGIN_TEST_SUITE(CodeFirst_ut_Dummy_Data_Provider)
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "InnerType_onDesiredProperty"))
             .SetReturn(TEST_INNERTYPE_MODEL_HANDLE);
         STRICT_EXPECTED_CALL(Schema_AddModelModel(TEST_OUTERTYPE_MODEL_HANDLE, "Inner_onDesiredProperty", TEST_INNERTYPE_MODEL_HANDLE, 8, onInner_onDesiredProperty));
+        STRICT_EXPECTED_CALL(Schema_AddModelInformation(TEST_OUTERTYPE_MODEL_HANDLE, "", "00000000-0000-0000-0000-000000000000", "", ""))
+            .SetReturn(SCHEMA_OK);
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "InnerType_onDesiredProperty"))
             .SetReturn(TEST_INNERTYPE_MODEL_HANDLE);
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "int"));
@@ -3973,6 +3983,8 @@ BEGIN_TEST_SUITE(CodeFirst_ut_Dummy_Data_Provider)
         STRICT_EXPECTED_CALL(Schema_AddModelProperty(TEST_INNERTYPE_MODEL_HANDLE, "this_is_double2_onDesiredProperty", "double"));
         STRICT_EXPECTED_CALL(Schema_GetModelByName(TEST_SCHEMA_HANDLE, "int"));
         STRICT_EXPECTED_CALL(Schema_AddModelProperty(TEST_INNERTYPE_MODEL_HANDLE, "this_is_int2_onDesiredProperty", "int"));
+        STRICT_EXPECTED_CALL(Schema_AddModelInformation(TEST_INNERTYPE_MODEL_HANDLE, "", "00000000-0000-0000-0000-000000000000", "", ""))
+            .SetReturn(SCHEMA_OK);
 
         ///act
         SCHEMA_HANDLE result = CodeFirst_RegisterSchema("TestSchema", &ALL_REFLECTED(testModelInModelReflected_with_onDesiredProperty));

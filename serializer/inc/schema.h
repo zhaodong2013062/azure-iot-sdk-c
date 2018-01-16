@@ -15,62 +15,12 @@
 extern "C" {
 #else
 #include <stddef.h>
+#include <stdbool.h>
 #endif
 
 /* Codes_SRS_SCHEMA_99_095: [Schema shall expose the following API:] */
 
-typedef struct SCHEMA_HANDLE_DATA_TAG* SCHEMA_HANDLE;
-typedef struct SCHEMA_MODEL_TYPE_HANDLE_DATA_TAG* SCHEMA_MODEL_TYPE_HANDLE;
-typedef struct SCHEMA_STRUCT_TYPE_HANDLE_DATA_TAG* SCHEMA_STRUCT_TYPE_HANDLE;
-typedef struct SCHEMA_PROPERTY_HANDLE_DATA_TAG* SCHEMA_PROPERTY_HANDLE;
-typedef struct SCHEMA_REPORTED_PROPERTY_HANDLE_DATA_TAG* SCHEMA_REPORTED_PROPERTY_HANDLE;
-typedef struct SCHEMA_DESIRED_PROPERTY_HANDLE_DATA_TAG* SCHEMA_DESIRED_PROPERTY_HANDLE;
-typedef struct SCHEMA_ACTION_HANDLE_DATA_TAG* SCHEMA_ACTION_HANDLE;
-typedef struct SCHEMA_ACTION_ARGUMENT_HANDLE_DATA_TAG* SCHEMA_ACTION_ARGUMENT_HANDLE;
-typedef struct SCHEMA_METHOD_ARGUMENT_HANDLE_DATA_TAG* SCHEMA_METHOD_ARGUMENT_HANDLE;
-typedef struct SCHEMA_METHOD_HANDLE_DATA_TAG* SCHEMA_METHOD_HANDLE;
-
-
-typedef void(*pfOnDesiredProperty)(void* model);
-typedef int(*pfDesiredPropertyFromAGENT_DATA_TYPE)(const AGENT_DATA_TYPE* source, void* dest);
-typedef void(*pfDesiredPropertyInitialize)(void* destination);
-typedef void(*pfDesiredPropertyDeinitialize)(void* destination);
-
-
-#define SCHEMA_RESULT_VALUES    \
-SCHEMA_OK,                      \
-SCHEMA_INVALID_ARG,             \
-SCHEMA_DUPLICATE_ELEMENT,       \
-SCHEMA_ELEMENT_NOT_FOUND,       \
-SCHEMA_MODEL_IN_USE,            \
-SCHEMA_DEVICE_COUNT_ZERO,       \
-SCHEMA_ERROR
-
-DEFINE_ENUM(SCHEMA_RESULT, SCHEMA_RESULT_VALUES)
-
-#define SCHEMA_ELEMENT_TYPE_VALUES \
-SCHEMA_NOT_FOUND, \
-SCHEMA_SEARCH_INVALID_ARG, \
-SCHEMA_PROPERTY, \
-SCHEMA_REPORTED_PROPERTY, \
-SCHEMA_DESIRED_PROPERTY, \
-SCHEMA_MODEL_ACTION, \
-SCHEMA_MODEL_IN_MODEL
-
-DEFINE_ENUM(SCHEMA_ELEMENT_TYPE, SCHEMA_ELEMENT_TYPE_VALUES);
-
-typedef struct SCHEMA_MODEL_ELEMENT_TAG
-{
-    SCHEMA_ELEMENT_TYPE elementType;
-    union ELEMENT_HANDLE_UNION_TAG
-    {
-        SCHEMA_DESIRED_PROPERTY_HANDLE desiredPropertyHandle;
-        SCHEMA_PROPERTY_HANDLE propertyHandle;
-        SCHEMA_REPORTED_PROPERTY_HANDLE reportedPropertyHandle;
-        SCHEMA_ACTION_HANDLE actionHandle;
-        SCHEMA_MODEL_TYPE_HANDLE modelHandle;
-    } elementHandle;
-}SCHEMA_MODEL_ELEMENT;
+#include "schema_types.h"
 
 MOCKABLE_FUNCTION(, SCHEMA_HANDLE, Schema_Create, const char*, schemaNamespace, void*, metadata);
 MOCKABLE_FUNCTION(, void*, Schema_GetMetadata, SCHEMA_HANDLE, schemaHandle);
@@ -171,8 +121,35 @@ MOCKABLE_FUNCTION(, const char*, Schema_GetPropertyType, SCHEMA_PROPERTY_HANDLE,
 MOCKABLE_FUNCTION(, void, Schema_Destroy, SCHEMA_HANDLE, schemaHandle);
 MOCKABLE_FUNCTION(, SCHEMA_RESULT, Schema_DestroyIfUnused,SCHEMA_MODEL_TYPE_HANDLE, modelHandle);
 
+MOCKABLE_FUNCTION(, SCHEMA_RESULT, Schema_AddModelInformation, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle, const char*, schemaVersion, const char*, id, const char*, version, const char*, description);
+MOCKABLE_FUNCTION(, const char*, Schema_GetModelSchemaVersion, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle);
+MOCKABLE_FUNCTION(, const char*, Schema_GetModelId, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle)
+MOCKABLE_FUNCTION(, const char*, Schema_GetModelVersion, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle);
+MOCKABLE_FUNCTION(, const char*, Schema_GetModelDescription, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle);
+
+MOCKABLE_FUNCTION(, const char*, Schema_GetReportedPropertyType, SCHEMA_REPORTED_PROPERTY_HANDLE, reportedPropertyHandle)
+MOCKABLE_FUNCTION(, const char*, Schema_GetReportedPropertyName, SCHEMA_REPORTED_PROPERTY_HANDLE, reportedPropertyHandle)
+MOCKABLE_FUNCTION(, const char*, Schema_GetDesiredPropertyType, SCHEMA_DESIRED_PROPERTY_HANDLE, desiredPropertyHandle)
+MOCKABLE_FUNCTION(, const char*, Schema_GetDesiredPropertyName, SCHEMA_DESIRED_PROPERTY_HANDLE, desiredPropertyHandle)
+MOCKABLE_FUNCTION(, SCHEMA_RESULT, Schema_GetModelMethodWithReturnTypeArgumentCount, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, methodWithReturnTypeHandle, size_t*, argumentCount)
+
+MOCKABLE_FUNCTION(, SCHEMA_RESULT, Schema_GetModelMethodWithReturnTypeCount, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle, size_t*, methodWithReturnTypeCount)
+MOCKABLE_FUNCTION(, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, Schema_GetModelMethodWithReturnTypeByIndex, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle, size_t, index)
+MOCKABLE_FUNCTION(, const char*, Schema_GetMethodWithReturnTypeName, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, methodWithReturnTypeHandle)
+MOCKABLE_FUNCTION(, SCHEMA_HANDLE, Schema_GetModelSchema, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle);
+MOCKABLE_FUNCTION(, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, Schema_CreateModelMethodWithReturnType, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle, const char*, returnType, const char*, methodWithReturnTypeName);
+MOCKABLE_FUNCTION(, SCHEMA_RESULT, Schema_AddModelMethodWithReturnTypeArgument, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, methodWithReturnTypeHandle, const char*, argumentName, const char*, argumentType)
+MOCKABLE_FUNCTION(, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, Schema_GetModelMethodWithReturnTypeByName, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle, const char*, methodWithReturnTypeName);
+MOCKABLE_FUNCTION(, SCHEMA_METHOD_ARGUMENT_HANDLE, Schema_GetModelMethodWithReturnTypeArgumentByIndex, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, methodWithReturnTypeHandle, size_t, argumentIndex);
+MOCKABLE_FUNCTION(, const char*, Schema_GetModelMethodWithReturnTypeName, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, methodWithReturnTypeHandle);
+MOCKABLE_FUNCTION(, const char*, Schema_GetModelMethodWithReturnTypeReturnType, SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, methodWithReturnTypeHandle);
+MOCKABLE_FUNCTION(, SCHEMA_RESULT, Schema_GetModelMethodCount, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle, size_t*, methodCount)
+MOCKABLE_FUNCTION(, SCHEMA_METHOD_HANDLE, Schema_GetModelMethodByIndex, SCHEMA_MODEL_TYPE_HANDLE, modelTypeHandle, size_t, methodIndex)
+MOCKABLE_FUNCTION(, const char*, Schema_GetModelMethodName, SCHEMA_METHOD_HANDLE, methodHandle)
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* SCHEMA_H */
+

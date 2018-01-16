@@ -28,6 +28,112 @@ template <> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::T
 }
 #endif
 
+static int _Bool_Compare(bool left, bool right)
+{
+    return left != right;
+}
+
+static void _Bool_ToString(char* string, size_t bufferSize, bool val)
+{
+    (void)bufferSize;
+    (void)strcpy(string, val ? "true" : "false");
+}
+
+
+#define EXPECTED_DURATION_STRING  "\"P15DT19H21M22.2S\""
+TEST_DEFINE_ENUM_TYPE(EDM_DURATION_SIGN, EDM_DURATION_SIGN_VALUES);
+static void InitializeDurationForSerializationTests(EDM_DURATION *edmDuration)
+{
+    edmDuration->edmDurationSign = EDM_DURATION_SIGN_POSITIVE;
+    edmDuration->days = 15;
+    edmDuration->hours = 19;
+    edmDuration->minutes = 21;
+    edmDuration->seconds = 22.2;
+}
+
+static void isDurationsExpected(const EDM_DURATION *edmDuration)
+{
+    ASSERT_ARE_EQUAL(EDM_DURATION_SIGN, edmDuration->edmDurationSign, EDM_DURATION_SIGN_POSITIVE);
+    ASSERT_ARE_EQUAL(int, edmDuration->days, 15);
+    ASSERT_ARE_EQUAL(int, edmDuration->hours, 19);
+    ASSERT_ARE_EQUAL(int, edmDuration->minutes, 21);
+    ASSERT_ARE_EQUAL(double, edmDuration->seconds, 22.2);
+}
+
+#define EXPECTED_GEOGRAPHY_POINT_STRING  "\"-179.8 55 123.11\""
+static void InitializeGeographyPointForSerializationTests(EDM_GEOGRAPHY_POINT *edmGeographyPoint)
+{
+    edmGeographyPoint->altitudeSet = true;
+    edmGeographyPoint->longitude = -179.8;
+    edmGeographyPoint->latitude = 55;
+    edmGeographyPoint->altitude = 123.11;
+}
+
+static void isGeographyPointExpected(const EDM_GEOGRAPHY_POINT *edmGeographyPoint)
+{
+    ASSERT_ARE_EQUAL(bool, edmGeographyPoint->altitudeSet, true);
+    ASSERT_ARE_EQUAL(double, edmGeographyPoint->longitude, -179.8);
+    ASSERT_ARE_EQUAL(double, edmGeographyPoint->latitude, 55);
+    ASSERT_ARE_EQUAL(double, edmGeographyPoint->altitude, 123.11);
+}
+
+#define EXPECTED_TIMESPAN_STRING "\"2014-06-18T09:41:23Z/2014-07-19T09:41:23Z\""
+// Sets legit date/time offset as basis for further testing
+
+static void SetTestDateTimeOffset(EDM_DATE_TIME_OFFSET *dateTimeOffset)
+{
+    dateTimeOffset->dateTime.tm_year = 114; /*so 2014*/
+    dateTimeOffset->dateTime.tm_mon = 6 - 1; 
+    dateTimeOffset->dateTime.tm_mday = 18;
+    dateTimeOffset->dateTime.tm_hour = 9;
+    dateTimeOffset->dateTime.tm_min = 41;
+    dateTimeOffset->dateTime.tm_sec = 23;
+    dateTimeOffset->hasFractionalSecond = 0;
+    dateTimeOffset->fractionalSecond = 0;
+    dateTimeOffset->hasTimeZone = 0;
+    dateTimeOffset->timeZoneHour = 0;
+    dateTimeOffset->timeZoneMinute = 0;
+}
+
+static void isTimespanExpected(const EDM_TIMESPAN *timespan)
+{
+    (void)timespan;
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_year, 114);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_year, 114);
+
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_mon,6 - 1);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_mon,6 - 1 + 1);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_mday,18);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_mday,18 + 1);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_hour,9);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_hour,9);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_min,41);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_min,41);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_sec,23);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_sec,23);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.hasFractionalSecond,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.hasFractionalSecond,0);
+    ASSERT_ARE_EQUAL(uint64_t, timespan->beginTime.fractionalSecond,0);
+    ASSERT_ARE_EQUAL(uint64_t, timespan->endTime.fractionalSecond,0);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.hasTimeZone,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.hasTimeZone,0);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.timeZoneHour,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.timeZoneHour,0);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.timeZoneMinute,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.timeZoneMinute,0);
+	
+}
+
+static void InitializeTimespan(EDM_TIMESPAN *timespan)
+{
+    SetTestDateTimeOffset(&timespan->beginTime);
+    SetTestDateTimeOffset(&timespan->endTime);
+
+    timespan->endTime.dateTime.tm_mon = timespan->endTime.dateTime.tm_mon + 1;
+    timespan->endTime.dateTime.tm_mday = timespan->endTime.dateTime.tm_mday + 1;
+}
+
+
 BEGIN_NAMESPACE(basic1)
 
 DECLARE_MODEL(basicModel_WithData1,
@@ -43,9 +149,13 @@ DECLARE_MODEL(basicModel_WithData1,
     WITH_DATA(bool, with_data_bool1),
     WITH_DATA(ascii_char_ptr, with_data_ascii_char_ptr1),
     WITH_DATA(ascii_char_ptr_no_quotes, with_data_ascii_char_ptr_no_quotes1),
+    WITH_DATA(ascii_char_ptr_secret, with_data_ascii_char_ptr_secret1),
     WITH_DATA(EDM_DATE_TIME_OFFSET, with_data_EdmDateTimeOffset1),
+    WITH_DATA(EDM_TIMESPAN, with_data_EdmTimespan1),
     WITH_DATA(EDM_GUID, with_data_EdmGuid1),
-    WITH_DATA(EDM_BINARY, with_data_EdmBinary1)
+    WITH_DATA(EDM_BINARY, with_data_EdmBinary1),
+    WITH_DATA(EDM_DURATION, with_data_EdmDuration1),
+    WITH_DATA(EDM_GEOGRAPHY_POINT, with_data_GeographyPoint1)
 )
 END_NAMESPACE(basic1)
 
@@ -65,9 +175,13 @@ DECLARE_STRUCT(struct_WithData2,
     bool, with_data_bool2,
     ascii_char_ptr, with_data_ascii_char_ptr2,
     ascii_char_ptr_no_quotes, with_data_ascii_char_ptr_no_quotes2,
+    ascii_char_ptr_secret, with_data_ascii_char_ptr_secret2,
     EDM_DATE_TIME_OFFSET, with_data_EdmDateTimeOffset2,
+    EDM_TIMESPAN, with_data_EdmTimespan2,
     EDM_GUID, with_data_EdmGuid2,
-    EDM_BINARY, with_data_EdmBinary2
+    EDM_BINARY, with_data_EdmBinary2,
+    EDM_DURATION, with_data_EdmDuration2,
+    EDM_GEOGRAPHY_POINT, with_data_EdmGeographyPoint2
     )
 DECLARE_MODEL(basicModel_WithStruct2,
     WITH_DATA(struct_WithData2, structure2)
@@ -89,9 +203,13 @@ DECLARE_MODEL(model_WithData3,
     WITH_DATA(bool, with_data_bool3),
     WITH_DATA(ascii_char_ptr, with_data_ascii_char_ptr3),
     WITH_DATA(ascii_char_ptr_no_quotes, with_data_ascii_char_ptr_no_quotes3),
+    WITH_DATA(ascii_char_ptr_secret, with_data_ascii_char_ptr_secret3),
     WITH_DATA(EDM_DATE_TIME_OFFSET, with_data_EdmDateTimeOffset3),
+    WITH_DATA(EDM_TIMESPAN, with_data_EdmTimespan3),
     WITH_DATA(EDM_GUID, with_data_EdmGuid3),
-    WITH_DATA(EDM_BINARY, with_data_EdmBinary3)
+    WITH_DATA(EDM_BINARY, with_data_EdmBinary3),
+    WITH_DATA(EDM_DURATION, with_data_EdmDuration3),
+    WITH_DATA(EDM_GEOGRAPHY_POINT, with_data_EdmGeographyPoint3)
     )
 DECLARE_MODEL(basicModel_WithModel3,
     WITH_DATA(model_WithData3, model3)
@@ -113,9 +231,13 @@ DECLARE_STRUCT(struct_WithData4,
     bool, with_data_bool4,
     ascii_char_ptr, with_data_ascii_char_ptr4,
     ascii_char_ptr_no_quotes, with_data_ascii_char_ptr_no_quotes4,
+    ascii_char_ptr_secret, with_data_ascii_char_ptr_secret4,
     EDM_DATE_TIME_OFFSET, with_data_EdmDateTimeOffset4,
+    EDM_TIMESPAN, with_data_EdmTimespan4,
     EDM_GUID, with_data_EdmGuid4,
-    EDM_BINARY, with_data_EdmBinary4
+    EDM_BINARY, with_data_EdmBinary4,
+    EDM_DURATION, with_data_EdmDuration4,
+    EDM_GEOGRAPHY_POINT, with_data_EdmGeographyPoint4
 )
 DECLARE_MODEL(innerModel4,
     WITH_DATA(struct_WithData4, structure4)
@@ -141,9 +263,13 @@ DECLARE_MODEL(basicModel_WithReportedProperty5,
     WITH_REPORTED_PROPERTY(bool, with_reported_property_bool5),
     WITH_REPORTED_PROPERTY(ascii_char_ptr, with_reported_property_ascii_char_ptr5),
     WITH_REPORTED_PROPERTY(ascii_char_ptr_no_quotes, with_reported_property_ascii_char_ptr_no_quotes5),
+    WITH_REPORTED_PROPERTY(ascii_char_ptr_secret, with_reported_property_ascii_char_ptr_secret5),
     WITH_REPORTED_PROPERTY(EDM_DATE_TIME_OFFSET, with_reported_property_EdmDateTimeOffset5),
+    WITH_REPORTED_PROPERTY(EDM_TIMESPAN, with_reported_property_EdmTimespan5),
     WITH_REPORTED_PROPERTY(EDM_GUID, with_reported_property_EdmGuid5),
-    WITH_REPORTED_PROPERTY(EDM_BINARY, with_reported_property_EdmBinary5)
+    WITH_REPORTED_PROPERTY(EDM_BINARY, with_reported_property_EdmBinary5),
+    WITH_REPORTED_PROPERTY(EDM_DURATION, with_reported_property_EdmDuration5),
+    WITH_REPORTED_PROPERTY(EDM_GEOGRAPHY_POINT, with_reported_property_EdmGeographyPoint5)
     )
 END_NAMESPACE(basic5)
 
@@ -162,9 +288,13 @@ DECLARE_STRUCT(struct_WithReportedPropery6,
     bool, with_reported_property_bool6,
     ascii_char_ptr, with_reported_property_ascii_char_ptr6,
     ascii_char_ptr_no_quotes, with_reported_property_ascii_char_ptr_no_quotes6,
+    ascii_char_ptr_secret, with_reported_property_ascii_char_ptr_secret6,
     EDM_DATE_TIME_OFFSET, with_reported_property_EdmDateTimeOffset6,
+    EDM_TIMESPAN, with_reported_property_EdmTimespan6,
     EDM_GUID, with_reported_property_EdmGuid6,
-    EDM_BINARY, with_reported_property_EdmBinary6
+    EDM_BINARY, with_reported_property_EdmBinary6,
+    EDM_DURATION, with_reported_property_EdmDuration6,
+    EDM_GEOGRAPHY_POINT, with_reported_property_EdmGeographyPoint6
     )
 DECLARE_MODEL(basicModel_WithStruct6,
     WITH_REPORTED_PROPERTY(struct_WithReportedPropery6, structure6)
@@ -186,9 +316,13 @@ DECLARE_MODEL(model_WithReported7,
     WITH_REPORTED_PROPERTY(bool, with_reported_property_bool7),
     WITH_REPORTED_PROPERTY(ascii_char_ptr, with_reported_property_ascii_char_ptr7),
     WITH_REPORTED_PROPERTY(ascii_char_ptr_no_quotes, with_reported_property_ascii_char_ptr_no_quotes7),
+    WITH_REPORTED_PROPERTY(ascii_char_ptr_secret, with_reported_property_ascii_char_ptr_secret7),
     WITH_REPORTED_PROPERTY(EDM_DATE_TIME_OFFSET, with_reported_property_EdmDateTimeOffset7),
+    WITH_REPORTED_PROPERTY(EDM_TIMESPAN, with_reported_property_EdmTimespan7),
     WITH_REPORTED_PROPERTY(EDM_GUID, with_reported_property_EdmGuid7),
-    WITH_REPORTED_PROPERTY(EDM_BINARY, with_reported_property_EdmBinary7)
+    WITH_REPORTED_PROPERTY(EDM_BINARY, with_reported_property_EdmBinary7),
+    WITH_REPORTED_PROPERTY(EDM_DURATION, with_reported_property_EdmDuration7),
+    WITH_REPORTED_PROPERTY(EDM_GEOGRAPHY_POINT, with_reported_property_EdmGeographyPoint7)
 )
 DECLARE_MODEL(basicModel_WithReportedProperty7,
     WITH_REPORTED_PROPERTY(model_WithReported7, model7)
@@ -210,9 +344,13 @@ DECLARE_STRUCT(struct_WithData8,
     bool, with_reported_property_bool8,
     ascii_char_ptr, with_reported_property_ascii_char_ptr8,
     ascii_char_ptr_no_quotes, with_reported_property_ascii_char_ptr_no_quotes8,
+    ascii_char_ptr_secret, with_reported_property_ascii_char_ptr_secret8,
     EDM_DATE_TIME_OFFSET, with_reported_property_EdmDateTimeOffset8,
+    EDM_TIMESPAN, with_reported_property_EdmTimespan8,
     EDM_GUID, with_reported_property_EdmGuid8,
-    EDM_BINARY, with_reported_property_EdmBinary8
+    EDM_BINARY, with_reported_property_EdmBinary8,
+    EDM_DURATION, with_reported_property_EdmDuration8,
+    EDM_GEOGRAPHY_POINT, with_reported_property_EdmGeographyPoint8
 )
 DECLARE_MODEL(innerModel8,
     WITH_REPORTED_PROPERTY(struct_WithData8, structure8)
@@ -239,9 +377,13 @@ DECLARE_MODEL(basicModel_WithData9,
     WITH_DESIRED_PROPERTY(bool, with_desired_property_bool9),
     WITH_DESIRED_PROPERTY(ascii_char_ptr, with_desired_property_ascii_char_ptr9),
     WITH_DESIRED_PROPERTY(ascii_char_ptr_no_quotes, with_desired_property_ascii_char_ptr_no_quotes9),
+    WITH_DESIRED_PROPERTY(ascii_char_ptr_secret, with_desired_property_ascii_char_ptr_secret9),
     WITH_DESIRED_PROPERTY(EDM_DATE_TIME_OFFSET, with_desired_property_EdmDateTimeOffset9),
+    WITH_DESIRED_PROPERTY(EDM_TIMESPAN, with_desired_property_EdmTimespan9),
     WITH_DESIRED_PROPERTY(EDM_GUID, with_desired_property_EdmGuid9),
-    WITH_DESIRED_PROPERTY(EDM_BINARY, with_desired_property_EdmBinary9)
+    WITH_DESIRED_PROPERTY(EDM_BINARY, with_desired_property_EdmBinary9),
+    WITH_DESIRED_PROPERTY(EDM_DURATION, with_desired_property_EdmDuration9),
+    WITH_DESIRED_PROPERTY(EDM_GEOGRAPHY_POINT, with_desired_property_EdmGeographyPoint9)
 )
 
 END_NAMESPACE(basic9)
@@ -261,9 +403,13 @@ DECLARE_STRUCT(struct_WithData10,
     bool, with_desired_property_bool10,
     ascii_char_ptr, with_desired_property_ascii_char_ptr10,
     ascii_char_ptr_no_quotes, with_desired_property_ascii_char_ptr_no_quotes10,
+    ascii_char_ptr_secret, with_desired_property_ascii_char_ptr_secret10,
     EDM_DATE_TIME_OFFSET, with_desired_property_EdmDateTimeOffset10,
+    EDM_TIMESPAN, with_desired_property_EdmTimespan10,
     EDM_GUID, with_desired_property_EdmGuid10,
-    EDM_BINARY, with_desired_property_EdmBinary10
+    EDM_BINARY, with_desired_property_EdmBinary10,
+    EDM_DURATION, with_desired_property_EdmDuration10,
+    EDM_GEOGRAPHY_POINT, with_desired_property_EdmGeographyPoint10
 )
 DECLARE_MODEL(basicModel_WithStruct10,
     WITH_DESIRED_PROPERTY(struct_WithData10, structure10)
@@ -285,9 +431,13 @@ DECLARE_MODEL(model_WithData11,
     WITH_DESIRED_PROPERTY(bool, with_desired_property_bool11),
     WITH_DESIRED_PROPERTY(ascii_char_ptr, with_desired_property_ascii_char_ptr11),
     WITH_DESIRED_PROPERTY(ascii_char_ptr_no_quotes, with_desired_property_ascii_char_ptr_no_quotes11),
+    WITH_DESIRED_PROPERTY(ascii_char_ptr_secret, with_desired_property_ascii_char_ptr_secret11),
     WITH_DESIRED_PROPERTY(EDM_DATE_TIME_OFFSET, with_desired_property_EdmDateTimeOffset11),
+    WITH_DESIRED_PROPERTY(EDM_TIMESPAN, with_desired_property_EdmTimespan11),
     WITH_DESIRED_PROPERTY(EDM_GUID, with_desired_property_EdmGuid11),
-    WITH_DESIRED_PROPERTY(EDM_BINARY, with_desired_property_EdmBinary11)
+    WITH_DESIRED_PROPERTY(EDM_BINARY, with_desired_property_EdmBinary11),
+    WITH_DESIRED_PROPERTY(EDM_DURATION, with_desired_property_EdmDuration11),
+    WITH_DESIRED_PROPERTY(EDM_GEOGRAPHY_POINT, with_desired_property_EdmGeographyPoint11)
 )
 DECLARE_MODEL(basicModel_WithModel11,
     WITH_DESIRED_PROPERTY(model_WithData11, model11)
@@ -310,9 +460,13 @@ DECLARE_STRUCT(struct_WithData12,
     bool, with_desired_property_bool12,
     ascii_char_ptr, with_desired_property_ascii_char_ptr12,
     ascii_char_ptr_no_quotes, with_desired_property_ascii_char_ptr_no_quotes12,
+    ascii_char_ptr_secret, with_desired_property_ascii_char_ptr_secret12,
     EDM_DATE_TIME_OFFSET, with_desired_property_EdmDateTimeOffset12,
+    EDM_TIMESPAN, with_desired_property_EdmTimespan12,
     EDM_GUID, with_desired_property_EdmGuid12,
-    EDM_BINARY, with_desired_property_EdmBinary12
+    EDM_BINARY, with_desired_property_EdmBinary12,
+    EDM_DURATION, with_desired_property_EdmDuration12,
+    EDM_GEOGRAPHY_POINT, with_desired_property_EdmGeographyPoint12
 )
 DECLARE_MODEL(innerModel12,
     WITH_DESIRED_PROPERTY(struct_WithData12, structure12)
@@ -339,9 +493,13 @@ DECLARE_MODEL(model_WithAction13,
         bool, bool13,
         ascii_char_ptr, ascii_char_ptr13,
         ascii_char_ptr_no_quotes, ascii_char_ptr_no_quotes13,
+        ascii_char_ptr_secret, ascii_char_ptr_secret13,
         EDM_DATE_TIME_OFFSET, EdmDateTimeOffset13,
+        EDM_TIMESPAN, EdmTimespan13,
         EDM_GUID, EdmGuid13, 
-        EDM_BINARY, EdmBinary13)
+        EDM_BINARY, EdmBinary13,
+        EDM_DURATION, EdmDuration13,
+        EDM_GEOGRAPHY_POINT, EdmGeographyPoint13)
     )
 
 END_NAMESPACE(basic13)
@@ -359,9 +517,13 @@ EXECUTE_COMMAND_RESULT action13(model_WithAction13* model,
     bool bool13,
     ascii_char_ptr ascii_char_ptr13,
     ascii_char_ptr_no_quotes ascii_char_ptr_no_quotes13,
+    ascii_char_ptr_secret ascii_char_ptr_secret13,
     EDM_DATE_TIME_OFFSET EdmDateTimeOffset13,
+    EDM_TIMESPAN EdmTimespan13,
     EDM_GUID EdmGuid13,
-    EDM_BINARY EdmBinary13
+    EDM_BINARY EdmBinary13,
+    EDM_DURATION EdmDuration13,
+    EDM_GEOGRAPHY_POINT EdmGeographyPoint13
 )
 {
     (void)(model);
@@ -377,6 +539,7 @@ EXECUTE_COMMAND_RESULT action13(model_WithAction13* model,
     ASSERT_IS_TRUE(bool13);
     ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      ascii_char_ptr13);
     ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   ascii_char_ptr_no_quotes13);
+    ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     ascii_char_ptr_secret13);
     ASSERT_ARE_EQUAL(int,       114,            EdmDateTimeOffset13.dateTime.tm_year);
     ASSERT_ARE_EQUAL(int,       6-1,            EdmDateTimeOffset13.dateTime.tm_mon);
     ASSERT_ARE_EQUAL(int,       17,             EdmDateTimeOffset13.dateTime.tm_mday);
@@ -388,6 +551,7 @@ EXECUTE_COMMAND_RESULT action13(model_WithAction13* model,
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset13.hasTimeZone);
     ASSERT_ARE_EQUAL(int8_t,    -8,             EdmDateTimeOffset13.timeZoneHour);
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset13.timeZoneMinute);
+    isTimespanExpected(&EdmTimespan13);
     ASSERT_ARE_EQUAL(uint8_t,   0x00,           EdmGuid13.GUID[0]);
     ASSERT_ARE_EQUAL(uint8_t,   0x11,           EdmGuid13.GUID[1]);
     ASSERT_ARE_EQUAL(uint8_t,   0x22,           EdmGuid13.GUID[2]);
@@ -409,6 +573,8 @@ EXECUTE_COMMAND_RESULT action13(model_WithAction13* model,
     ASSERT_ARE_EQUAL(uint8_t,   '3',            EdmBinary13.data[0]);
     ASSERT_ARE_EQUAL(uint8_t,   '4',            EdmBinary13.data[1]);
     ASSERT_ARE_EQUAL(uint8_t,   '5',            EdmBinary13.data[2]);
+    isDurationsExpected(&EdmDuration13);
+    isGeographyPointExpected(&EdmGeographyPoint13);
     return EXECUTE_COMMAND_SUCCESS;
 }
 
@@ -428,9 +594,13 @@ DECLARE_MODEL(model_WithAction14,
         bool, bool14,
         ascii_char_ptr, ascii_char_ptr14,
         ascii_char_ptr_no_quotes, ascii_char_ptr_no_quotes14,
+        ascii_char_ptr_secret, ascii_char_ptr_secret14,
         EDM_DATE_TIME_OFFSET, EdmDateTimeOffset14,
+        EDM_TIMESPAN, EdmTimespan14,
         EDM_GUID, EdmGuid14,
-        EDM_BINARY, EdmBinary14)
+        EDM_BINARY, EdmBinary14,
+        EDM_DURATION, EdmDuration14,
+        EDM_GEOGRAPHY_POINT, EdmGeographyPoint14)
     );
 
 DECLARE_MODEL(outerModel14,
@@ -451,9 +621,13 @@ EXECUTE_COMMAND_RESULT action14(model_WithAction14* model,
     bool bool14,
     ascii_char_ptr ascii_char_ptr14,
     ascii_char_ptr_no_quotes ascii_char_ptr_no_quotes14,
+    ascii_char_ptr_secret ascii_char_ptr_secret14,
     EDM_DATE_TIME_OFFSET EdmDateTimeOffset14,
+    EDM_TIMESPAN EdmTimespan14,
     EDM_GUID EdmGuid14,
-    EDM_BINARY EdmBinary14
+    EDM_BINARY EdmBinary14,
+    EDM_DURATION EdmDuration14,
+    EDM_GEOGRAPHY_POINT EdmGeographyPoint14
 )
 {
     (void)(model);
@@ -469,6 +643,7 @@ EXECUTE_COMMAND_RESULT action14(model_WithAction14* model,
     ASSERT_IS_TRUE(bool14);
     ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      ascii_char_ptr14);
     ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   ascii_char_ptr_no_quotes14);
+    ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     ascii_char_ptr_secret14);
     ASSERT_ARE_EQUAL(int,       114,            EdmDateTimeOffset14.dateTime.tm_year);
     ASSERT_ARE_EQUAL(int,       6-1,            EdmDateTimeOffset14.dateTime.tm_mon);
     ASSERT_ARE_EQUAL(int,       17,             EdmDateTimeOffset14.dateTime.tm_mday);
@@ -480,6 +655,7 @@ EXECUTE_COMMAND_RESULT action14(model_WithAction14* model,
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset14.hasTimeZone);
     ASSERT_ARE_EQUAL(int8_t,    -8,             EdmDateTimeOffset14.timeZoneHour);
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset14.timeZoneMinute);
+    isTimespanExpected(&EdmTimespan14);
     ASSERT_ARE_EQUAL(uint8_t,   0x00,           EdmGuid14.GUID[0]);
     ASSERT_ARE_EQUAL(uint8_t,   0x11,           EdmGuid14.GUID[1]);
     ASSERT_ARE_EQUAL(uint8_t,   0x22,           EdmGuid14.GUID[2]);
@@ -501,6 +677,8 @@ EXECUTE_COMMAND_RESULT action14(model_WithAction14* model,
     ASSERT_ARE_EQUAL(uint8_t,   '3',            EdmBinary14.data[0]);
     ASSERT_ARE_EQUAL(uint8_t,   '4',            EdmBinary14.data[1]);
     ASSERT_ARE_EQUAL(uint8_t,   '5',            EdmBinary14.data[2]);
+    isDurationsExpected(&EdmDuration14);
+    isGeographyPointExpected(&EdmGeographyPoint14);
     return EXECUTE_COMMAND_SUCCESS;
 }
 
@@ -519,9 +697,13 @@ DECLARE_MODEL(basicModel_WithData15,
     WITH_DESIRED_PROPERTY(bool, with_desired_property_bool15, on_desired_property_bool15),
     WITH_DESIRED_PROPERTY(ascii_char_ptr, with_desired_property_ascii_char_ptr15, on_desired_property_ascii_char_ptr15),
     WITH_DESIRED_PROPERTY(ascii_char_ptr_no_quotes, with_desired_property_ascii_char_ptr_no_quotes15, on_desired_property_ascii_char_ptr_no_quotes15),
+    WITH_DESIRED_PROPERTY(ascii_char_ptr_secret, with_desired_property_ascii_char_ptr_secret15, on_desired_property_ascii_char_ptr_secret15),
     WITH_DESIRED_PROPERTY(EDM_DATE_TIME_OFFSET, with_desired_property_EdmDateTimeOffset15, on_desired_property_EdmDateTimeOffset15),
+    WITH_DESIRED_PROPERTY(EDM_TIMESPAN, with_desired_property_EdmTimespan15, on_desired_property_EdmTimespan15),
     WITH_DESIRED_PROPERTY(EDM_GUID, with_desired_property_EdmGuid15, on_desired_property_EdmGuid15),
-    WITH_DESIRED_PROPERTY(EDM_BINARY, with_desired_property_EdmBinary15, on_desired_property_EdmBinary15)
+    WITH_DESIRED_PROPERTY(EDM_BINARY, with_desired_property_EdmBinary15, on_desired_property_EdmBinary15),
+    WITH_DESIRED_PROPERTY(EDM_DURATION, with_desired_property_EdmDuration15, on_desired_property_EdmDuration15),
+    WITH_DESIRED_PROPERTY(EDM_GEOGRAPHY_POINT, with_desired_property_EdmGeographyPoint15, on_desired_property_EdmGeographyPoint15)
 )
 END_NAMESPACE(basic15)
 
@@ -539,9 +721,13 @@ END_NAMESPACE(basic15)
     MOCKABLE_FUNCTION(, void, on_desired_property_bool15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_ascii_char_ptr15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_ascii_char_ptr_no_quotes15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_ascii_char_ptr_secret15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_EdmDateTimeOffset15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_EdmTimespan15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_EdmGuid15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_EdmBinary15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_EdmDuration15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_EdmGeographyPoint15, void*, v);
 #undef ENABLE_MOCKS
 
 BEGIN_NAMESPACE(basic16)
@@ -559,9 +745,13 @@ DECLARE_STRUCT(struct_WithData16,
     bool, with_desired_property_bool16,
     ascii_char_ptr, with_desired_property_ascii_char_ptr16,
     ascii_char_ptr_no_quotes, with_desired_property_ascii_char_ptr_no_quotes16,
+    ascii_char_ptr_secret, with_desired_property_ascii_char_ptr_secret16,
     EDM_DATE_TIME_OFFSET, with_desired_property_EdmDateTimeOffset16,
+    EDM_TIMESPAN, with_desired_property_EdmTimespan16,
     EDM_GUID, with_desired_property_EdmGuid16,
-    EDM_BINARY, with_desired_property_EdmBinary16
+    EDM_BINARY, with_desired_property_EdmBinary16,
+    EDM_DURATION, with_desired_property_EdmDuration16,
+    EDM_GEOGRAPHY_POINT, with_desired_property_EdmGeographyPoint16
 )
 DECLARE_MODEL(innerModel16,
     WITH_DESIRED_PROPERTY(struct_WithData16, structure16, on_structure16)
@@ -642,9 +832,13 @@ DECLARE_MODEL(model_WithMethod18,
         bool, bool18,
         ascii_char_ptr, ascii_char_ptr18,
         ascii_char_ptr_no_quotes, ascii_char_ptr_no_quotes18,
+        ascii_char_ptr_secret, ascii_char_ptr_secret18,
         EDM_DATE_TIME_OFFSET, EdmDateTimeOffset18,
+        EDM_TIMESPAN, EdmTimespan18,
         EDM_GUID, EdmGuid18,
-        EDM_BINARY, EdmBinary18)
+        EDM_BINARY, EdmBinary18,
+        EDM_DURATION, EdmDuration18,
+        EDM_GEOGRAPHY_POINT, EdmGeographyPoint18)
     )
 
 END_NAMESPACE(basic18)
@@ -662,9 +856,13 @@ METHODRETURN_HANDLE method18(model_WithMethod18* model,
     bool bool18,
     ascii_char_ptr ascii_char_ptr18,
     ascii_char_ptr_no_quotes ascii_char_ptr_no_quotes18,
+    ascii_char_ptr_secret ascii_char_ptr_secret18,
     EDM_DATE_TIME_OFFSET EdmDateTimeOffset18,
+    EDM_TIMESPAN EdmTimespan18,
     EDM_GUID EdmGuid18,
-    EDM_BINARY EdmBinary18
+    EDM_BINARY EdmBinary18,
+    EDM_DURATION EdmDuration18,
+    EDM_GEOGRAPHY_POINT EdmGeographyPoint18
 )
 {
     (void)(model);
@@ -680,6 +878,7 @@ METHODRETURN_HANDLE method18(model_WithMethod18* model,
     ASSERT_IS_TRUE(bool18);
     ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      ascii_char_ptr18);
     ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   ascii_char_ptr_no_quotes18);
+    ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     ascii_char_ptr_secret18);
     ASSERT_ARE_EQUAL(int,       114,            EdmDateTimeOffset18.dateTime.tm_year);
     ASSERT_ARE_EQUAL(int,       6-1,            EdmDateTimeOffset18.dateTime.tm_mon);
     ASSERT_ARE_EQUAL(int,       17,             EdmDateTimeOffset18.dateTime.tm_mday);
@@ -691,6 +890,7 @@ METHODRETURN_HANDLE method18(model_WithMethod18* model,
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset18.hasTimeZone);
     ASSERT_ARE_EQUAL(int8_t,    -8,             EdmDateTimeOffset18.timeZoneHour);
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset18.timeZoneMinute);
+    isTimespanExpected(&EdmTimespan18);
     ASSERT_ARE_EQUAL(uint8_t,   0x00,           EdmGuid18.GUID[0]);
     ASSERT_ARE_EQUAL(uint8_t,   0x11,           EdmGuid18.GUID[1]);
     ASSERT_ARE_EQUAL(uint8_t,   0x22,           EdmGuid18.GUID[2]);
@@ -712,6 +912,8 @@ METHODRETURN_HANDLE method18(model_WithMethod18* model,
     ASSERT_ARE_EQUAL(uint8_t,   '3',            EdmBinary18.data[0]);
     ASSERT_ARE_EQUAL(uint8_t,   '4',            EdmBinary18.data[1]);
     ASSERT_ARE_EQUAL(uint8_t,   '5',            EdmBinary18.data[2]);
+    isDurationsExpected(&EdmDuration18);
+    isGeographyPointExpected(&EdmGeographyPoint18);
 
     METHODRETURN_HANDLE result = MethodReturn_Create(18, "\"18\""); /*the statusCode is 18, the JSON value is "18"*/
     return result;
@@ -733,9 +935,13 @@ DECLARE_MODEL(model_WithMethod19,
         bool, bool19,
         ascii_char_ptr, ascii_char_ptr19,
         ascii_char_ptr_no_quotes, ascii_char_ptr_no_quotes19,
+        ascii_char_ptr_secret, ascii_char_ptr_secret19,
         EDM_DATE_TIME_OFFSET, EdmDateTimeOffset19,
+        EDM_TIMESPAN, EdmTimespan19,
         EDM_GUID, EdmGuid19,
-        EDM_BINARY, EdmBinary19)
+        EDM_BINARY, EdmBinary19,
+        EDM_DURATION, EdmDuration19,
+        EDM_GEOGRAPHY_POINT, EdmGeographyPoint19)
     );
 
     DECLARE_MODEL(outerModel19,
@@ -756,9 +962,13 @@ METHODRETURN_HANDLE method19(model_WithMethod19* model,
     bool bool19,
     ascii_char_ptr ascii_char_ptr19,
     ascii_char_ptr_no_quotes ascii_char_ptr_no_quotes19,
+    ascii_char_ptr_secret ascii_char_ptr_secret19,
     EDM_DATE_TIME_OFFSET EdmDateTimeOffset19,
+    EDM_TIMESPAN EdmTimespan19,
     EDM_GUID EdmGuid19,
-    EDM_BINARY EdmBinary19
+    EDM_BINARY EdmBinary19,
+    EDM_DURATION EdmDuration19,
+    EDM_GEOGRAPHY_POINT EdmGeographyPoint19
 )
 {
     (void)(model);
@@ -774,6 +984,7 @@ METHODRETURN_HANDLE method19(model_WithMethod19* model,
     ASSERT_IS_TRUE(bool19);
     ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      ascii_char_ptr19);
     ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   ascii_char_ptr_no_quotes19);
+    ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     ascii_char_ptr_secret19);
     ASSERT_ARE_EQUAL(int,       119,            EdmDateTimeOffset19.dateTime.tm_year);
     ASSERT_ARE_EQUAL(int,       6-1,            EdmDateTimeOffset19.dateTime.tm_mon);
     ASSERT_ARE_EQUAL(int,       17,             EdmDateTimeOffset19.dateTime.tm_mday);
@@ -785,6 +996,7 @@ METHODRETURN_HANDLE method19(model_WithMethod19* model,
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset19.hasTimeZone);
     ASSERT_ARE_EQUAL(int8_t,    -8,             EdmDateTimeOffset19.timeZoneHour);
     ASSERT_ARE_EQUAL(uint8_t,   1,              EdmDateTimeOffset19.timeZoneMinute);
+    isTimespanExpected(&EdmTimespan19);
     ASSERT_ARE_EQUAL(uint8_t,   0x00,           EdmGuid19.GUID[0]);
     ASSERT_ARE_EQUAL(uint8_t,   0x11,           EdmGuid19.GUID[1]);
     ASSERT_ARE_EQUAL(uint8_t,   0x22,           EdmGuid19.GUID[2]);
@@ -806,6 +1018,8 @@ METHODRETURN_HANDLE method19(model_WithMethod19* model,
     ASSERT_ARE_EQUAL(uint8_t,   '3',            EdmBinary19.data[0]);
     ASSERT_ARE_EQUAL(uint8_t,   '4',            EdmBinary19.data[1]);
     ASSERT_ARE_EQUAL(uint8_t,   '5',            EdmBinary19.data[2]);
+    isDurationsExpected(&EdmDuration19);
+    isGeographyPointExpected(&EdmGeographyPoint19);
 
     METHODRETURN_HANDLE result = MethodReturn_Create(19, "{\"result\": \"nineteen\"}");
     return result;
@@ -829,6 +1043,352 @@ METHODRETURN_HANDLE method20(model_WithMethod20* model
     METHODRETURN_HANDLE result = MethodReturn_Create(20, "{\"result\": \"twenty\"}");
     return result;
 }
+
+BEGIN_NAMESPACE(basic21)
+
+DECLARE_MODEL(model_WithMethod21,
+WITH_INFORMATION("a", "a", "a", "a"),
+WITH_METHOD(void, method21,
+    double, double21,
+    int, int21,
+    float, float21,
+    long, long21,
+    int8_t, sint8_t21,
+    uint8_t, uint8_t21,
+    int16_t, int16_t21,
+    int32_t, int32_t21,
+    int64_t, int64_t21,
+    bool, bool21,
+    ascii_char_ptr, ascii_char_ptr21,
+    ascii_char_ptr_no_quotes, ascii_char_ptr_no_quotes21,
+    ascii_char_ptr_secret, ascii_char_ptr_secret21,
+    EDM_DATE_TIME_OFFSET, EdmDateTimeOffset21,
+    EDM_TIMESPAN, EdmTimespan21,
+    EDM_GUID, EdmGuid21,
+    EDM_BINARY, EdmBinary21,
+    EDM_DURATION, EdmDuration21,
+    EDM_GEOGRAPHY_POINT, EdmGeographyPoint21)
+    )
+
+    END_NAMESPACE(basic21)
+
+void method21(model_WithMethod21* model,
+        double double21,
+        int int21,
+        float float21,
+        long long21,
+        int8_t sint8_t21,
+        uint8_t uint8_t21,
+        int16_t int16_t21,
+        int32_t int32_t21,
+        int64_t int64_t21,
+        bool bool21,
+        ascii_char_ptr ascii_char_ptr21,
+        ascii_char_ptr_no_quotes ascii_char_ptr_no_quotes21,
+        ascii_char_ptr_secret ascii_char_ptr_secret21,
+        EDM_DATE_TIME_OFFSET EdmDateTimeOffset21,
+        EDM_TIMESPAN EdmTimespan21,
+        EDM_GUID EdmGuid21,
+        EDM_BINARY EdmBinary21,
+        EDM_DURATION EdmDuration21,
+        EDM_GEOGRAPHY_POINT EdmGeographyPoint21
+    )
+{
+    (void)(model);
+    ASSERT_ARE_EQUAL(double, 1.0, double21);
+    ASSERT_ARE_EQUAL(int, 2, int21);
+    ASSERT_ARE_EQUAL(float, 3.0, float21);
+    ASSERT_ARE_EQUAL(long, 4, long21);
+    ASSERT_ARE_EQUAL(int8_t, 5, sint8_t21);
+    ASSERT_ARE_EQUAL(uint8_t, 6, uint8_t21);
+    ASSERT_ARE_EQUAL(int16_t, 7, int16_t21);
+    ASSERT_ARE_EQUAL(int32_t, 8, int32_t21);
+    ASSERT_ARE_EQUAL(int64_t, 9, int64_t21);
+    ASSERT_IS_TRUE(bool21);
+    ASSERT_ARE_EQUAL(char_ptr, "eleven", ascii_char_ptr21);
+    ASSERT_ARE_EQUAL(char_ptr, "\"twelve\"", ascii_char_ptr_no_quotes21);
+    ASSERT_ARE_EQUAL(char_ptr, "thirteen", ascii_char_ptr_secret21);
+    ASSERT_ARE_EQUAL(int, 114, EdmDateTimeOffset21.dateTime.tm_year);
+    ASSERT_ARE_EQUAL(int, 6 - 1, EdmDateTimeOffset21.dateTime.tm_mon);
+    ASSERT_ARE_EQUAL(int, 17, EdmDateTimeOffset21.dateTime.tm_mday);
+    ASSERT_ARE_EQUAL(int, 8, EdmDateTimeOffset21.dateTime.tm_hour);
+    ASSERT_ARE_EQUAL(int, 51, EdmDateTimeOffset21.dateTime.tm_min);
+    ASSERT_ARE_EQUAL(int, 23, EdmDateTimeOffset21.dateTime.tm_sec);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset21.hasFractionalSecond);
+    ASSERT_ARE_EQUAL(uint64_t, 5, EdmDateTimeOffset21.fractionalSecond);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset21.hasTimeZone);
+    ASSERT_ARE_EQUAL(int8_t, -8, EdmDateTimeOffset21.timeZoneHour);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset21.timeZoneMinute);
+    isTimespanExpected(&EdmTimespan21);
+    ASSERT_ARE_EQUAL(uint8_t, 0x00, EdmGuid21.GUID[0]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x11, EdmGuid21.GUID[1]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x22, EdmGuid21.GUID[2]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x33, EdmGuid21.GUID[3]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x44, EdmGuid21.GUID[4]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x55, EdmGuid21.GUID[5]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x66, EdmGuid21.GUID[6]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x77, EdmGuid21.GUID[7]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x88, EdmGuid21.GUID[8]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x99, EdmGuid21.GUID[9]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xAA, EdmGuid21.GUID[10]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xBB, EdmGuid21.GUID[11]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xCC, EdmGuid21.GUID[12]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xDD, EdmGuid21.GUID[13]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xEE, EdmGuid21.GUID[14]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xFF, EdmGuid21.GUID[15]);
+
+    ASSERT_ARE_EQUAL(size_t, 3, EdmBinary21.size);
+    ASSERT_ARE_EQUAL(uint8_t, '3', EdmBinary21.data[0]);
+    ASSERT_ARE_EQUAL(uint8_t, '4', EdmBinary21.data[1]);
+    ASSERT_ARE_EQUAL(uint8_t, '5', EdmBinary21.data[2]);
+    isDurationsExpected(&EdmDuration21);
+    isGeographyPointExpected(&EdmGeographyPoint21);
+}
+
+BEGIN_NAMESPACE(basic22)
+
+DECLARE_MODEL(model_WithMethod22,
+
+WITH_METHOD(int, method22,
+    double, double22,
+    int, int22,
+    float, float22,
+    long, long22,
+    int8_t, sint8_t22,
+    uint8_t, uint8_t22,
+    int16_t, int16_t22,
+    int32_t, int32_t22,
+    int64_t, int64_t22,
+    bool, bool22,
+    ascii_char_ptr, ascii_char_ptr22,
+    ascii_char_ptr_no_quotes, ascii_char_ptr_no_quotes22,
+    ascii_char_ptr_secret, ascii_char_ptr_secret22,
+    EDM_DATE_TIME_OFFSET, EdmDateTimeOffset22,
+    EDM_TIMESPAN, EdmTimespan22,
+    EDM_GUID, EdmGuid22,
+    EDM_BINARY, EdmBinary22,
+    EDM_DURATION, EdmDuration22,
+    EDM_GEOGRAPHY_POINT, EdmGeographyPoint22)
+    )
+
+END_NAMESPACE(basic22)
+
+int method22(model_WithMethod22* model,
+     double double22,
+     int int22,
+     float float22,
+     long long22,
+     int8_t sint8_t22,
+     uint8_t uint8_t22,
+     int16_t int16_t22,
+     int32_t int32_t22,
+     int64_t int64_t22,
+     bool bool22,
+     ascii_char_ptr ascii_char_ptr22,
+     ascii_char_ptr_no_quotes ascii_char_ptr_no_quotes22,
+     ascii_char_ptr_secret ascii_char_ptr_secret22,
+     EDM_DATE_TIME_OFFSET EdmDateTimeOffset22,
+     EDM_TIMESPAN EdmTimespan22,
+     EDM_GUID EdmGuid22,
+     EDM_BINARY EdmBinary22,
+     EDM_DURATION EdmDuration22,
+     EDM_GEOGRAPHY_POINT EdmGeographyPoint22
+    )
+{
+    (void)(model);
+    ASSERT_ARE_EQUAL(double, 1.0, double22);
+    ASSERT_ARE_EQUAL(int, 2, int22);
+    ASSERT_ARE_EQUAL(float, 3.0, float22);
+    ASSERT_ARE_EQUAL(long, 4, long22);
+    ASSERT_ARE_EQUAL(int8_t, 5, sint8_t22);
+    ASSERT_ARE_EQUAL(uint8_t, 6, uint8_t22);
+    ASSERT_ARE_EQUAL(int16_t, 7, int16_t22);
+    ASSERT_ARE_EQUAL(int32_t, 8, int32_t22);
+    ASSERT_ARE_EQUAL(int64_t, 9, int64_t22);
+    ASSERT_IS_TRUE(bool22);
+    ASSERT_ARE_EQUAL(char_ptr, "eleven", ascii_char_ptr22);
+    ASSERT_ARE_EQUAL(char_ptr, "\"twelve\"", ascii_char_ptr_no_quotes22);
+    ASSERT_ARE_EQUAL(char_ptr, "thirteen", ascii_char_ptr_secret22);
+    ASSERT_ARE_EQUAL(int, 114, EdmDateTimeOffset22.dateTime.tm_year);
+    ASSERT_ARE_EQUAL(int, 6 - 1, EdmDateTimeOffset22.dateTime.tm_mon);
+    ASSERT_ARE_EQUAL(int, 17, EdmDateTimeOffset22.dateTime.tm_mday);
+    ASSERT_ARE_EQUAL(int, 8, EdmDateTimeOffset22.dateTime.tm_hour);
+    ASSERT_ARE_EQUAL(int, 51, EdmDateTimeOffset22.dateTime.tm_min);
+    ASSERT_ARE_EQUAL(int, 23, EdmDateTimeOffset22.dateTime.tm_sec);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset22.hasFractionalSecond);
+    ASSERT_ARE_EQUAL(uint64_t, 5, EdmDateTimeOffset22.fractionalSecond);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset22.hasTimeZone);
+    ASSERT_ARE_EQUAL(int8_t, -8, EdmDateTimeOffset22.timeZoneHour);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset22.timeZoneMinute);
+    isTimespanExpected(&EdmTimespan22);
+    ASSERT_ARE_EQUAL(uint8_t, 0x00, EdmGuid22.GUID[0]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x11, EdmGuid22.GUID[1]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x22, EdmGuid22.GUID[2]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x33, EdmGuid22.GUID[3]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x44, EdmGuid22.GUID[4]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x55, EdmGuid22.GUID[5]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x66, EdmGuid22.GUID[6]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x77, EdmGuid22.GUID[7]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x88, EdmGuid22.GUID[8]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x99, EdmGuid22.GUID[9]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xAA, EdmGuid22.GUID[10]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xBB, EdmGuid22.GUID[11]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xCC, EdmGuid22.GUID[12]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xDD, EdmGuid22.GUID[13]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xEE, EdmGuid22.GUID[14]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xFF, EdmGuid22.GUID[15]);
+
+    ASSERT_ARE_EQUAL(size_t, 3, EdmBinary22.size);
+    ASSERT_ARE_EQUAL(uint8_t, '3', EdmBinary22.data[0]);
+    ASSERT_ARE_EQUAL(uint8_t, '4', EdmBinary22.data[1]);
+    ASSERT_ARE_EQUAL(uint8_t, '5', EdmBinary22.data[2]);
+    isDurationsExpected(&EdmDuration22);
+    isGeographyPointExpected(&EdmGeographyPoint22);
+    return 22;
+}
+
+BEGIN_NAMESPACE(basic23)
+
+DECLARE_STRUCT(accelerometer,
+    int, x,
+    int, y,
+    int, z
+);
+DECLARE_MODEL(model_WithMethod23,
+
+WITH_METHOD(accelerometer, method23,
+    double, double23,
+    int, int23,
+    float, float23,
+    long, long23,
+    int8_t, sint8_t23,
+    uint8_t, uint8_t23,
+    int16_t, int16_t23,
+    int32_t, int32_t23,
+    int64_t, int64_t23,
+    bool, bool23,
+    ascii_char_ptr, ascii_char_ptr23,
+    ascii_char_ptr_no_quotes, ascii_char_ptr_no_quotes23,
+    ascii_char_ptr_secret, ascii_char_ptr_secret23,
+    EDM_DATE_TIME_OFFSET, EdmDateTimeOffset23,
+    EDM_TIMESPAN, EdmTimespan23,
+    EDM_GUID, EdmGuid23,
+    EDM_BINARY, EdmBinary23,
+    EDM_DURATION, EdmDuration23,
+    EDM_GEOGRAPHY_POINT, EdmGeographyPoint23)
+    )
+
+    END_NAMESPACE(basic23)
+
+accelerometer method23(model_WithMethod23* model,
+     double double23,
+     int int23,
+     float float23,
+     long long23,
+     int8_t sint8_t23,
+     uint8_t uint8_t23,
+     int16_t int16_t23,
+     int32_t int32_t23,
+     int64_t int64_t23,
+     bool bool23,
+     ascii_char_ptr ascii_char_ptr23,
+     ascii_char_ptr_no_quotes ascii_char_ptr_no_quotes23,
+     ascii_char_ptr_secret ascii_char_ptr_secret23,
+     EDM_DATE_TIME_OFFSET EdmDateTimeOffset23,
+     EDM_TIMESPAN EdmTimespan23,
+     EDM_GUID EdmGuid23,
+     EDM_BINARY EdmBinary23,
+     EDM_DURATION EdmDuration23,
+     EDM_GEOGRAPHY_POINT EdmGeographyPoint23
+    )
+{
+    (void)(model);
+    ASSERT_ARE_EQUAL(double, 1.0, double23);
+    ASSERT_ARE_EQUAL(int, 2, int23);
+    ASSERT_ARE_EQUAL(float, 3.0, float23);
+    ASSERT_ARE_EQUAL(long, 4, long23);
+    ASSERT_ARE_EQUAL(int8_t, 5, sint8_t23);
+    ASSERT_ARE_EQUAL(uint8_t, 6, uint8_t23);
+    ASSERT_ARE_EQUAL(int16_t, 7, int16_t23);
+    ASSERT_ARE_EQUAL(int32_t, 8, int32_t23);
+    ASSERT_ARE_EQUAL(int64_t, 9, int64_t23);
+    ASSERT_IS_TRUE(bool23);
+    ASSERT_ARE_EQUAL(char_ptr, "eleven", ascii_char_ptr23);
+    ASSERT_ARE_EQUAL(char_ptr, "\"twelve\"", ascii_char_ptr_no_quotes23);
+    ASSERT_ARE_EQUAL(char_ptr, "thirteen", ascii_char_ptr_secret23);
+    ASSERT_ARE_EQUAL(int, 114, EdmDateTimeOffset23.dateTime.tm_year);
+    ASSERT_ARE_EQUAL(int, 6 - 1, EdmDateTimeOffset23.dateTime.tm_mon);
+    ASSERT_ARE_EQUAL(int, 17, EdmDateTimeOffset23.dateTime.tm_mday);
+    ASSERT_ARE_EQUAL(int, 8, EdmDateTimeOffset23.dateTime.tm_hour);
+    ASSERT_ARE_EQUAL(int, 51, EdmDateTimeOffset23.dateTime.tm_min);
+    ASSERT_ARE_EQUAL(int, 23, EdmDateTimeOffset23.dateTime.tm_sec);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset23.hasFractionalSecond);
+    ASSERT_ARE_EQUAL(uint64_t, 5, EdmDateTimeOffset23.fractionalSecond);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset23.hasTimeZone);
+    ASSERT_ARE_EQUAL(int8_t, -8, EdmDateTimeOffset23.timeZoneHour);
+    ASSERT_ARE_EQUAL(uint8_t, 1, EdmDateTimeOffset23.timeZoneMinute);
+    isTimespanExpected(&EdmTimespan23);
+    ASSERT_ARE_EQUAL(uint8_t, 0x00, EdmGuid23.GUID[0]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x11, EdmGuid23.GUID[1]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x23, EdmGuid23.GUID[2]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x33, EdmGuid23.GUID[3]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x44, EdmGuid23.GUID[4]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x55, EdmGuid23.GUID[5]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x66, EdmGuid23.GUID[6]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x77, EdmGuid23.GUID[7]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x88, EdmGuid23.GUID[8]);
+    ASSERT_ARE_EQUAL(uint8_t, 0x99, EdmGuid23.GUID[9]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xAA, EdmGuid23.GUID[10]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xBB, EdmGuid23.GUID[11]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xCC, EdmGuid23.GUID[12]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xDD, EdmGuid23.GUID[13]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xEE, EdmGuid23.GUID[14]);
+    ASSERT_ARE_EQUAL(uint8_t, 0xFF, EdmGuid23.GUID[15]);
+
+    ASSERT_ARE_EQUAL(size_t, 3, EdmBinary23.size);
+    ASSERT_ARE_EQUAL(uint8_t, '3', EdmBinary23.data[0]);
+    ASSERT_ARE_EQUAL(uint8_t, '4', EdmBinary23.data[1]);
+    ASSERT_ARE_EQUAL(uint8_t, '5', EdmBinary23.data[2]);
+    isDurationsExpected(&EdmDuration23);
+    isGeographyPointExpected(&EdmGeographyPoint23);
+
+    accelerometer r = { 1,2,3 };
+    return r;
+}
+
+
+BEGIN_NAMESPACE(basic24)
+
+DECLARE_STRUCT(accelerometer24,
+int, x,
+int, y,
+int, z
+);
+DECLARE_MODEL(model_WithMethod24,
+
+WITH_METHOD(accelerometer24, method24,
+    accelerometer24, a,
+    accelerometer24, b
+    )
+)
+
+    END_NAMESPACE(basic24)
+
+    accelerometer24 method24(model_WithMethod24* model,
+        accelerometer24 a,
+        accelerometer24 b
+    )
+{
+    (void)(model);
+
+    accelerometer24 r;
+    r.x = a.x + b.x;
+    r.y = a.y + b.y;
+    r.z = a.z + b.z;
+    return r;
+}
+
+
 
 #define ENABLE_MOCKS
 #include "azure_c_shared_utility/umock_c_prod.h"
@@ -910,6 +1470,7 @@ BEGIN_TEST_SUITE(serializer_int)
     {
         TEST_MUTEX_RELEASE(g_testByTest);
     }
+
     /*the following test has a model consisting only of root level WITH_DATA properties of all types*/
     /*conceptually:
     MODEL
@@ -935,6 +1496,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithData->with_data_bool1 = true;
         modelWithData->with_data_ascii_char_ptr1 = "e/leven";
         modelWithData->with_data_ascii_char_ptr_no_quotes1 = "\"twelve\"";
+        modelWithData->with_data_ascii_char_ptr_secret1 = "thirteen";
         modelWithData->with_data_EdmDateTimeOffset1.dateTime.tm_year = 114;
         modelWithData->with_data_EdmDateTimeOffset1.dateTime.tm_mon = 6 - 1;
         modelWithData->with_data_EdmDateTimeOffset1.dateTime.tm_mday = 17;
@@ -946,6 +1508,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithData->with_data_EdmDateTimeOffset1.hasTimeZone = 1;
         modelWithData->with_data_EdmDateTimeOffset1.timeZoneHour = -8;
         modelWithData->with_data_EdmDateTimeOffset1.timeZoneMinute = 1;
+        InitializeTimespan(&modelWithData->with_data_EdmTimespan1);
         modelWithData->with_data_EdmGuid1.GUID[0] = 0x00;
         modelWithData->with_data_EdmGuid1.GUID[1] = 0x11;
         modelWithData->with_data_EdmGuid1.GUID[2] = 0x22;
@@ -962,6 +1525,9 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithData->with_data_EdmGuid1.GUID[13] = 0xDD;
         modelWithData->with_data_EdmGuid1.GUID[14] = 0xEE;
         modelWithData->with_data_EdmGuid1.GUID[15] = 0xFF;
+
+        InitializeDurationForSerializationTests(&modelWithData->with_data_EdmDuration1);
+        InitializeGeographyPointForSerializationTests(&modelWithData->with_data_GeographyPoint1);
 
         unsigned char edmBinary[3] = { '3', '4', '5' };
         modelWithData->with_data_EdmBinary1.data = edmBinary;
@@ -981,9 +1547,13 @@ BEGIN_TEST_SUITE(serializer_int)
             \"with_data_bool1\" : true,                                                           \
             \"with_data_ascii_char_ptr1\" : \"e/leven\",                                          \
             \"with_data_ascii_char_ptr_no_quotes1\" : \"twelve\",                                 \
+            \"with_data_ascii_char_ptr_secret1\" : \"thirteen\",                                  \
             \"with_data_EdmDateTimeOffset1\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+            \"with_data_EdmTimespan1\": " EXPECTED_TIMESPAN_STRING  ",                            \
             \"with_data_EdmGuid1\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-            \"with_data_EdmBinary1\": \"MzQ1\"                                                    \
+            \"with_data_EdmBinary1\": \"MzQ1\",                                                   \
+            \"with_data_EdmDuration1\": " EXPECTED_DURATION_STRING  ",                            \
+            \"with_data_GeographyPoint1\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                   \
         }";
 
         unsigned char* destination;
@@ -1027,6 +1597,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithStruct->structure2.with_data_bool2 = true;
         modelWithStruct->structure2.with_data_ascii_char_ptr2 = "e/leven";
         modelWithStruct->structure2.with_data_ascii_char_ptr_no_quotes2 = "\"twelve\"";
+        modelWithStruct->structure2.with_data_ascii_char_ptr_secret2 = "thirteen";
         modelWithStruct->structure2.with_data_EdmDateTimeOffset2.dateTime.tm_year = 114;
         modelWithStruct->structure2.with_data_EdmDateTimeOffset2.dateTime.tm_mon = 6 - 1;
         modelWithStruct->structure2.with_data_EdmDateTimeOffset2.dateTime.tm_mday = 17;
@@ -1038,6 +1609,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithStruct->structure2.with_data_EdmDateTimeOffset2.hasTimeZone = 1;
         modelWithStruct->structure2.with_data_EdmDateTimeOffset2.timeZoneHour = -8;
         modelWithStruct->structure2.with_data_EdmDateTimeOffset2.timeZoneMinute = 1;
+        InitializeTimespan(&modelWithStruct->structure2.with_data_EdmTimespan2);
         modelWithStruct->structure2.with_data_EdmGuid2.GUID[0] = 0x00;
         modelWithStruct->structure2.with_data_EdmGuid2.GUID[1] = 0x11;
         modelWithStruct->structure2.with_data_EdmGuid2.GUID[2] = 0x22;
@@ -1059,6 +1631,9 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithStruct->structure2.with_data_EdmBinary2.data = edmBinary;
         modelWithStruct->structure2.with_data_EdmBinary2.size = 3;
 
+        InitializeDurationForSerializationTests(&modelWithStruct->structure2.with_data_EdmDuration2);
+        InitializeGeographyPointForSerializationTests(&modelWithStruct->structure2.with_data_EdmGeographyPoint2);
+
         const char* expectedJsonAsString =
             "{                                                                                       \
             \"structure2\":                                                                          \
@@ -1075,9 +1650,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"with_data_bool2\" : true,                                                          \
                 \"with_data_ascii_char_ptr2\" : \"e/leven\",                                         \
                 \"with_data_ascii_char_ptr_no_quotes2\" : \"twelve\",                                \
+                \"with_data_ascii_char_ptr_secret2\" : \"thirteen\",                                 \
                 \"with_data_EdmDateTimeOffset2\" : \"2014-06-17T08:51:23.000000000005-08:01\",       \
+                \"with_data_EdmTimespan2\" : " EXPECTED_TIMESPAN_STRING ",                           \
                 \"with_data_EdmGuid2\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                   \
-                \"with_data_EdmBinary2\": \"MzQ1\"                                                   \
+                \"with_data_EdmBinary2\": \"MzQ1\",                                                  \
+                \"with_data_EdmDuration2\": " EXPECTED_DURATION_STRING  ",                           \
+                \"with_data_EdmGeographyPoint2\": " EXPECTED_GEOGRAPHY_POINT_STRING  "               \
             }                                                                                        \
         }";
 
@@ -1122,6 +1701,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithModel->model3.with_data_bool3 = true;
         modelWithModel->model3.with_data_ascii_char_ptr3 = "e/leven";
         modelWithModel->model3.with_data_ascii_char_ptr_no_quotes3 = "\"twelve\"";
+        modelWithModel->model3.with_data_ascii_char_ptr_secret3 = "thirteen";
         modelWithModel->model3.with_data_EdmDateTimeOffset3.dateTime.tm_year = 114;
         modelWithModel->model3.with_data_EdmDateTimeOffset3.dateTime.tm_mon = 6 - 1;
         modelWithModel->model3.with_data_EdmDateTimeOffset3.dateTime.tm_mday = 17;
@@ -1133,6 +1713,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithModel->model3.with_data_EdmDateTimeOffset3.hasTimeZone = 1;
         modelWithModel->model3.with_data_EdmDateTimeOffset3.timeZoneHour = -8;
         modelWithModel->model3.with_data_EdmDateTimeOffset3.timeZoneMinute = 1;
+        InitializeTimespan(&modelWithModel->model3.with_data_EdmTimespan3);
         modelWithModel->model3.with_data_EdmGuid3.GUID[1] = 0x11;
         modelWithModel->model3.with_data_EdmGuid3.GUID[0] = 0x00;
         modelWithModel->model3.with_data_EdmGuid3.GUID[2] = 0x22;
@@ -1153,6 +1734,8 @@ BEGIN_TEST_SUITE(serializer_int)
         unsigned char edmBinary[3] = { '3', '4', '5' };
         modelWithModel->model3.with_data_EdmBinary3.data = edmBinary;
         modelWithModel->model3.with_data_EdmBinary3.size = 3;
+        InitializeDurationForSerializationTests(&modelWithModel->model3.with_data_EdmDuration3);
+        InitializeGeographyPointForSerializationTests(&modelWithModel->model3.with_data_EdmGeographyPoint3);
 
         const char* expectedJsonAsString =
             "{                                                                                        \
@@ -1170,9 +1753,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"with_data_bool3\" : true,                                                           \
                 \"with_data_ascii_char_ptr3\" : \"e/leven\",                                          \
                 \"with_data_ascii_char_ptr_no_quotes3\" : \"twelve\",                                 \
+                \"with_data_ascii_char_ptr_secret3\" : \"thirteen\",                                  \
                 \"with_data_EdmDateTimeOffset3\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+                \"with_data_EdmTimespan3\": " EXPECTED_TIMESPAN_STRING  ",                            \
                 \"with_data_EdmGuid3\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-                \"with_data_EdmBinary3\": \"MzQ1\"                                                    \
+                \"with_data_EdmBinary3\": \"MzQ1\",                                                   \
+                \"with_data_EdmDuration3\": " EXPECTED_DURATION_STRING  ",                            \
+                \"with_data_EdmGeographyPoint3\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
             }                                                                                         \
         }";
 
@@ -1217,6 +1804,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithModel->inner_model4.structure4.with_data_bool4 = true;
         modelWithModel->inner_model4.structure4.with_data_ascii_char_ptr4 = "e/leven";
         modelWithModel->inner_model4.structure4.with_data_ascii_char_ptr_no_quotes4 = "\"twelve\"";
+        modelWithModel->inner_model4.structure4.with_data_ascii_char_ptr_secret4 = "thirteen";
         modelWithModel->inner_model4.structure4.with_data_EdmDateTimeOffset4.dateTime.tm_year = 114;
         modelWithModel->inner_model4.structure4.with_data_EdmDateTimeOffset4.dateTime.tm_mon = 6 - 1;
         modelWithModel->inner_model4.structure4.with_data_EdmDateTimeOffset4.dateTime.tm_mday = 17;
@@ -1228,6 +1816,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithModel->inner_model4.structure4.with_data_EdmDateTimeOffset4.hasTimeZone = 1;
         modelWithModel->inner_model4.structure4.with_data_EdmDateTimeOffset4.timeZoneHour = -8;
         modelWithModel->inner_model4.structure4.with_data_EdmDateTimeOffset4.timeZoneMinute = 1;
+        InitializeTimespan(&modelWithModel->inner_model4.structure4.with_data_EdmTimespan4);
         modelWithModel->inner_model4.structure4.with_data_EdmGuid4.GUID[0] = 0x00;
         modelWithModel->inner_model4.structure4.with_data_EdmGuid4.GUID[1] = 0x11;
         modelWithModel->inner_model4.structure4.with_data_EdmGuid4.GUID[2] = 0x22;
@@ -1248,6 +1837,8 @@ BEGIN_TEST_SUITE(serializer_int)
         unsigned char edmBinary[3] = { '3', '4', '5' };
         modelWithModel->inner_model4.structure4.with_data_EdmBinary4.data = edmBinary;
         modelWithModel->inner_model4.structure4.with_data_EdmBinary4.size = 3;
+        InitializeDurationForSerializationTests(&modelWithModel->inner_model4.structure4.with_data_EdmDuration4);
+        InitializeGeographyPointForSerializationTests(&modelWithModel->inner_model4.structure4.with_data_EdmGeographyPoint4);
 
         const char* expectedJsonAsString =
         "{                                                                                            \
@@ -1267,9 +1858,13 @@ BEGIN_TEST_SUITE(serializer_int)
                     \"with_data_bool4\" : true,                                                       \
                     \"with_data_ascii_char_ptr4\" : \"e/leven\",                                      \
                     \"with_data_ascii_char_ptr_no_quotes4\" : \"twelve\",                             \
+                    \"with_data_ascii_char_ptr_secret4\" : \"thirteen\",                              \
                     \"with_data_EdmDateTimeOffset4\" : \"2014-06-17T08:51:23.000000000005-08:01\",    \
+                    \"with_data_EdmTimespan4\": " EXPECTED_TIMESPAN_STRING    ",                      \
                     \"with_data_EdmGuid4\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                \
-                    \"with_data_EdmBinary4\": \"MzQ1\"                                                \
+                    \"with_data_EdmBinary4\": \"MzQ1\",                                               \
+                    \"with_data_EdmDuration4\": " EXPECTED_DURATION_STRING  ",                        \
+                    \"with_data_EdmGeographyPoint4\": " EXPECTED_GEOGRAPHY_POINT_STRING  "            \
                 }                                                                                     \
             }                                                                                         \
         }";
@@ -1314,6 +1909,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithReportedProperty->with_reported_property_bool5 = true;
         modelWithReportedProperty->with_reported_property_ascii_char_ptr5 = "e/leven";
         modelWithReportedProperty->with_reported_property_ascii_char_ptr_no_quotes5 = "\"twelve\"";
+        modelWithReportedProperty->with_reported_property_ascii_char_ptr_secret5 = "thirteen";
         modelWithReportedProperty->with_reported_property_EdmDateTimeOffset5.dateTime.tm_year = 114;
         modelWithReportedProperty->with_reported_property_EdmDateTimeOffset5.dateTime.tm_mon = 6 - 1;
         modelWithReportedProperty->with_reported_property_EdmDateTimeOffset5.dateTime.tm_mday = 17;
@@ -1325,6 +1921,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithReportedProperty->with_reported_property_EdmDateTimeOffset5.hasTimeZone = 1;
         modelWithReportedProperty->with_reported_property_EdmDateTimeOffset5.timeZoneHour = -8;
         modelWithReportedProperty->with_reported_property_EdmDateTimeOffset5.timeZoneMinute = 1;
+        InitializeTimespan(&modelWithReportedProperty->with_reported_property_EdmTimespan5);
         modelWithReportedProperty->with_reported_property_EdmGuid5.GUID[0] = 0x00;
         modelWithReportedProperty->with_reported_property_EdmGuid5.GUID[1] = 0x11;
         modelWithReportedProperty->with_reported_property_EdmGuid5.GUID[2] = 0x22;
@@ -1346,6 +1943,9 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithReportedProperty->with_reported_property_EdmBinary5.data = edmBinary;
         modelWithReportedProperty->with_reported_property_EdmBinary5.size = 3;
 
+        InitializeDurationForSerializationTests(&modelWithReportedProperty->with_reported_property_EdmDuration5);
+        InitializeGeographyPointForSerializationTests(&modelWithReportedProperty->with_reported_property_EdmGeographyPoint5);
+
         const char* expectedJsonAsString =
             "{                                                                                   \
             \"with_reported_property_double5\" : 1.0,                                                          \
@@ -1360,9 +1960,13 @@ BEGIN_TEST_SUITE(serializer_int)
             \"with_reported_property_bool5\" : true,                                                           \
             \"with_reported_property_ascii_char_ptr5\" : \"e/leven\",                                          \
             \"with_reported_property_ascii_char_ptr_no_quotes5\" : \"twelve\",                                 \
+            \"with_reported_property_ascii_char_ptr_secret5\" : \"thirteen\",                                  \
             \"with_reported_property_EdmDateTimeOffset5\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+            \"with_reported_property_EdmTimespan5\" : " EXPECTED_TIMESPAN_STRING ",                            \
             \"with_reported_property_EdmGuid5\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-            \"with_reported_property_EdmBinary5\": \"MzQ1\"                                                    \
+            \"with_reported_property_EdmBinary5\": \"MzQ1\",                                                   \
+            \"with_reported_property_EdmDuration5\": " EXPECTED_DURATION_STRING  ",                            \
+            \"with_reported_property_EdmGeographyPoint5\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
         }";
 
         unsigned char* destination;
@@ -1406,6 +2010,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithStruct->structure6.with_reported_property_bool6 = true;
         modelWithStruct->structure6.with_reported_property_ascii_char_ptr6 = "e/leven";
         modelWithStruct->structure6.with_reported_property_ascii_char_ptr_no_quotes6 = "\"twelve\"";
+        modelWithStruct->structure6.with_reported_property_ascii_char_ptr_secret6 = "thirteen";
         modelWithStruct->structure6.with_reported_property_EdmDateTimeOffset6.dateTime.tm_year = 114;
         modelWithStruct->structure6.with_reported_property_EdmDateTimeOffset6.dateTime.tm_mon = 6 - 1;
         modelWithStruct->structure6.with_reported_property_EdmDateTimeOffset6.dateTime.tm_mday = 17;
@@ -1417,6 +2022,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithStruct->structure6.with_reported_property_EdmDateTimeOffset6.hasTimeZone = 1;
         modelWithStruct->structure6.with_reported_property_EdmDateTimeOffset6.timeZoneHour = -8;
         modelWithStruct->structure6.with_reported_property_EdmDateTimeOffset6.timeZoneMinute = 1;
+        InitializeTimespan(&modelWithStruct->structure6.with_reported_property_EdmTimespan6);
         modelWithStruct->structure6.with_reported_property_EdmGuid6.GUID[0] = 0x00;
         modelWithStruct->structure6.with_reported_property_EdmGuid6.GUID[1] = 0x11;
         modelWithStruct->structure6.with_reported_property_EdmGuid6.GUID[2] = 0x22;
@@ -1437,6 +2043,8 @@ BEGIN_TEST_SUITE(serializer_int)
         unsigned char edmBinary[3] = { '3', '4', '5' };
         modelWithStruct->structure6.with_reported_property_EdmBinary6.data = edmBinary;
         modelWithStruct->structure6.with_reported_property_EdmBinary6.size = 3;
+        InitializeDurationForSerializationTests(&modelWithStruct->structure6.with_reported_property_EdmDuration6);
+        InitializeGeographyPointForSerializationTests(&modelWithStruct->structure6.with_reported_property_EdmGeographyPoint6);
 
         const char* expectedJsonAsString =
             "{                                                                                                 \
@@ -1454,9 +2062,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"with_reported_property_bool6\" : true,                                                       \
                 \"with_reported_property_ascii_char_ptr6\" : \"e/leven\",                                      \
                 \"with_reported_property_ascii_char_ptr_no_quotes6\" : \"twelve\",                             \
+                \"with_reported_property_ascii_char_ptr_secret6\" : \"thirteen\",                              \
                 \"with_reported_property_EdmDateTimeOffset6\" : \"2014-06-17T08:51:23.000000000005-08:01\",    \
+                \"with_reported_property_EdmTimespan6\": " EXPECTED_TIMESPAN_STRING  ",                        \
                 \"with_reported_property_EdmGuid6\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                \
-                \"with_reported_property_EdmBinary6\": \"MzQ1\"                                                \
+                \"with_reported_property_EdmBinary6\": \"MzQ1\",                                               \
+                \"with_reported_property_EdmDuration6\": " EXPECTED_DURATION_STRING  ",                        \
+                \"with_reported_property_EdmGeographyPoint6\": " EXPECTED_GEOGRAPHY_POINT_STRING  "            \
             }                                                                                                  \
         }";
 
@@ -1501,6 +2113,7 @@ BEGIN_TEST_SUITE(serializer_int)
         basicModel_WithModel->model7.with_reported_property_bool7 = true;
         basicModel_WithModel->model7.with_reported_property_ascii_char_ptr7 = "e/leven";
         basicModel_WithModel->model7.with_reported_property_ascii_char_ptr_no_quotes7 = "\"twelve\"";
+        basicModel_WithModel->model7.with_reported_property_ascii_char_ptr_secret7 = "thirteen";
         basicModel_WithModel->model7.with_reported_property_EdmDateTimeOffset7.dateTime.tm_year = 114;
         basicModel_WithModel->model7.with_reported_property_EdmDateTimeOffset7.dateTime.tm_mon = 6 - 1;
         basicModel_WithModel->model7.with_reported_property_EdmDateTimeOffset7.dateTime.tm_mday = 17;
@@ -1512,6 +2125,7 @@ BEGIN_TEST_SUITE(serializer_int)
         basicModel_WithModel->model7.with_reported_property_EdmDateTimeOffset7.hasTimeZone = 1;
         basicModel_WithModel->model7.with_reported_property_EdmDateTimeOffset7.timeZoneHour = -8;
         basicModel_WithModel->model7.with_reported_property_EdmDateTimeOffset7.timeZoneMinute = 1;
+        InitializeTimespan(&basicModel_WithModel->model7.with_reported_property_EdmTimespan7);
         basicModel_WithModel->model7.with_reported_property_EdmGuid7.GUID[0] = 0x00;
         basicModel_WithModel->model7.with_reported_property_EdmGuid7.GUID[1] = 0x11;
         basicModel_WithModel->model7.with_reported_property_EdmGuid7.GUID[2] = 0x22;
@@ -1533,6 +2147,9 @@ BEGIN_TEST_SUITE(serializer_int)
         basicModel_WithModel->model7.with_reported_property_EdmBinary7.data = edmBinary;
         basicModel_WithModel->model7.with_reported_property_EdmBinary7.size = 3;
 
+        InitializeDurationForSerializationTests(&basicModel_WithModel->model7.with_reported_property_EdmDuration7);
+        InitializeGeographyPointForSerializationTests(&basicModel_WithModel->model7.with_reported_property_EdmGeographyPoint7);
+
         const char* expectedJsonAsString =
         "{                                                                                                  \
             \"model7\":                                                                                     \
@@ -1549,9 +2166,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"with_reported_property_bool7\" : true,                                                    \
                 \"with_reported_property_ascii_char_ptr7\" : \"e/leven\",                                   \
                 \"with_reported_property_ascii_char_ptr_no_quotes7\" : \"twelve\",                          \
+                \"with_reported_property_ascii_char_ptr_secret7\" : \"thirteen\",                           \
                 \"with_reported_property_EdmDateTimeOffset7\" : \"2014-06-17T08:51:23.000000000005-08:01\", \
+                \"with_reported_property_EdmTimespan7\": " EXPECTED_TIMESPAN_STRING  ",                     \
                 \"with_reported_property_EdmGuid7\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",             \
-                \"with_reported_property_EdmBinary7\": \"MzQ1\"                                             \
+                \"with_reported_property_EdmBinary7\": \"MzQ1\",                                            \
+                \"with_reported_property_EdmDuration7\": " EXPECTED_DURATION_STRING  ",                     \
+                \"with_reported_property_EdmGeographyPoint7\": " EXPECTED_GEOGRAPHY_POINT_STRING  "         \
             }                                                                                               \
         }";
 
@@ -1596,6 +2217,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithModel->inner_model8.structure8.with_reported_property_bool8 = true;
         modelWithModel->inner_model8.structure8.with_reported_property_ascii_char_ptr8 = "e/leven";
         modelWithModel->inner_model8.structure8.with_reported_property_ascii_char_ptr_no_quotes8 = "\"twelve\"";
+        modelWithModel->inner_model8.structure8.with_reported_property_ascii_char_ptr_secret8 = "thirteen";
         modelWithModel->inner_model8.structure8.with_reported_property_EdmDateTimeOffset8.dateTime.tm_year = 114;
         modelWithModel->inner_model8.structure8.with_reported_property_EdmDateTimeOffset8.dateTime.tm_mon = 6 - 1;
         modelWithModel->inner_model8.structure8.with_reported_property_EdmDateTimeOffset8.dateTime.tm_mday = 17;
@@ -1607,6 +2229,7 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithModel->inner_model8.structure8.with_reported_property_EdmDateTimeOffset8.hasTimeZone = 1;
         modelWithModel->inner_model8.structure8.with_reported_property_EdmDateTimeOffset8.timeZoneHour = -8;
         modelWithModel->inner_model8.structure8.with_reported_property_EdmDateTimeOffset8.timeZoneMinute = 1;
+        InitializeTimespan(&modelWithModel->inner_model8.structure8.with_reported_property_EdmTimespan8);
         modelWithModel->inner_model8.structure8.with_reported_property_EdmGuid8.GUID[0] = 0x00;
         modelWithModel->inner_model8.structure8.with_reported_property_EdmGuid8.GUID[1] = 0x11;
         modelWithModel->inner_model8.structure8.with_reported_property_EdmGuid8.GUID[2] = 0x22;
@@ -1628,6 +2251,9 @@ BEGIN_TEST_SUITE(serializer_int)
         modelWithModel->inner_model8.structure8.with_reported_property_EdmBinary8.data = edmBinary;
         modelWithModel->inner_model8.structure8.with_reported_property_EdmBinary8.size = 3;
 
+        InitializeDurationForSerializationTests(&modelWithModel->inner_model8.structure8.with_reported_property_EdmDuration8);
+        InitializeGeographyPointForSerializationTests(&modelWithModel->inner_model8.structure8.with_reported_property_EdmGeographyPoint8);
+
         const char* expectedJsonAsString =
         "{                                                                                                         \
             \"inner_model8\":                                                                                      \
@@ -1646,9 +2272,13 @@ BEGIN_TEST_SUITE(serializer_int)
                     \"with_reported_property_bool8\" : true,                                                       \
                     \"with_reported_property_ascii_char_ptr8\" : \"e/leven\",                                      \
                     \"with_reported_property_ascii_char_ptr_no_quotes8\" : \"twelve\",                             \
+                    \"with_reported_property_ascii_char_ptr_secret8\" : \"thirteen\",                              \
                     \"with_reported_property_EdmDateTimeOffset8\" : \"2014-06-17T08:51:23.000000000005-08:01\",    \
+                    \"with_reported_property_EdmTimespan8\": " EXPECTED_TIMESPAN_STRING  ",                        \
                     \"with_reported_property_EdmGuid8\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                \
-                    \"with_reported_property_EdmBinary8\": \"MzQ1\"                                                \
+                    \"with_reported_property_EdmBinary8\": \"MzQ1\",                                               \
+                    \"with_reported_property_EdmDuration8\": " EXPECTED_DURATION_STRING  ",                        \
+                    \"with_reported_property_EdmGeographyPoint8\": " EXPECTED_GEOGRAPHY_POINT_STRING  "            \
                 }                                                                                                  \
             }                                                                                                      \
         }";
@@ -1687,9 +2317,13 @@ BEGIN_TEST_SUITE(serializer_int)
             \"with_desired_property_bool9\" : true,                                                           \
             \"with_desired_property_ascii_char_ptr9\" : \"e/leven\",                                          \
             \"with_desired_property_ascii_char_ptr_no_quotes9\" : \"twelve\",                                 \
+            \"with_desired_property_ascii_char_ptr_secret9\" : \"thirteen\",                                  \
             \"with_desired_property_EdmDateTimeOffset9\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+            \"with_desired_property_EdmTimespan9\": " EXPECTED_TIMESPAN_STRING  ",                            \
             \"with_desired_property_EdmGuid9\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-            \"with_desired_property_EdmBinary9\": \"MzQ1\"                                                    \
+            \"with_desired_property_EdmBinary9\": \"MzQ1\",                                                   \
+            \"with_desired_property_EdmDuration9\": " EXPECTED_DURATION_STRING  ",                            \
+            \"with_desired_property_EdmGeographyPoint9\": " EXPECTED_GEOGRAPHY_POINT_STRING "                 \
         }";
 
         ///act
@@ -1711,6 +2345,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_IS_TRUE(modelWithData->with_desired_property_bool9);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      modelWithData->with_desired_property_ascii_char_ptr9);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->with_desired_property_ascii_char_ptr_no_quotes9);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->with_desired_property_ascii_char_ptr_secret9);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->with_desired_property_EdmDateTimeOffset9.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->with_desired_property_EdmDateTimeOffset9.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->with_desired_property_EdmDateTimeOffset9.dateTime.tm_mday);
@@ -1722,6 +2357,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset9.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->with_desired_property_EdmDateTimeOffset9.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset9.timeZoneMinute);
+        InitializeTimespan(&modelWithData->with_desired_property_EdmTimespan9);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->with_desired_property_EdmGuid9.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->with_desired_property_EdmGuid9.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->with_desired_property_EdmGuid9.GUID[2]);
@@ -1743,6 +2379,8 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   '3',            modelWithData->with_desired_property_EdmBinary9.data[0]);
         ASSERT_ARE_EQUAL(uint8_t,   '4',            modelWithData->with_desired_property_EdmBinary9.data[1]);
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->with_desired_property_EdmBinary9.data[2]);
+        isDurationsExpected(&modelWithData->with_desired_property_EdmDuration9);
+        isGeographyPointExpected(&modelWithData->with_desired_property_EdmGeographyPoint9);
 
         ///clean
         DESTROY_MODEL_INSTANCE(modelWithData);
@@ -1769,9 +2407,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"with_desired_property_bool10\" : true,                                                           \
                 \"with_desired_property_ascii_char_ptr10\" : \"e/leven\",                                          \
                 \"with_desired_property_ascii_char_ptr_no_quotes10\" : \"twelve\",                                 \
+                \"with_desired_property_ascii_char_ptr_secret10\" : \"thirteen\",                                  \
                 \"with_desired_property_EdmDateTimeOffset10\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+                \"with_desired_property_EdmTimespan10\": " EXPECTED_TIMESPAN_STRING  ",                            \
                 \"with_desired_property_EdmGuid10\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-                \"with_desired_property_EdmBinary10\": \"MzQ1\"                                                    \
+                \"with_desired_property_EdmBinary10\": \"MzQ1\",                                                   \
+                \"with_desired_property_EdmDuration10\": " EXPECTED_DURATION_STRING  ",                            \
+                \"with_desired_property_EdmGeographyPoint10\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
             }                                                                                                      \
         }";
 
@@ -1793,6 +2435,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_IS_TRUE(modelWithData->structure10.with_desired_property_bool10);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      modelWithData->structure10.with_desired_property_ascii_char_ptr10);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->structure10.with_desired_property_ascii_char_ptr_no_quotes10);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->structure10.with_desired_property_ascii_char_ptr_secret10);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->structure10.with_desired_property_EdmDateTimeOffset10.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->structure10.with_desired_property_EdmDateTimeOffset10.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->structure10.with_desired_property_EdmDateTimeOffset10.dateTime.tm_mday);
@@ -1804,6 +2447,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->structure10.with_desired_property_EdmDateTimeOffset10.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->structure10.with_desired_property_EdmDateTimeOffset10.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->structure10.with_desired_property_EdmDateTimeOffset10.timeZoneMinute);
+        InitializeTimespan(&modelWithData->structure10.with_desired_property_EdmTimespan10);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->structure10.with_desired_property_EdmGuid10.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->structure10.with_desired_property_EdmGuid10.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->structure10.with_desired_property_EdmGuid10.GUID[2]);
@@ -1825,6 +2469,8 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   '3',            modelWithData->structure10.with_desired_property_EdmBinary10.data[0]);
         ASSERT_ARE_EQUAL(uint8_t,   '4',            modelWithData->structure10.with_desired_property_EdmBinary10.data[1]);
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->structure10.with_desired_property_EdmBinary10.data[2]);
+        isDurationsExpected(&modelWithData->structure10.with_desired_property_EdmDuration10);
+        isGeographyPointExpected(&modelWithData->structure10.with_desired_property_EdmGeographyPoint10);
 
         ///clean
         DESTROY_MODEL_INSTANCE(modelWithData);
@@ -1851,9 +2497,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"with_desired_property_bool11\" : true,                                                           \
                 \"with_desired_property_ascii_char_ptr11\" : \"e/leven\",                                          \
                 \"with_desired_property_ascii_char_ptr_no_quotes11\" : \"twelve\",                                 \
+                \"with_desired_property_ascii_char_ptr_secret11\" : \"thirteen\",                                  \
                 \"with_desired_property_EdmDateTimeOffset11\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+                \"with_desired_property_EdmTimespan11\": " EXPECTED_TIMESPAN_STRING  ",                            \
                 \"with_desired_property_EdmGuid11\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
                 \"with_desired_property_EdmBinary11\": \"MzQ1\"                                                    \
+                \"with_desired_property_EdmDuration11\": " EXPECTED_DURATION_STRING  ",                            \
+                \"with_desired_property_EdmGeographyPoint11\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
             }                                                                                                      \
         }";
 
@@ -1875,6 +2525,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_IS_TRUE(modelWithData->model11.with_desired_property_bool11);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      modelWithData->model11.with_desired_property_ascii_char_ptr11);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->model11.with_desired_property_ascii_char_ptr_no_quotes11);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->model11.with_desired_property_ascii_char_ptr_secret11);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->model11.with_desired_property_EdmDateTimeOffset11.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->model11.with_desired_property_EdmDateTimeOffset11.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->model11.with_desired_property_EdmDateTimeOffset11.dateTime.tm_mday);
@@ -1886,6 +2537,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->model11.with_desired_property_EdmDateTimeOffset11.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->model11.with_desired_property_EdmDateTimeOffset11.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->model11.with_desired_property_EdmDateTimeOffset11.timeZoneMinute);
+        isTimespanExpected(&modelWithData->model11.with_desired_property_EdmTimespan11);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->model11.with_desired_property_EdmGuid11.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->model11.with_desired_property_EdmGuid11.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->model11.with_desired_property_EdmGuid11.GUID[2]);
@@ -1907,6 +2559,8 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   '3',            modelWithData->model11.with_desired_property_EdmBinary11.data[0]);
         ASSERT_ARE_EQUAL(uint8_t,   '4',            modelWithData->model11.with_desired_property_EdmBinary11.data[1]);
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->model11.with_desired_property_EdmBinary11.data[2]);
+        isDurationsExpected(&modelWithData->model11.with_desired_property_EdmDuration11);
+        isGeographyPointExpected(&modelWithData->model11.with_desired_property_EdmGeographyPoint11);
 
         ///clean
         DESTROY_MODEL_INSTANCE(modelWithData);
@@ -1935,9 +2589,13 @@ BEGIN_TEST_SUITE(serializer_int)
                     \"with_desired_property_bool12\" : true,                                                           \
                     \"with_desired_property_ascii_char_ptr12\" : \"e/leven\",                                          \
                     \"with_desired_property_ascii_char_ptr_no_quotes12\" : \"twelve\",                                 \
+                    \"with_desired_property_ascii_char_ptr_secret12\" : \"thirteen\",                                  \
                     \"with_desired_property_EdmDateTimeOffset12\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+                    \"with_desired_property_EdmTimespan12\": " EXPECTED_TIMESPAN_STRING  ",                            \
                     \"with_desired_property_EdmGuid12\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-                    \"with_desired_property_EdmBinary12\": \"MzQ1\"                                                    \
+                    \"with_desired_property_EdmBinary12\": \"MzQ1\",                                                   \
+                    \"with_desired_property_EdmDuration12\": " EXPECTED_DURATION_STRING  ",                            \
+                    \"with_desired_property_EdmGeographyPoint12\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
                 }                                                                                                      \
             }                                                                                                          \
         }";
@@ -1960,6 +2618,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_IS_TRUE(modelWithData->inner_model12.structure12.with_desired_property_bool12);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      modelWithData->inner_model12.structure12.with_desired_property_ascii_char_ptr12);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->inner_model12.structure12.with_desired_property_ascii_char_ptr_no_quotes12);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->inner_model12.structure12.with_desired_property_ascii_char_ptr_secret12);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->inner_model12.structure12.with_desired_property_EdmDateTimeOffset12.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->inner_model12.structure12.with_desired_property_EdmDateTimeOffset12.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->inner_model12.structure12.with_desired_property_EdmDateTimeOffset12.dateTime.tm_mday);
@@ -1971,6 +2630,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->inner_model12.structure12.with_desired_property_EdmDateTimeOffset12.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->inner_model12.structure12.with_desired_property_EdmDateTimeOffset12.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->inner_model12.structure12.with_desired_property_EdmDateTimeOffset12.timeZoneMinute);
+        isTimespanExpected(&modelWithData->inner_model12.structure12.with_desired_property_EdmTimespan12);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->inner_model12.structure12.with_desired_property_EdmGuid12.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->inner_model12.structure12.with_desired_property_EdmGuid12.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->inner_model12.structure12.with_desired_property_EdmGuid12.GUID[2]);
@@ -1992,6 +2652,8 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   '3',            modelWithData->inner_model12.structure12.with_desired_property_EdmBinary12.data[0]);
         ASSERT_ARE_EQUAL(uint8_t,   '4',            modelWithData->inner_model12.structure12.with_desired_property_EdmBinary12.data[1]);
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->inner_model12.structure12.with_desired_property_EdmBinary12.data[2]);
+        isDurationsExpected(&modelWithData->inner_model12.structure12.with_desired_property_EdmDuration12);
+        isGeographyPointExpected(&modelWithData->inner_model12.structure12.with_desired_property_EdmGeographyPoint12);
 
         ///clean
         DESTROY_MODEL_INSTANCE(modelWithData);
@@ -2019,9 +2681,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"bool13\" : true,                                                               \
                 \"ascii_char_ptr13\" : \"e/leven\",                                              \
                 \"ascii_char_ptr_no_quotes13\" : \"twelve\",                                     \
+                \"ascii_char_ptr_secret13\" : \"thirteen\",                                      \
                 \"EdmDateTimeOffset13\" : \"2014-06-17T08:51:23.000000000005-08:01\",            \
+                \"EdmTimespan13\": " EXPECTED_TIMESPAN_STRING  ",                                \
                 \"EdmGuid13\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                        \
-                \"EdmBinary13\": \"MzQ1\"                                                        \
+                \"EdmBinary13\": \"MzQ1\",                                                       \
+                \"EdmDuration13\": " EXPECTED_DURATION_STRING  ",                                \
+                \"EdmGeographyPoint13\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                    \
             }                                                                                    \
         }";
 
@@ -2057,9 +2723,13 @@ BEGIN_TEST_SUITE(serializer_int)
                 \"bool14\" : true,                                                               \
                 \"ascii_char_ptr14\" : \"e/leven\",                                              \
                 \"ascii_char_ptr_no_quotes14\" : \"twelve\",                                     \
+                \"ascii_char_ptr_secret14\" : \"thirteen\",                                      \
                 \"EdmDateTimeOffset14\" : \"2014-06-17T08:51:23.000000000005-08:01\",            \
+                \"EdmTimespan14\": " EXPECTED_TIMESPAN_STRING  ",                                \
                 \"EdmGuid14\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                        \
-                \"EdmBinary14\": \"MzQ1\"                                                        \
+                \"EdmBinary14\": \"MzQ1\",                                                       \
+                \"EdmDuration14\": " EXPECTED_DURATION_STRING  ",                                \
+                \"EdmGeographyPoint14\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                    \
             }                                                                                    \
         }";
 
@@ -2080,6 +2750,8 @@ BEGIN_TEST_SUITE(serializer_int)
         
         ///act
         basicModel_WithData9 *modelWithData = CREATE_MODEL_INSTANCE(basic9, basicModel_WithData9, true);
+		EDM_TIMESPAN edmTimespanUnset;
+		memset(&edmTimespanUnset, 0, sizeof(edmTimespanUnset));
 
         ///assert
         ASSERT_ARE_EQUAL(double,    0,              modelWithData->with_desired_property_double9);
@@ -2094,6 +2766,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_IS_FALSE(modelWithData->with_desired_property_bool9);
         ASSERT_IS_NULL(modelWithData->with_desired_property_ascii_char_ptr9);
         ASSERT_IS_NULL(modelWithData->with_desired_property_ascii_char_ptr_no_quotes9);
+        ASSERT_IS_NULL(modelWithData->with_desired_property_ascii_char_ptr_secret9);
         ASSERT_ARE_EQUAL(int,       0,              modelWithData->with_desired_property_EdmDateTimeOffset9.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       0,              modelWithData->with_desired_property_EdmDateTimeOffset9.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       0,              modelWithData->with_desired_property_EdmDateTimeOffset9.dateTime.tm_mday);
@@ -2105,6 +2778,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   0,              modelWithData->with_desired_property_EdmDateTimeOffset9.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    0,              modelWithData->with_desired_property_EdmDateTimeOffset9.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   0,              modelWithData->with_desired_property_EdmDateTimeOffset9.timeZoneMinute);
+        ASSERT_ARE_EQUAL(int,       0,              memcmp(&edmTimespanUnset, &modelWithData->with_desired_property_EdmTimespan9, sizeof(edmTimespanUnset)));
         ASSERT_ARE_EQUAL(uint8_t,   0,              modelWithData->with_desired_property_EdmGuid9.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0,              modelWithData->with_desired_property_EdmGuid9.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0,              modelWithData->with_desired_property_EdmGuid9.GUID[2]);
@@ -2123,6 +2797,15 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   0,              modelWithData->with_desired_property_EdmGuid9.GUID[15]);
         ASSERT_ARE_EQUAL(size_t,     0,             modelWithData->with_desired_property_EdmBinary9.size);
         ASSERT_IS_NULL(modelWithData->with_desired_property_EdmBinary9.data);
+        ASSERT_ARE_EQUAL(EDM_DURATION_SIGN, modelWithData->with_desired_property_EdmDuration9.edmDurationSign, EDM_DURATION_SIGN_POSITIVE);
+        ASSERT_ARE_EQUAL(int, modelWithData->with_desired_property_EdmDuration9.days, 0);
+        ASSERT_ARE_EQUAL(int, modelWithData->with_desired_property_EdmDuration9.hours, 0);
+        ASSERT_ARE_EQUAL(int, modelWithData->with_desired_property_EdmDuration9.minutes, 0);
+        ASSERT_ARE_EQUAL(double, modelWithData->with_desired_property_EdmDuration9.seconds, 0);
+        ASSERT_ARE_EQUAL(bool, modelWithData->with_desired_property_EdmGeographyPoint9.altitudeSet, false);
+        ASSERT_ARE_EQUAL(double, modelWithData->with_desired_property_EdmGeographyPoint9.longitude, 0);
+        ASSERT_ARE_EQUAL(double, modelWithData->with_desired_property_EdmGeographyPoint9.latitude, 0);
+        ASSERT_ARE_EQUAL(double, modelWithData->with_desired_property_EdmGeographyPoint9.altitude, 0);
 
         ///clean
         DESTROY_MODEL_INSTANCE(modelWithData);
@@ -2148,9 +2831,13 @@ BEGIN_TEST_SUITE(serializer_int)
             \"with_desired_property_bool15\" : true,                                                           \
             \"with_desired_property_ascii_char_ptr15\" : \"e/leven\",                                          \
             \"with_desired_property_ascii_char_ptr_no_quotes15\" : \"twelve\",                                 \
+            \"with_desired_property_ascii_char_ptr_secret15\" : \"thirteen\",                                  \
             \"with_desired_property_EdmDateTimeOffset15\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+            \"with_desired_property_EdmTimespan15\": " EXPECTED_TIMESPAN_STRING  ",                            \
             \"with_desired_property_EdmGuid15\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-            \"with_desired_property_EdmBinary15\": \"MzQ1\"                                                    \
+            \"with_desired_property_EdmBinary15\": \"MzQ1\",                                                   \
+            \"with_desired_property_EdmDuration15\": " EXPECTED_DURATION_STRING  ",                            \
+            \"with_desired_property_EdmGeographyPoint15\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
         }";
 
         STRICT_EXPECTED_CALL(on_desired_property_double15(modelWithData));
@@ -2165,9 +2852,13 @@ BEGIN_TEST_SUITE(serializer_int)
         STRICT_EXPECTED_CALL(on_desired_property_bool15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr_no_quotes15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr_secret15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmDateTimeOffset15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmTimespan15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmGuid15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmBinary15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmDuration15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmGeographyPoint15(modelWithData));
 
         ///act
         CODEFIRST_RESULT result = INGEST_DESIRED_PROPERTIES(modelWithData, inputJsonAsString, false);
@@ -2188,6 +2879,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_IS_TRUE(modelWithData->with_desired_property_bool15);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      modelWithData->with_desired_property_ascii_char_ptr15);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->with_desired_property_ascii_char_ptr_no_quotes15);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->with_desired_property_ascii_char_ptr_secret15);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_mday);
@@ -2199,6 +2891,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset15.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->with_desired_property_EdmDateTimeOffset15.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset15.timeZoneMinute);
+        isTimespanExpected(&modelWithData->with_desired_property_EdmTimespan15);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->with_desired_property_EdmGuid15.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->with_desired_property_EdmGuid15.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->with_desired_property_EdmGuid15.GUID[2]);
@@ -2222,6 +2915,9 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->with_desired_property_EdmBinary15.data[2]);
 
         ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        isDurationsExpected(&modelWithData->with_desired_property_EdmDuration15);
+        isGeographyPointExpected(&modelWithData->with_desired_property_EdmGeographyPoint15);
 
         ///clean
         DESTROY_MODEL_INSTANCE(modelWithData);
@@ -2251,9 +2947,13 @@ BEGIN_TEST_SUITE(serializer_int)
                     \"with_desired_property_bool16\" : true,                                                           \
                     \"with_desired_property_ascii_char_ptr16\" : \"e/leven\",                                          \
                     \"with_desired_property_ascii_char_ptr_no_quotes16\" : \"twelve\",                                 \
+                    \"with_desired_property_ascii_char_ptr_secret16\" : \"thirteen\",                                  \
                     \"with_desired_property_EdmDateTimeOffset16\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+                    \"with_desired_property_EdmTimespan16\": " EXPECTED_TIMESPAN_STRING  ",                            \
                     \"with_desired_property_EdmGuid16\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
                     \"with_desired_property_EdmBinary16\": \"MzQ1\"                                                    \
+                    \"with_desired_property_EdmDuration16\": " EXPECTED_DURATION_STRING  ",                            \
+                    \"with_desired_property_EdmGeographyPoint16\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
                 }                                                                                                      \
             }                                                                                                          \
         }";
@@ -2279,6 +2979,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_IS_TRUE(modelWithData->inner_model16.structure16.with_desired_property_bool16);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",      modelWithData->inner_model16.structure16.with_desired_property_ascii_char_ptr16);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->inner_model16.structure16.with_desired_property_ascii_char_ptr_no_quotes16);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->inner_model16.structure16.with_desired_property_ascii_char_ptr_secret16);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->inner_model16.structure16.with_desired_property_EdmDateTimeOffset16.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->inner_model16.structure16.with_desired_property_EdmDateTimeOffset16.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->inner_model16.structure16.with_desired_property_EdmDateTimeOffset16.dateTime.tm_mday);
@@ -2290,6 +2991,7 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->inner_model16.structure16.with_desired_property_EdmDateTimeOffset16.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->inner_model16.structure16.with_desired_property_EdmDateTimeOffset16.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->inner_model16.structure16.with_desired_property_EdmDateTimeOffset16.timeZoneMinute);
+        isTimespanExpected(&modelWithData->inner_model16.structure16.with_desired_property_EdmTimespan16);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->inner_model16.structure16.with_desired_property_EdmGuid16.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->inner_model16.structure16.with_desired_property_EdmGuid16.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->inner_model16.structure16.with_desired_property_EdmGuid16.GUID[2]);
@@ -2311,6 +3013,8 @@ BEGIN_TEST_SUITE(serializer_int)
         ASSERT_ARE_EQUAL(uint8_t,   '3',            modelWithData->inner_model16.structure16.with_desired_property_EdmBinary16.data[0]);
         ASSERT_ARE_EQUAL(uint8_t,   '4',            modelWithData->inner_model16.structure16.with_desired_property_EdmBinary16.data[1]);
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->inner_model16.structure16.with_desired_property_EdmBinary16.data[2]);
+        isDurationsExpected(&modelWithData->inner_model16.structure16.with_desired_property_EdmDuration16);
+        isGeographyPointExpected(&modelWithData->inner_model16.structure16.with_desired_property_EdmGeographyPoint16);
 
         ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
 
@@ -2337,9 +3041,13 @@ BEGIN_TEST_SUITE(serializer_int)
             \"bool18\" : true,                                                               \
             \"ascii_char_ptr18\" : \"e/leven\",                                              \
             \"ascii_char_ptr_no_quotes18\" : \"twelve\",                                     \
+            \"ascii_char_ptr_secret18\" : \"thirteen\",                                      \
             \"EdmDateTimeOffset18\" : \"2014-06-17T08:51:23.000000000005-08:01\",            \
+            \"EdmTimespan18\": " EXPECTED_TIMESPAN_STRING  ",                                \
             \"EdmGuid18\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                        \
-            \"EdmBinary18\": \"MzQ1\"                                                        \
+            \"EdmBinary18\": \"MzQ1\",                                                       \
+            \"EdmDuration18\": " EXPECTED_DURATION_STRING  ",                                \
+            \"EdmGeographyPoint18\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                    \
         }";
 
         ///act
@@ -2375,9 +3083,13 @@ BEGIN_TEST_SUITE(serializer_int)
             \"bool19\" : true,                                                               \
             \"ascii_char_ptr19\" : \"e/leven\",                                              \
             \"ascii_char_ptr_no_quotes19\" : \"twelve\",                                     \
+            \"ascii_char_ptr_secret19\" : \"thirteen\",                                      \
             \"EdmDateTimeOffset19\" : \"2019-06-17T08:51:23.000000000005-08:01\",            \
+            \"EdmTimespan19\": " EXPECTED_TIMESPAN_STRING  ",                                \
             \"EdmGuid19\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                        \
-            \"EdmBinary19\": \"MzQ1\"                                                        \
+            \"EdmBinary19\": \"MzQ1\",                                                       \
+            \"EdmDuration19\": " EXPECTED_DURATION_STRING  ",                                \
+            \"EdmGeographyPoint19\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                    \
         }";
 
         ///act
@@ -2421,5 +3133,161 @@ BEGIN_TEST_SUITE(serializer_int)
         DESTROY_MODEL_INSTANCE(modelWithData);
     }
 
+    TEST_FUNCTION(WITH_VOID_METHOD_IN_ROOT_MODEL)
+    {
+        ///arrange
+        model_WithMethod21 *modelWithData = CREATE_MODEL_INSTANCE(basic21, model_WithMethod21, true);
+
+        const char* inputJsonAsString =
+            "{                                                                                   \
+            \"double21\" : 1.0,                                                              \
+            \"int21\" : 2,                                                                   \
+            \"float21\" : 3.000000,                                                          \
+            \"long21\" : 4,                                                                  \
+            \"sint8_t21\" : 5,                                                               \
+            \"uint8_t21\" : 6,                                                               \
+            \"int16_t21\" : 7,                                                               \
+            \"int32_t21\" : 8,                                                               \
+            \"int64_t21\" : 9,                                                               \
+            \"bool21\" : true,                                                               \
+            \"ascii_char_ptr21\" : \"eleven\",                                               \
+            \"ascii_char_ptr_no_quotes21\" : \"twelve\",                                     \
+            \"ascii_char_ptr_secret21\" : \"thirteen\",                                      \
+            \"EdmDateTimeOffset21\" : \"2014-06-17T08:51:23.000000000005-08:01\",            \
+            \"EdmTimespan21\": " EXPECTED_TIMESPAN_STRING  ",                                \
+            \"EdmGuid21\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                        \
+            \"EdmBinary21\": \"MzQ1\",                                                       \
+            \"EdmDuration21\": " EXPECTED_DURATION_STRING  ",                                \
+            \"EdmGeographyPoint21\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                    \
+        }";
+
+        ///act
+        METHODRETURN_HANDLE result = EXECUTE_METHOD(modelWithData, "method21", inputJsonAsString);
+
+        ///assert (rest of asserts are in the action)
+        ASSERT_IS_NOT_NULL(result);
+        const METHODRETURN_DATA* r2 = MethodReturn_GetReturn(result);
+        ASSERT_ARE_EQUAL(int, 200, r2->statusCode);
+        ASSERT_ARE_EQUAL(char_ptr, "{}", r2->jsonValue);
+
+        ///clean
+        MethodReturn_Destroy(result);
+        DESTROY_MODEL_INSTANCE(modelWithData);
+    }
+
+    TEST_FUNCTION(WITH_INT_METHOD_IN_ROOT_MODEL)
+    {
+        ///arrange
+        model_WithMethod22 *modelWithData = CREATE_MODEL_INSTANCE(basic22, model_WithMethod22, true);
+
+        const char* inputJsonAsString =
+            "{                                                                                   \
+            \"double22\" : 1.0,                                                              \
+            \"int22\" : 2,                                                                   \
+            \"float22\" : 3.000000,                                                          \
+            \"long22\" : 4,                                                                  \
+            \"sint8_t22\" : 5,                                                               \
+            \"uint8_t22\" : 6,                                                               \
+            \"int16_t22\" : 7,                                                               \
+            \"int32_t22\" : 8,                                                               \
+            \"int64_t22\" : 9,                                                               \
+            \"bool22\" : true,                                                               \
+            \"ascii_char_ptr22\" : \"eleven\",                                               \
+            \"ascii_char_ptr_no_quotes22\" : \"twelve\",                                     \
+            \"ascii_char_ptr_secret22\" : \"thirteen\",                                      \
+            \"EdmDateTimeOffset22\" : \"2014-06-17T08:51:23.000000000005-08:01\",            \
+            \"EdmTimespan22\": " EXPECTED_TIMESPAN_STRING  ",                                \
+            \"EdmGuid22\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                        \
+            \"EdmBinary22\": \"MzQ1\",                                                       \
+            \"EdmDuration22\": " EXPECTED_DURATION_STRING  ",                                \
+            \"EdmGeographyPoint22\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                    \
+        }";
+
+        ///act
+        METHODRETURN_HANDLE result = EXECUTE_METHOD(modelWithData, "method22", inputJsonAsString);
+
+        ///assert (rest of asserts are in the action)
+        ASSERT_IS_NOT_NULL(result);
+        const METHODRETURN_DATA* r2 = MethodReturn_GetReturn(result);
+        ASSERT_ARE_EQUAL(int, 200, r2->statusCode);
+        ASSERT_ARE_EQUAL(char_ptr, "22", r2->jsonValue);
+
+        ///clean
+        MethodReturn_Destroy(result);
+        DESTROY_MODEL_INSTANCE(modelWithData);
+    }
+
+    TEST_FUNCTION(WITH_DATATYPE_METHOD_IN_ROOT_MODEL)
+    {
+        ///arrange
+        model_WithMethod23 *modelWithData = CREATE_MODEL_INSTANCE(basic23, model_WithMethod23, true);
+
+        const char* inputJsonAsString =
+            "{                                                                                   \
+            \"double23\" : 1.0,                                                              \
+            \"int23\" : 2,                                                                   \
+            \"float23\" : 3.000000,                                                          \
+            \"long23\" : 4,                                                                  \
+            \"sint8_t23\" : 5,                                                               \
+            \"uint8_t23\" : 6,                                                               \
+            \"int16_t23\" : 7,                                                               \
+            \"int32_t23\" : 8,                                                               \
+            \"int64_t23\" : 9,                                                               \
+            \"bool23\" : true,                                                               \
+            \"ascii_char_ptr23\" : \"eleven\",                                               \
+            \"ascii_char_ptr_no_quotes23\" : \"twelve\",                                     \
+            \"ascii_char_ptr_secret23\" : \"thirteen\",                                      \
+            \"EdmDateTimeOffset23\" : \"2014-06-17T08:51:23.000000000005-08:01\",            \
+            \"EdmTimespan23\": " EXPECTED_TIMESPAN_STRING  ",                                \
+            \"EdmGuid23\" : \"00112333-4455-6677-8899-AABBCCDDEEFF\",                        \
+            \"EdmBinary23\": \"MzQ1\",                                                       \
+            \"EdmDuration23\": " EXPECTED_DURATION_STRING  ",                                \
+            \"EdmGeographyPoint23\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                    \
+        }";
+
+        ///act
+        METHODRETURN_HANDLE result = EXECUTE_METHOD(modelWithData, "method23", inputJsonAsString);
+
+        ///assert (rest of asserts are in the action)
+        ASSERT_IS_NOT_NULL(result);
+        const METHODRETURN_DATA* r2 = MethodReturn_GetReturn(result);
+        ASSERT_ARE_EQUAL(int, 200, r2->statusCode);
+
+        const char* expectedJson= "{\"z\":3, \"x\":1, \"y\":2}";
+        
+        ASSERT_IS_TRUE(areTwoJsonsEqual((const unsigned char*)expectedJson, strlen(expectedJson), r2->jsonValue));
+
+        ///clean
+        MethodReturn_Destroy(result);
+        DESTROY_MODEL_INSTANCE(modelWithData);
+    }
+
+    TEST_FUNCTION(WITH_DATATYPE_METHOD_TAKING_DATATYPE_PARAMETERS_IN_ROOT_MODEL)
+    {
+        ///arrange
+        model_WithMethod24 *modelWithData = CREATE_MODEL_INSTANCE(basic24, model_WithMethod24, true);
+
+        const char* inputJsonAsString =
+            "{                                                                               \
+            \"a\" : {\"x\":1, \"y\":2, \"z\":3},                                             \
+            \"b\" : {\"x\":10, \"y\":20, \"z\":30}                                           \
+        }";
+
+        ///act
+        METHODRETURN_HANDLE result = EXECUTE_METHOD(modelWithData, "method24", inputJsonAsString);
+
+        ///assert (rest of asserts are in the action)
+        ASSERT_IS_NOT_NULL(result);
+        const METHODRETURN_DATA* r2 = MethodReturn_GetReturn(result);
+        ASSERT_ARE_EQUAL(int, 200, r2->statusCode);
+
+        const char* expectedJson = "{\"z\":33, \"x\":11, \"y\":22}";
+
+        ASSERT_IS_TRUE(areTwoJsonsEqual((const unsigned char*)expectedJson, strlen(expectedJson), r2->jsonValue));
+
+        ///clean
+        MethodReturn_Destroy(result);
+        DESTROY_MODEL_INSTANCE(modelWithData);
+    }
 
 END_TEST_SUITE(serializer_int)

@@ -197,7 +197,7 @@ several segments as in `model1/model2/model3/methodName`. A segment is a model_i
 
 **SRS_COMMAND_DECODER_02_019: [** `CommandDecoder_ExecuteMethod` shall locate the final model to which the `methodName` applies. **]**
 
-**SRS_COMMAND_DECODER_02_020: [** `CommandDecoder_ExecuteMethod` shall verify that the model has a method called `methodName`. **]**
+**SRS_COMMAND_DECODER_02_020: [** `CommandDecoder_ExecuteMethod` shall verify that the model has a method or a method with return type called `methodName`. **]**
 
 **SRS_COMMAND_DECODER_02_021: [** For every argument of `methodName`, `CommandDecoder_ExecuteMethod` shall build an `AGENT_DATA_TYPE` from the node with the same name from the `MULTITREE_HANDLE`. **]**  
 

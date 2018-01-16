@@ -215,4 +215,7 @@ EXPORTS
     Destroy_AGENT_DATA_TYPE
     CreateAgentDataType_From_String
     AgentDataType_GetComplexTypeField
-
+    Create_AGENT_DATA_TYPE_from_charz_secret
+    Create_AGENT_DATA_TYPE_from_EDM_DURATION
+    Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT
+    Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN

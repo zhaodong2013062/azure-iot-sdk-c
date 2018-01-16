@@ -35,7 +35,7 @@
 #define PLUSINF_STRING "INF"
 
 #ifndef _HUGE_ENUF
-#define _HUGE_ENUF  1e+300	/* _HUGE_ENUF*_HUGE_ENUF must overflow */
+#define _HUGE_ENUF  1e+300    /* _HUGE_ENUF*_HUGE_ENUF must overflow */
 #endif /* _HUGE_ENUF */
 
 #ifndef INFINITY
@@ -170,6 +170,50 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_UINT8(AGENT_DATA_TYPE* agent
     return result;
 }
 
+static int ValidateTimeAndTimezone(const EDM_DATE_TIME_OFFSET *dateTimeOffset)
+{
+    AGENT_DATA_TYPES_RESULT result;
+
+    if (
+        (dateTimeOffset->dateTime.tm_hour > 23) ||
+        (dateTimeOffset->dateTime.tm_hour < 0) ||
+        (dateTimeOffset->dateTime.tm_min > 59) ||
+        (dateTimeOffset->dateTime.tm_min < 0) ||
+        (dateTimeOffset->dateTime.tm_sec > 59) ||
+        (dateTimeOffset->dateTime.tm_sec < 0)
+        )
+    {
+        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated, and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
+        LogError("Illegal dateTime being used: invalid hour, minute, and/or seconds");
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else if ((dateTimeOffset->hasFractionalSecond) && (dateTimeOffset->fractionalSecond > 999999999999))
+    {
+        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated to be conforming to OData specifications (odata-abnf-construction-rules, 2013), and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
+        LogError("Illegal dateTime being used: invalid fractionalSecond");
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else if (
+        (dateTimeOffset->hasTimeZone) && 
+        (
+            (dateTimeOffset->timeZoneHour<-23) ||
+            (dateTimeOffset->timeZoneHour>23) ||
+            (dateTimeOffset->timeZoneMinute>59)
+        )
+    )
+    {
+        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated to be conforming to OData specifications (odata-abnf-construction-rules, 2013), and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
+        LogError("Illegal dateTime being used: invalid timezone");
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else
+    {
+        result = AGENT_DATA_TYPES_OK;
+    }
+
+    return result;
+}
+
 /*Codes_SRS_AGENT_TYPE_SYSTEM_99_091:[Creates an AGENT_DATA_TYPE containing an Edm.DateTimeOffset from an EDM_DATE_TIME_OFFSET.]*/
 AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(AGENT_DATA_TYPE* agentData, EDM_DATE_TIME_OFFSET v)
 {
@@ -184,34 +228,9 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(AGENT_D
         /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated to be conforming to OData specifications (odata-abnf-construction-rules, 2013), and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
         result = AGENT_DATA_TYPES_INVALID_ARG; 
     }
-    else if (
-        (v.dateTime.tm_hour > 23) ||
-        (v.dateTime.tm_hour < 0) ||
-        (v.dateTime.tm_min > 59) ||
-        (v.dateTime.tm_min < 0) ||
-        (v.dateTime.tm_sec > 59) ||
-        (v.dateTime.tm_sec < 0)
-        )
+    else if (AGENT_DATA_TYPES_OK != (result = ValidateTimeAndTimezone(&v)))
     {
-        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated, and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
-        result = AGENT_DATA_TYPES_INVALID_ARG;
-    }
-    else if ((v.hasFractionalSecond) && (v.fractionalSecond > 999999999999))
-    {
-        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated to be conforming to OData specifications (odata-abnf-construction-rules, 2013), and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
-        result = AGENT_DATA_TYPES_INVALID_ARG;
-    }
-    else if (
-        (v.hasTimeZone) && 
-        (
-            (v.timeZoneHour<-23) ||
-            (v.timeZoneHour>23) ||
-            (v.timeZoneMinute>59)
-        )
-    )
-    {
-        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated to be conforming to OData specifications (odata-abnf-construction-rules, 2013), and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
-        result = AGENT_DATA_TYPES_INVALID_ARG;
+        ;
     }
     else
     {
@@ -221,6 +240,42 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(AGENT_D
     }
     return result;
 }
+
+AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN(AGENT_DATA_TYPE* agentData, EDM_TIMESPAN v)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    /*Codes_SRS_AGENT_TYPE_SYSTEM_99_013:[ All the Create_... functions shall check their parameters for validity. When an invalid parameter is detected, a code of AGENT_DATA_TYPES_INVALID_ARG shall be returned ]*/
+    if (agentData == NULL)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else if (ValidateDate(v.beginTime.dateTime.tm_year+1900, v.beginTime.dateTime.tm_mon +1 , v.beginTime.dateTime.tm_mday) != 0)
+    {
+        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated to be conforming to OData specifications (odata-abnf-construction-rules, 2013), and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
+        result = AGENT_DATA_TYPES_INVALID_ARG; 
+    }
+    else if (ValidateDate(v.endTime.dateTime.tm_year+1900, v.endTime.dateTime.tm_mon +1 , v.endTime.dateTime.tm_mday) != 0)
+    {
+        /*Codes_SRS_AGENT_TYPE_SYSTEM_99_092:[ The structure shall be validated to be conforming to OData specifications (odata-abnf-construction-rules, 2013), and if found invalid, AGENT_DATA_TYPES_INVALID_ARG shall be returned.]*/
+        result = AGENT_DATA_TYPES_INVALID_ARG; 
+    }
+    else if (AGENT_DATA_TYPES_OK != (result = ValidateTimeAndTimezone(&v.beginTime)))
+    {
+        ;
+    }
+    else if (AGENT_DATA_TYPES_OK != (result = ValidateTimeAndTimezone(&v.endTime)))
+    {
+        ;
+    }
+    else
+    {
+        agentData->type = EDM_TIMESPAN_TYPE;
+        agentData->value.edmTimespan = v;
+        result = AGENT_DATA_TYPES_OK;
+    }
+    return result;
+}
+
 
 /*Codes_SRS_AGENT_TYPE_SYSTEM_99_094:[ Creates and AGENT_DATA_TYPE containing a EDM_GUID from an EDM_GUID]*/
 AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_GUID(AGENT_DATA_TYPE* agentData, EDM_GUID v)
@@ -294,6 +349,42 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_BINARY(AGENT_DATA_TYPE* 
                 LogError("result = %s", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
             }
         }
+    }
+    return result;
+}
+
+AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_DURATION(AGENT_DATA_TYPE* agentData, EDM_DURATION v)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    /*Codes_SRS_AGENT_TYPE_SYSTEM_99_013:[ All the Create_... functions shall check their parameters for validity. When an invalid parameter is detected, a code of AGENT_DATA_TYPES_INVALID_ARG shall be returned ].*/
+    if (agentData == NULL)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+    }
+    else
+    {
+        agentData->type = EDM_DURATION_TYPE;
+        agentData->value.edmDuration = v;
+        result = AGENT_DATA_TYPES_OK;
+    }
+    return result;
+}
+
+AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT(AGENT_DATA_TYPE* agentData, EDM_GEOGRAPHY_POINT v)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    /*Codes_SRS_AGENT_TYPE_SYSTEM_99_013:[ All the Create_... functions shall check their parameters for validity. When an invalid parameter is detected, a code of AGENT_DATA_TYPES_INVALID_ARG shall be returned ].*/
+    if (agentData == NULL)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+    }
+    else
+    {
+        agentData->type = EDM_GEOGRAPHY_POINT_TYPE;
+        agentData->value.edmGeographyPoint = v;
+        result = AGENT_DATA_TYPES_OK;
     }
     return result;
 }
@@ -992,8 +1083,7 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_FLOAT(AGENT_DATA_TYPE* agent
 
 const char hexToASCII[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-/*create an AGENT_DATA_TYPE from ANSI zero terminated string*/
-AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_charz(AGENT_DATA_TYPE* agentData, const char* v)
+AGENT_DATA_TYPES_RESULT CreateStringAgentData(AGENT_DATA_TYPE* agentData, const char* v, AGENT_DATA_TYPE_TYPE agentDataType, EDM_STRING *edmString)
 {
     AGENT_DATA_TYPES_RESULT result = AGENT_DATA_TYPES_OK;
     /*Codes_SRS_AGENT_TYPE_SYSTEM_99_013:[ All the Create_... functions shall check their parameters for validity. When an invalid parameter is detected, a code of AGENT_DATA_TYPES_INVALID_ARG shall be returned ].*/
@@ -1010,52 +1100,37 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_charz(AGENT_DATA_TYPE* agent
     else
     {
         /*Codes_SRS_AGENT_TYPE_SYSTEM_99_049:[ Creates an AGENT_DATA_TYPE containing an EDM_STRING from an ASCII zero terminated string.]*/
-        agentData->type = EDM_STRING_TYPE;
-        if (mallocAndStrcpy_s(&agentData->value.edmString.chars, v) != 0)
+        agentData->type = agentDataType;
+        if (mallocAndStrcpy_s(&edmString->chars, v) != 0)
         {
             result = AGENT_DATA_TYPES_ERROR;
             LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
         }
         else
         {
-            agentData->value.edmString.length = strlen(agentData->value.edmString.chars);
+            edmString->length = strlen(edmString->chars);
             result = AGENT_DATA_TYPES_OK;
         }
     }
     return result;
 }
 
+/*create an AGENT_DATA_TYPE from ANSI zero terminated string*/
+AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_charz(AGENT_DATA_TYPE* agentData, const char* v)
+{
+    return CreateStringAgentData(agentData, v, EDM_STRING_TYPE, &agentData->value.edmString);
+}
+
 /*create an AGENT_DATA_TYPE from ANSI zero terminated string (without quotes) */
 AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_charz_no_quotes(AGENT_DATA_TYPE* agentData, const char* v)
 {
-    AGENT_DATA_TYPES_RESULT result = AGENT_DATA_TYPES_OK;
-    /*Codes_SRS_AGENT_TYPE_SYSTEM_99_013:[ All the Create_... functions shall check their parameters for validity. When an invalid parameter is detected, a code of AGENT_DATA_TYPES_INVALID_ARG shall be returned ].*/
-    if (agentData == NULL)
-    {
-        result = AGENT_DATA_TYPES_INVALID_ARG;
-        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-    }
-    else if (v == NULL)
-    {
-        result = AGENT_DATA_TYPES_INVALID_ARG;
-        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-    }
-    else
-    {
-        /* Codes_SRS_AGENT_TYPE_SYSTEM_01_001: [Creates an AGENT_DATA_TYPE containing an EDM_STRING from an ASCII zero terminated string.] */
-        agentData->type = EDM_STRING_NO_QUOTES_TYPE;
-        if (mallocAndStrcpy_s(&agentData->value.edmStringNoQuotes.chars, v) != 0)
-        {
-            result = AGENT_DATA_TYPES_ERROR;
-            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-        }
-        else
-        {
-            agentData->value.edmStringNoQuotes.length = strlen(agentData->value.edmStringNoQuotes.chars);
-            result = AGENT_DATA_TYPES_OK;
-        }
-    }
-    return result;
+    return CreateStringAgentData(agentData, v, EDM_STRING_NO_QUOTES_TYPE, &agentData->value.edmStringNoQuotes);
+}
+
+/*create an AGENT_DATA_TYPE from ANSI zero terminated string*/
+AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_charz_secret(AGENT_DATA_TYPE* agentData, const char* v)
+{
+    return CreateStringAgentData(agentData, v, EDM_STRING_SECRET_TYPE, &agentData->value.edmStringSecret);
 }
 
 void Destroy_AGENT_DATA_TYPE(AGENT_DATA_TYPE* agentData)
@@ -1105,6 +1180,11 @@ void Destroy_AGENT_DATA_TYPE(AGENT_DATA_TYPE* agentData)
                 /*nothing to do*/
                 break;
             }
+            case(EDM_TIMESPAN_TYPE):
+            {
+                /*nothing to do*/
+                break;
+            }
             case(EDM_DECIMAL_TYPE):
             {
                 STRING_delete(agentData->value.edmDecimal.value);
@@ -1113,7 +1193,7 @@ void Destroy_AGENT_DATA_TYPE(AGENT_DATA_TYPE* agentData)
             }
             case(EDM_DURATION_TYPE):
             {
-                LogError("EDM_DURATION_TYPE not implemented");
+                /*nothing to do*/
                 break;
             }
             case(EDM_GUID_TYPE):
@@ -1164,6 +1244,15 @@ void Destroy_AGENT_DATA_TYPE(AGENT_DATA_TYPE* agentData)
                 }
                 break;
             }
+            case(EDM_STRING_SECRET_TYPE) :
+            {
+                if (agentData->value.edmStringSecret.chars != NULL)
+                {
+                    free(agentData->value.edmStringSecret.chars);
+                    agentData->value.edmStringSecret.chars = NULL;
+                }
+                break;
+            }
             case(EDM_TIME_OF_DAY_TYPE) :
             {
                 LogError("EDM_TIME_OF_DAY_TYPE not implemented");
@@ -1176,7 +1265,7 @@ void Destroy_AGENT_DATA_TYPE(AGENT_DATA_TYPE* agentData)
             }
             case(EDM_GEOGRAPHY_POINT_TYPE):
             {
-                LogError("EDM_GEOGRAPHY_POINT_TYPE not implemented");
+                /*nothing to do*/
                 break;
             }
             case(EDM_GEOGRAPHY_LINE_STRING_TYPE):
@@ -1281,6 +1370,536 @@ static char hexDigitToChar(uint8_t hexDigit)
 {
     if (hexDigit < 10) return '0' + hexDigit;
     else return ('A' - 10) + hexDigit;
+}
+
+// EDM_DURATION_FIELD members must come in same order as edmDurationCharacters.  It also
+// MUST be in the same order as specified by the ABNF in the spec
+typedef enum EDM_DURATION_FIELD_TAG
+{
+    EDM_DURATION_FIELD_INITIAL,
+    EDM_DURATION_FIELD_DAYS,
+    EDM_DURATION_FIELD_TIME,
+    EDM_DURATION_FIELD_HOURS,
+    EDM_DURATION_FIELD_MINUTES,
+    EDM_DURATION_FIELD_SECONDS_DECIMAL,
+    EDM_DURATION_FIELD_SECONDS_MARKER,
+} EDM_DURATION_FIELD;
+
+#define edmDurationInitial 'P'
+#define edmDurationDays 'D'
+#define edmDurationTime 'T'
+#define edmDurationHours 'H'
+#define edmDurationMinutes 'M'
+#define edmDurationSecondsDecimal '.'
+#define edmDurationSecondsMarker 'S'
+
+// Characters - in expected order (assuming they're set) of durationValue
+static const char edmDurationCharacters[] = 
+{
+    edmDurationInitial, 
+    edmDurationDays, 
+    edmDurationTime, 
+    edmDurationHours, 
+    edmDurationMinutes, 
+    edmDurationSecondsDecimal, 
+    edmDurationSecondsMarker
+};
+
+int AddDurationField(STRING_HANDLE destination, int value, const char fieldType)
+{
+    char tempBuf[MAX_LONG_STRING_LENGTH + 1];
+
+    if (0 == sprintf_s(tempBuf, sizeof(tempBuf), "%d%c", value, fieldType) ||
+        (STRING_concat(destination, tempBuf) != 0))
+    {
+        LogError("Unable to add destination field for field type <%c>", fieldType);
+        return 0;
+    }
+
+    return 1;
+}
+
+// AddDurationField adds a laber (e.g. 12D) for current value and field type
+int AddDurationFieldIfNeeded(STRING_HANDLE destination, int value, const char fieldType)
+{
+    if (value == 0)
+    {
+        return 1;
+    }
+
+    return AddDurationField(destination, value, fieldType);
+}
+
+AGENT_DATA_TYPES_RESULT DurationType_ToString(STRING_HANDLE destination, const EDM_DURATION* edmDuration)
+{
+    // Build up string in temporary buffer
+    char fieldBuffer[2];
+
+    if (STRING_concat(destination, "\"") != 0)
+    {
+        LogError("STRING_concat on duration type opening quote failed");
+        return AGENT_DATA_TYPES_ERROR;
+    }
+
+    if (edmDuration->edmDurationSign == EDM_DURATION_SIGN_NEGATIVE)
+    {
+        if (STRING_concat(destination, "-") != 0)
+        {
+            LogError("STRING_concat on duration type '-' failed");
+            return AGENT_DATA_TYPES_ERROR;
+        }
+    }
+
+    if ((sprintf_s(fieldBuffer, sizeof(fieldBuffer), "%c", edmDurationInitial) < 0) ||
+        (STRING_concat(destination, fieldBuffer) != 0))
+    {
+        LogError("unable to add initial char to duration string");
+        return AGENT_DATA_TYPES_ERROR;
+    }
+
+    if ((0 == edmDuration->days) && (0 == edmDuration->hours) && (0 == edmDuration->minutes) && (0 == edmDuration->seconds))
+    {
+        // If we have 0 duration, by convention we will send back "PT0S".
+        if ((sprintf_s(fieldBuffer, sizeof(fieldBuffer), "%c", edmDurationTime) < 0) ||
+            (STRING_concat(destination, fieldBuffer) != 0))
+        {
+            LogError("unable to add Time char to duration string");
+            return AGENT_DATA_TYPES_ERROR;
+        }
+    
+        if (AddDurationField(destination, 0, edmDurationSecondsMarker) == 0)
+        {
+            LogError("Cannot add duration field <%c>", edmDurationSecondsMarker);
+            return AGENT_DATA_TYPES_ERROR;
+        }
+    }
+    else
+    {
+        if (AddDurationFieldIfNeeded(destination, edmDuration->days, edmDurationDays) == 0)
+        {
+            LogError("Cannot add duration field <%c>", edmDurationDays);
+            return AGENT_DATA_TYPES_ERROR;
+        }
+
+        if ((edmDuration->hours != 0) || (edmDuration->minutes != 0) || (edmDuration->seconds != 0))
+        {
+            if ((sprintf_s(fieldBuffer, sizeof(fieldBuffer), "%c", edmDurationTime) < 0) ||
+                (STRING_concat(destination, fieldBuffer) != 0))
+            {
+                LogError("unable to add Time char to duration string");
+                return AGENT_DATA_TYPES_ERROR;
+            }
+        }
+
+        if (AddDurationFieldIfNeeded(destination, edmDuration->hours, edmDurationHours) == 0)
+        {
+            LogError("Cannot add duration field <%c>", edmDurationHours);
+            return AGENT_DATA_TYPES_ERROR;
+        }
+
+        if (AddDurationFieldIfNeeded(destination, edmDuration->minutes, edmDurationMinutes) == 0)
+        {
+            LogError("Cannot add duration field <%c>", edmDurationMinutes);
+            return AGENT_DATA_TYPES_ERROR;
+        }
+
+        if (edmDuration->seconds != 0)
+        {
+            char floatBuffer[MAX_FLOATING_POINT_STRING_LENGTH + 2];
+            if (sprintf_s(floatBuffer, sizeof(floatBuffer), "%.*g%c", FLT_DIG, edmDuration->seconds, edmDurationSecondsMarker) < 0)
+            {
+                LogError("sprintf_s() for seconds (seconds=<%s>) failed, errno=<%d>", edmDuration->seconds, errno);
+                return AGENT_DATA_TYPES_ERROR;
+            }
+
+            if (STRING_concat(destination, floatBuffer) != 0)
+            {
+                LogError("STRING_concat failed building duration seconds field");
+                return AGENT_DATA_TYPES_ERROR;
+            }
+        }
+    }
+
+    if (STRING_concat(destination, "\"") != 0)
+    {
+        LogError("STRING_concat on duration type closing quote failed");
+        return AGENT_DATA_TYPES_ERROR;
+    }
+
+    return AGENT_DATA_TYPES_OK;
+}
+
+AGENT_DATA_TYPES_RESULT GeographyPointType_ToString(STRING_HANDLE destination, const EDM_GEOGRAPHY_POINT* edmGeographyPoint)
+{
+    char geoBuffer[2 * MAX_FLOATING_POINT_STRING_LENGTH + 2];
+
+    if (sprintf_s(geoBuffer, sizeof(geoBuffer), "\"%.*g %.*g", FLT_DIG, edmGeographyPoint->longitude, FLT_DIG, edmGeographyPoint->latitude) < 0)
+    {
+        LogError("sprintf_s() fails creating lat/long buffer, errno=<%d>", errno);
+        return AGENT_DATA_TYPES_ERROR;
+    }
+
+    if (STRING_concat(destination, geoBuffer) != 0)
+    {
+        LogError("STRING_concat failed adding lat/long data");
+        return AGENT_DATA_TYPES_ERROR;
+    }
+
+    if (edmGeographyPoint->altitudeSet == true)
+    {
+        if (sprintf_s(geoBuffer, sizeof(geoBuffer), " %.*g", FLT_DIG, edmGeographyPoint->altitude) < 0)
+        {
+            LogError("sprintf_s() fails creating lat/long buffer, errno=<%d>", errno);
+            return AGENT_DATA_TYPES_ERROR;
+        }
+
+        if (STRING_concat(destination, geoBuffer) != 0)
+        {
+            LogError("STRING_concat failed adding lat/long data");
+            return AGENT_DATA_TYPES_ERROR;
+        }    
+    }
+
+    if (STRING_concat(destination, "\"") != 0)
+    {
+        LogError("STRING_concat on geography point closing quote failed");
+        return AGENT_DATA_TYPES_ERROR;
+    }
+
+    return AGENT_DATA_TYPES_OK;
+}
+
+AGENT_DATA_TYPES_RESULT StringType_ToString(STRING_HANDLE destination, const EDM_STRING* edmString)
+{
+    size_t i;
+    size_t nControlCharacters = 0; /*counts how many characters are to be expanded from 1 character to \uxxxx (6 characters)*/
+    size_t nEscapeCharacters = 0;
+    size_t vlen = edmString->length;
+    char* v = edmString->chars;
+
+    AGENT_DATA_TYPES_RESULT result;
+
+    for (i = 0; i < vlen; i++)
+    {
+        if ((unsigned char)v[i] >= 128) /*this be a UNICODE character begin*/
+        {
+            break;
+        }
+        else
+        {
+            if (v[i] <= 0x1F)
+            {
+                nControlCharacters++;
+            }
+            else if (
+                (v[i] == '"') ||
+                (v[i] == '\\') ||
+                (v[i] == '/')
+                )
+            {
+                nEscapeCharacters++;
+            }
+        }
+    }
+
+    if (i < vlen)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG; /*don't handle those who do not copy bit by bit to UTF8*/
+        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+    }
+    else
+    {
+        /*forward parse the string to scan for " and for \ that in JSON are \" respectively \\*/
+        size_t tempBufferSize = vlen + 5 * nControlCharacters + nEscapeCharacters + 3 + 1;
+        char* tempBuffer = (char*)malloc(tempBufferSize);
+        if (tempBuffer == NULL)
+        {
+            result = AGENT_DATA_TYPES_ERROR;
+            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+        }
+        else
+        {
+            size_t w = 0;
+            tempBuffer[w++] = '"';
+            for (i = 0; i < vlen; i++)
+            {
+                if (v[i] <= 0x1F)
+                {
+                    tempBuffer[w++] = '\\';
+                    tempBuffer[w++] = 'u';
+                    tempBuffer[w++] = '0';
+                    tempBuffer[w++] = '0';
+                    tempBuffer[w++] = hexToASCII[(v[i] & 0xF0) >> 4]; /*high nibble*/
+                    tempBuffer[w++] = hexToASCII[v[i] & 0x0F]; /*lowNibble nibble*/
+                }
+                else if (v[i] == '"')
+                {
+                    tempBuffer[w++] = '\\';
+                    tempBuffer[w++] = '"';
+                }
+                else if (v[i] == '\\')
+                {
+                    tempBuffer[w++] = '\\';
+                    tempBuffer[w++] = '\\';
+                }
+                else if (v[i] == '/')
+                {
+                    tempBuffer[w++] = '\\';
+                    tempBuffer[w++] = '/';
+                }
+                else
+                {
+                    tempBuffer[w++] = v[i];
+                }
+            }
+
+#ifdef _MSC_VER
+#pragma warning(suppress: 6386) /* The test Create_AGENT_DATA_TYPE_from_charz_With_2_Slashes_Succeeds verifies that Code Analysis is wrong here */
+#endif
+            tempBuffer[w] = '"';
+            /*zero terminating it*/
+            tempBuffer[vlen + 5 * nControlCharacters + nEscapeCharacters + 3 - 1] = '\0';
+
+            if (STRING_concat(destination, tempBuffer) != 0)
+            {
+                result = AGENT_DATA_TYPES_ERROR;
+                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+            }
+            else
+            {
+                result = AGENT_DATA_TYPES_OK;
+            }
+
+            free(tempBuffer);
+        }
+    }
+
+    return result;
+}
+
+AGENT_DATA_TYPES_RESULT DateTimeOffset_ToString(STRING_HANDLE destination, const EDM_DATE_TIME_OFFSET* edmDateTimeOffset)
+{
+    AGENT_DATA_TYPES_RESULT result;
+
+    /*Codes_SRS_AGENT_TYPE_SYSTEM_99_019:[ EDM_DATETIMEOFFSET: dateTimeOffsetValue = year "-" month "-" day "T" hour ":" minute [ ":" second [ "." fractionalSeconds ] ] ( "Z" / sign hour ":" minute )]*/
+    /*from ABNF seems like these numbers HAVE to be padded with zeroes*/
+    if (edmDateTimeOffset->hasTimeZone)
+    {
+        if (edmDateTimeOffset->hasFractionalSecond)
+        {
+            size_t tempBufferSize = MAX_LONG_STRING_LENGTH + // %.4d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // T
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // .
+                MAX_ULONG_LONG_STRING_LENGTH + // %.12llu
+                1 + MAX_LONG_STRING_LENGTH + // %+.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1;  // " (terminating NULL);
+
+            char* tempBuffer = (char*)malloc(tempBufferSize);
+            if (tempBuffer == NULL)
+            {
+                result = AGENT_DATA_TYPES_ERROR;
+                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+            }
+            else
+            {
+                if (sprintf_s(tempBuffer, tempBufferSize, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.12llu%+.2d:%.2d", /*+ in printf forces the sign to appear*/
+                    edmDateTimeOffset->dateTime.tm_year+1900,
+                    edmDateTimeOffset->dateTime.tm_mon+1,
+                    edmDateTimeOffset->dateTime.tm_mday,
+                    edmDateTimeOffset->dateTime.tm_hour,
+                    edmDateTimeOffset->dateTime.tm_min,
+                    edmDateTimeOffset->dateTime.tm_sec,
+                    edmDateTimeOffset->fractionalSecond,
+                    edmDateTimeOffset->timeZoneHour,
+                    edmDateTimeOffset->timeZoneMinute) < 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (STRING_concat(destination, tempBuffer) != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else
+                {
+                    result = AGENT_DATA_TYPES_OK;
+                }
+
+                // Clean up temp buffer if allocated
+                free(tempBuffer);
+            }
+        }
+        else
+        {
+            size_t tempBufferSize = MAX_LONG_STRING_LENGTH + // %.4d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // T
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + MAX_LONG_STRING_LENGTH + // %+.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1; // " terminating NULL
+            char* tempBuffer = (char*)malloc(tempBufferSize);
+
+            if (tempBuffer == NULL)
+            {
+                result = AGENT_DATA_TYPES_ERROR;
+                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+            }
+            else
+            {
+                if (sprintf_s(tempBuffer, tempBufferSize, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d%+.2d:%.2d", /*+ in printf forces the sign to appear*/
+                    edmDateTimeOffset->dateTime.tm_year + 1900,
+                    edmDateTimeOffset->dateTime.tm_mon+1,
+                    edmDateTimeOffset->dateTime.tm_mday,
+                    edmDateTimeOffset->dateTime.tm_hour,
+                    edmDateTimeOffset->dateTime.tm_min,
+                    edmDateTimeOffset->dateTime.tm_sec,
+                    edmDateTimeOffset->timeZoneHour,
+                    edmDateTimeOffset->timeZoneMinute) < 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (STRING_concat(destination, tempBuffer) != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else
+                {
+                    result = AGENT_DATA_TYPES_OK;
+                }
+
+                // Clean up temp buffer if allocated
+                free(tempBuffer);
+            }
+        }
+    }
+    else
+    {
+        if (edmDateTimeOffset->hasFractionalSecond)
+        {
+            size_t tempBufferSize = MAX_LONG_STRING_LENGTH + // %.4d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // T
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // .
+                MAX_ULONG_LONG_STRING_LENGTH + // %.12llu
+                1 + // Z
+                1; // " (terminating NULL)
+            char* tempBuffer = (char*)malloc(tempBufferSize);
+
+            if (tempBuffer == NULL)
+            {
+                result = AGENT_DATA_TYPES_ERROR;
+                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+            }
+            else
+            {
+                if (sprintf_s(tempBuffer, tempBufferSize, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.12lluZ", /*+ in printf forces the sign to appear*/
+                    edmDateTimeOffset->dateTime.tm_year + 1900,
+                    edmDateTimeOffset->dateTime.tm_mon+1,
+                    edmDateTimeOffset->dateTime.tm_mday,
+                    edmDateTimeOffset->dateTime.tm_hour,
+                    edmDateTimeOffset->dateTime.tm_min,
+                    edmDateTimeOffset->dateTime.tm_sec,
+                    edmDateTimeOffset->fractionalSecond) < 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (STRING_concat(destination, tempBuffer) != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else
+                {
+                    result = AGENT_DATA_TYPES_OK;
+                }
+
+                free(tempBuffer);
+            }
+        }
+        else
+        {
+            size_t tempBufferSize = MAX_LONG_STRING_LENGTH + // %.4d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // -
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // T
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // :
+                MAX_LONG_STRING_LENGTH + // %.2d
+                1 + // Z
+                1; // " (terminating null);
+
+            char* tempBuffer = (char*)malloc(tempBufferSize);
+
+            if (tempBuffer == NULL)
+            {
+                result = AGENT_DATA_TYPES_ERROR;
+                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+            }
+            else
+            {
+                if (sprintf_s(tempBuffer, tempBufferSize, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2dZ",
+                    edmDateTimeOffset->dateTime.tm_year + 1900,
+                    edmDateTimeOffset->dateTime.tm_mon+1,
+                    edmDateTimeOffset->dateTime.tm_mday,
+                    edmDateTimeOffset->dateTime.tm_hour,
+                    edmDateTimeOffset->dateTime.tm_min,
+                    edmDateTimeOffset->dateTime.tm_sec) < 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (STRING_concat(destination, tempBuffer) != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else
+                {
+                    result = AGENT_DATA_TYPES_OK;
+                }
+
+                free(tempBuffer);
+            }
+        }
+    }
+
+    return result;
 }
 
 AGENT_DATA_TYPES_RESULT AgentDataTypes_ToString(STRING_HANDLE destination, const AGENT_DATA_TYPE* value)
@@ -1427,230 +2046,55 @@ AGENT_DATA_TYPES_RESULT AgentDataTypes_ToString(STRING_HANDLE destination, const
             }
             case (EDM_DATE_TIME_OFFSET_TYPE):
             {
-                /*Codes_SRS_AGENT_TYPE_SYSTEM_99_019:[ EDM_DATETIMEOFFSET: dateTimeOffsetValue = year "-" month "-" day "T" hour ":" minute [ ":" second [ "." fractionalSeconds ] ] ( "Z" / sign hour ":" minute )]*/
-                /*from ABNF seems like these numbers HAVE to be padded with zeroes*/
-                if (value->value.edmDateTimeOffset.hasTimeZone)
+                if (STRING_concat(destination, "\"") != 0)
                 {
-                    if (value->value.edmDateTimeOffset.hasFractionalSecond)
-                    {
-                        size_t tempBufferSize = 1 + // \"
-                            MAX_LONG_STRING_LENGTH + // %.4d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // T
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // .
-                            MAX_ULONG_LONG_STRING_LENGTH + // %.12llu
-                            1 + MAX_LONG_STRING_LENGTH + // %+.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + //\"
-                            1;  // " (terminating NULL);
-
-                        char* tempBuffer = (char*)malloc(tempBufferSize);
-                        if (tempBuffer == NULL)
-                        {
-                            result = AGENT_DATA_TYPES_ERROR;
-                            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                        }
-                        else
-                        {
-                            if (sprintf_s(tempBuffer, tempBufferSize, "\"%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.12llu%+.2d:%.2d\"", /*+ in printf forces the sign to appear*/
-                                value->value.edmDateTimeOffset.dateTime.tm_year+1900,
-                                value->value.edmDateTimeOffset.dateTime.tm_mon+1,
-                                value->value.edmDateTimeOffset.dateTime.tm_mday,
-                                value->value.edmDateTimeOffset.dateTime.tm_hour,
-                                value->value.edmDateTimeOffset.dateTime.tm_min,
-                                value->value.edmDateTimeOffset.dateTime.tm_sec,
-                                value->value.edmDateTimeOffset.fractionalSecond,
-                                value->value.edmDateTimeOffset.timeZoneHour,
-                                value->value.edmDateTimeOffset.timeZoneMinute) < 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else if (STRING_concat(destination, tempBuffer) != 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else
-                            {
-                                result = AGENT_DATA_TYPES_OK;
-                            }
-
-                            // Clean up temp buffer if allocated
-                            free(tempBuffer);
-                        }
-                    }
-                    else
-                    {
-                        size_t tempBufferSize = 1 + // \"
-                            MAX_LONG_STRING_LENGTH + // %.4d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // T
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + MAX_LONG_STRING_LENGTH + // %+.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // \"
-                            1; // " terminating NULL
-                        char* tempBuffer = (char*)malloc(tempBufferSize);
-
-                        if (tempBuffer == NULL)
-                        {
-                            result = AGENT_DATA_TYPES_ERROR;
-                            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                        }
-                        else
-                        {
-                            if (sprintf_s(tempBuffer, tempBufferSize, "\"%.4d-%.2d-%.2dT%.2d:%.2d:%.2d%+.2d:%.2d\"", /*+ in printf forces the sign to appear*/
-                                value->value.edmDateTimeOffset.dateTime.tm_year + 1900,
-                                value->value.edmDateTimeOffset.dateTime.tm_mon+1,
-                                value->value.edmDateTimeOffset.dateTime.tm_mday,
-                                value->value.edmDateTimeOffset.dateTime.tm_hour,
-                                value->value.edmDateTimeOffset.dateTime.tm_min,
-                                value->value.edmDateTimeOffset.dateTime.tm_sec,
-                                value->value.edmDateTimeOffset.timeZoneHour,
-                                value->value.edmDateTimeOffset.timeZoneMinute) < 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else if (STRING_concat(destination, tempBuffer) != 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else
-                            {
-                                result = AGENT_DATA_TYPES_OK;
-                            }
-
-                            // Clean up temp buffer if allocated
-                            free(tempBuffer);
-                        }
-                    }
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (AGENT_DATA_TYPES_OK != (result = DateTimeOffset_ToString(destination, &value->value.edmDateTimeOffset)))
+                {
+                    ;
+                }
+                else if (STRING_concat(destination, "\"") != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
                 }
                 else
                 {
-                    if (value->value.edmDateTimeOffset.hasFractionalSecond)
-                    {
-                        size_t tempBufferSize = 1 + //\"
-                            MAX_LONG_STRING_LENGTH + // %.4d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // T
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // .
-                            MAX_ULONG_LONG_STRING_LENGTH + // %.12llu
-                            1 + // Z
-                            1 + // \"
-                            1; // " (terminating NULL)
-                        char* tempBuffer = (char*)malloc(tempBufferSize);
-
-                        if (tempBuffer == NULL)
-                        {
-                            result = AGENT_DATA_TYPES_ERROR;
-                            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                        }
-                        else
-                        {
-                            if (sprintf_s(tempBuffer, tempBufferSize, "\"%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.12lluZ\"", /*+ in printf forces the sign to appear*/
-                                value->value.edmDateTimeOffset.dateTime.tm_year + 1900,
-                                value->value.edmDateTimeOffset.dateTime.tm_mon+1,
-                                value->value.edmDateTimeOffset.dateTime.tm_mday,
-                                value->value.edmDateTimeOffset.dateTime.tm_hour,
-                                value->value.edmDateTimeOffset.dateTime.tm_min,
-                                value->value.edmDateTimeOffset.dateTime.tm_sec,
-                                value->value.edmDateTimeOffset.fractionalSecond) < 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else if (STRING_concat(destination, tempBuffer) != 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else
-                            {
-                                result = AGENT_DATA_TYPES_OK;
-                            }
-
-                            free(tempBuffer);
-                        }
-                    }
-                    else
-                    {
-                        size_t tempBufferSize = 1 + // \"
-                            MAX_LONG_STRING_LENGTH + // %.4d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // -
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // T
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // :
-                            MAX_LONG_STRING_LENGTH + // %.2d
-                            1 + // Z
-                            1 + // \"
-                            1; // " (terminating null);
-
-                        char* tempBuffer = (char*)malloc(tempBufferSize);
-
-                        if (tempBuffer == NULL)
-                        {
-                            result = AGENT_DATA_TYPES_ERROR;
-                            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                        }
-                        else
-                        {
-                            if (sprintf_s(tempBuffer, tempBufferSize, "\"%.4d-%.2d-%.2dT%.2d:%.2d:%.2dZ\"",
-                                value->value.edmDateTimeOffset.dateTime.tm_year + 1900,
-                                value->value.edmDateTimeOffset.dateTime.tm_mon+1,
-                                value->value.edmDateTimeOffset.dateTime.tm_mday,
-                                value->value.edmDateTimeOffset.dateTime.tm_hour,
-                                value->value.edmDateTimeOffset.dateTime.tm_min,
-                                value->value.edmDateTimeOffset.dateTime.tm_sec) < 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else if (STRING_concat(destination, tempBuffer) != 0)
-                            {
-                                result = AGENT_DATA_TYPES_ERROR;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else
-                            {
-                                result = AGENT_DATA_TYPES_OK;
-                            }
-
-                            free(tempBuffer);
-                        }
-                    }
+                    result = AGENT_DATA_TYPES_OK;
+                }
+                break;
+            }
+            case (EDM_TIMESPAN_TYPE):
+            {
+                const char* timeSpanDelimeter = "/";
+                if (STRING_concat(destination, "\"") != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (AGENT_DATA_TYPES_OK != (result = DateTimeOffset_ToString(destination, &value->value.edmTimespan.beginTime)))
+                {
+                    LogError("DateTimeOffset_ToString failed processing timespan, result=<%s>", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (STRING_concat(destination, timeSpanDelimeter) != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (AGENT_DATA_TYPES_OK != (result = DateTimeOffset_ToString(destination, &value->value.edmTimespan.endTime)))
+                {
+                    LogError("DateTimeOffset_ToString failed processing timespan, result=<%s>", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else if (STRING_concat(destination, "\"") != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else
+                {
+                    result = AGENT_DATA_TYPES_OK;
                 }
                 break;
             }
@@ -1827,107 +2271,12 @@ AGENT_DATA_TYPES_RESULT AgentDataTypes_ToString(STRING_HANDLE destination, const
             }
             case (EDM_STRING_TYPE):
             {
-                size_t i;
-                size_t nControlCharacters = 0; /*counts how many characters are to be expanded from 1 character to \uxxxx (6 characters)*/
-                size_t nEscapeCharacters = 0;
-                size_t vlen = value->value.edmString.length;
-                char* v = value->value.edmString.chars;
-
-                for (i = 0; i < vlen; i++)
-                {
-                    if ((unsigned char)v[i] >= 128) /*this be a UNICODE character begin*/
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        if (v[i] <= 0x1F)
-                        {
-                            nControlCharacters++;
-                        }
-                        else if (
-                            (v[i] == '"') ||
-                            (v[i] == '\\') ||
-                            (v[i] == '/')
-                            )
-                        {
-                            nEscapeCharacters++;
-                        }
-                    }
-                }
-
-                if (i < vlen)
-                {
-                    result = AGENT_DATA_TYPES_INVALID_ARG; /*don't handle those who do not copy bit by bit to UTF8*/
-                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                }
-                else
-                {
-                    /*forward parse the string to scan for " and for \ that in JSON are \" respectively \\*/
-                    size_t tempBufferSize = vlen + 5 * nControlCharacters + nEscapeCharacters + 3 + 1;
-                    char* tempBuffer = (char*)malloc(tempBufferSize);
-                    if (tempBuffer == NULL)
-                    {
-                        result = AGENT_DATA_TYPES_ERROR;
-                        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                    }
-                    else
-                    {
-                        size_t w = 0;
-                        tempBuffer[w++] = '"';
-                        for (i = 0; i < vlen; i++)
-                        {
-                            if (v[i] <= 0x1F)
-                            {
-                                tempBuffer[w++] = '\\';
-                                tempBuffer[w++] = 'u';
-                                tempBuffer[w++] = '0';
-                                tempBuffer[w++] = '0';
-                                tempBuffer[w++] = hexToASCII[(v[i] & 0xF0) >> 4]; /*high nibble*/
-                                tempBuffer[w++] = hexToASCII[v[i] & 0x0F]; /*lowNibble nibble*/
-                            }
-                            else if (v[i] == '"')
-                            {
-                                tempBuffer[w++] = '\\';
-                                tempBuffer[w++] = '"';
-                            }
-                            else if (v[i] == '\\')
-                            {
-                                tempBuffer[w++] = '\\';
-                                tempBuffer[w++] = '\\';
-                            }
-                            else if (v[i] == '/')
-                            {
-                                tempBuffer[w++] = '\\';
-                                tempBuffer[w++] = '/';
-                            }
-                            else
-                            {
-                                tempBuffer[w++] = v[i];
-                            }
-                        }
-
-#ifdef _MSC_VER
-#pragma warning(suppress: 6386) /* The test Create_AGENT_DATA_TYPE_from_charz_With_2_Slashes_Succeeds verifies that Code Analysis is wrong here */
-#endif
-                        tempBuffer[w] = '"';
-                        /*zero terminating it*/
-                        tempBuffer[vlen + 5 * nControlCharacters + nEscapeCharacters + 3 - 1] = '\0';
-
-                        if (STRING_concat(destination, tempBuffer) != 0)
-                        {
-                            result = AGENT_DATA_TYPES_ERROR;
-                            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                        }
-                        else
-                        {
-                            result = AGENT_DATA_TYPES_OK;
-                        }
-
-                        free(tempBuffer);
-                    }
-                }
-
+                result = StringType_ToString(destination, &value->value.edmString);
+                break;
+            }
+            case (EDM_STRING_SECRET_TYPE):
+            {
+                result = StringType_ToString(destination, &value->value.edmStringSecret);
                 break;
             }
 
@@ -2305,6 +2654,18 @@ AGENT_DATA_TYPES_RESULT AgentDataTypes_ToString(STRING_HANDLE destination, const
                 }
                 break;
             }
+
+            case(EDM_DURATION_TYPE):
+            {
+                result = DurationType_ToString(destination, &value->value.edmDuration);
+                break;
+            }
+
+            case(EDM_GEOGRAPHY_POINT_TYPE):
+            {
+                result = GeographyPointType_ToString(destination, &value->value.edmGeographyPoint);
+                break;
+            }
         }
     }
     return result;
@@ -2448,6 +2809,13 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_AGENT_DATA_TYPE(AGENT_DATA_T
                 result = AGENT_DATA_TYPES_OK;
                 break;
             }
+            case(EDM_TIMESPAN_TYPE) :
+            {
+                dest->type = src->type;
+                dest->value.edmTimespan = src->value.edmTimespan;
+                result = AGENT_DATA_TYPES_OK;
+                break;
+            }
             case(EDM_DECIMAL_TYPE) :
             {
                 if ((dest->value.edmDecimal.value = STRING_clone(src->value.edmDecimal.value)) == NULL)
@@ -2472,8 +2840,9 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_AGENT_DATA_TYPE(AGENT_DATA_T
             }
             case(EDM_DURATION_TYPE) :
             {
-                result = AGENT_DATA_TYPES_NOT_IMPLEMENTED;
-                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                dest->type = src->type;
+                dest->value.edmDuration = src->value.edmDuration;
+                result = AGENT_DATA_TYPES_OK;
                 break;
             }
             case(EDM_GUID_TYPE) :
@@ -2581,6 +2950,23 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_AGENT_DATA_TYPE(AGENT_DATA_T
                 }
                 break;
             }
+            case(EDM_STRING_SECRET_TYPE) :
+            {
+                dest->type = src->type;
+                dest->value.edmStringSecret.length = src->value.edmStringSecret.length;
+                if (mallocAndStrcpy_s((char**)&(dest->value.edmStringSecret.chars), (char*)src->value.edmStringSecret.chars) != 0)
+                {
+                    result = AGENT_DATA_TYPES_ERROR;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else
+                {
+                    result = AGENT_DATA_TYPES_OK;
+                    /*all is fine*/
+                }
+                break;
+
+            }            
             case(EDM_TIME_OF_DAY_TYPE) :
             {
                 result = AGENT_DATA_TYPES_NOT_IMPLEMENTED;
@@ -2595,8 +2981,9 @@ AGENT_DATA_TYPES_RESULT Create_AGENT_DATA_TYPE_from_AGENT_DATA_TYPE(AGENT_DATA_T
             } /*not supported because what is "abstract base type"*/
             case(EDM_GEOGRAPHY_POINT_TYPE) :
             {
-                result = AGENT_DATA_TYPES_NOT_IMPLEMENTED;
-                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                dest->type = src->type;
+                dest->value.edmGeographyPoint = src->value.edmGeographyPoint ;
+                result = AGENT_DATA_TYPES_OK;
                 break;
             }
             case(EDM_GEOGRAPHY_LINE_STRING_TYPE) :
@@ -3015,6 +3402,7 @@ static int sscanfd(const char *src, int* dst)
 {
     int result;
     char* next;
+    errno = 0;
     long int temp = strtol(src, &next, 10);
     if ((src == next) || (((temp == LONG_MAX) || (temp == LONG_MIN)) && (errno != 0)))
     {
@@ -3033,6 +3421,7 @@ static int sscanfllu(const char** src, unsigned long long* dst)
 {
     int result = 1;
     char* next;
+    errno = 0;
     (*dst) = strtoull((*src), &next, 10);
     if (((*src) == (const char*)next) || (((*dst) == ULLONG_MAX) && (errno != 0)))
     {
@@ -3066,6 +3455,7 @@ static int sscanfu(const char* src, unsigned int* dst)
 {
     int result;
     char* next;
+    errno = 0;
     unsigned long int temp = strtoul(src, &next, 10);
     if ((src == next) || ((temp == ULONG_MAX) && (errno != 0)))
     {
@@ -3084,6 +3474,7 @@ static int sscanff(const char*src, float* dst)
 {
     int result = 1;
     char* next;
+    errno = 0;
     (*dst) = strtof(src, &next);
     if ((src == next) || (((*dst) == HUGE_VALF) && (errno != 0)))
     {
@@ -3097,6 +3488,7 @@ static int sscanflf(const char*src, double* dst)
 {
     int result = 1;
     char* next;
+    errno = 0;
     (*dst) = strtod(src, &next);
     if ((src == next) || (((*dst) == HUGE_VALL) && (errno != 0)))
     {
@@ -3109,7 +3501,7 @@ static int sscanflf(const char*src, double* dst)
 /*the below function replaces sscanf(src, "%03d:%02d\"", &hourOffset, &minOffset)*/
 /*return 2 if success*/
 
-static int sscanf3d2d(const char* src, int* hourOffset, int* minOffset)
+static int sscanf3d2d(const char* src, int* hourOffset, int* minOffset, size_t *charsConsumed)
 {
     size_t position = 0;
     int result = EOF;
@@ -3131,10 +3523,12 @@ static int sscanf3d2d(const char* src, int* hourOffset, int* minOffset)
         (scanAndReadNDigitsInt(src, &position, minOffset, 2) == 0)
         )
     {
+        *charsConsumed = position;
         result = 2;
     }
     else
     {
+        *charsConsumed = 0;
         result = 0;
     }
     if (isNegative)
@@ -3143,9 +3537,504 @@ static int sscanf3d2d(const char* src, int* hourOffset, int* minOffset)
     return result;
 }
 
+// Duration fields are of format of digits followed by field describing time unit, e.g. 53H.
+// scanDigitsAndReadDurationLabel reads from current position a number and field.
+static AGENT_DATA_TYPES_RESULT scanDigitsAndReadDurationLabel(const char* source, size_t* position, uint32_t *value, EDM_DURATION_FIELD *durationField)
+{
+    // First, read the integer value.  Read into a long log to begin with to detect possible oveflow.
+    unsigned long long newValue = 0;
+
+    if (! IS_DIGIT(source[*position]))
+    {
+        LogError("scanning duration for <%s> has found non-digit <%c> at position <%zu>", source, source[*position], *position);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+
+    while (IS_DIGIT(source[*position]))
+    {
+        newValue = newValue*10 + (source[*position] - '0');
+        if (newValue > UINT_MAX)
+        {
+            LogError("Integer overflow reading duration <%s> around position <%zu>", source, *position);
+            return AGENT_DATA_TYPES_INVALID_ARG;
+        }
+        (*position)++;
+    }
+    *value = (uint32_t)newValue;
+
+    // Next, read the time field describing it.
+    switch (source[*position])
+    {
+        case edmDurationDays:
+            *durationField = EDM_DURATION_FIELD_DAYS;
+            break;
+
+        case edmDurationHours:
+            *durationField = EDM_DURATION_FIELD_HOURS;
+            break;
+
+        case edmDurationMinutes:
+            *durationField = EDM_DURATION_FIELD_MINUTES;
+            break;
+
+        case edmDurationSecondsDecimal:
+            *durationField = EDM_DURATION_FIELD_SECONDS_DECIMAL;
+            break;
+
+        case edmDurationSecondsMarker:
+            *durationField = EDM_DURATION_FIELD_SECONDS_MARKER;
+            break;
+
+        default:
+            LogError("Invalid field in duratation string=<%s> at position=<%zu>, character=<%c>", source, *position, source[*position]);
+            return AGENT_DATA_TYPES_INVALID_ARG;
+            break;
+
+    }
+    (*position)++;
+
+    return AGENT_DATA_TYPES_OK;
+}
+
+typedef enum EDM_SECONDS_DECIMAL_PARSE_STATUS_TAG
+{
+    EDM_SECONDS_DECIMAL_PARSE_NOT_FOUND,
+    EDM_SECONDS_DECIMAL_PARSE_PROCESSING,
+    EDM_SECONDS_DECIMAL_PARSE_FINISHED
+}
+EDM_SECONDS_DECIMAL_PARSE_STATUS;
+
+
+AGENT_DATA_TYPES_RESULT CreateDurationData_From_String(const char* source, AGENT_DATA_TYPE* agentData)
+{
+    size_t sourceLength = strlen(source);
+    size_t currentPosition = 0;
+    size_t previousPosition = 0;
+    int sign;
+    EDM_DURATION_FIELD previousDurationField;
+    AGENT_DATA_TYPES_RESULT result;
+    EDM_SECONDS_DECIMAL_PARSE_STATUS secondsDecimalParseStatus = EDM_SECONDS_DECIMAL_PARSE_NOT_FOUND;
+    bool foundTimeField = false;
+
+    memset(&agentData->value.edmDuration, 0, sizeof(agentData->value.edmDuration));
+
+    scanOptionalSign(source, sourceLength, &currentPosition, &sign);
+    agentData->value.edmDuration.edmDurationSign = (sign == 1) ? EDM_DURATION_SIGN_POSITIVE : EDM_DURATION_SIGN_NEGATIVE;
+
+    if (currentPosition >= sourceLength)
+    { 
+        LogError("Invalid duration data <%s>", source);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    } 
+    if (source[currentPosition] != edmDurationCharacters[EDM_DURATION_FIELD_INITIAL])
+    {
+        LogError("duration string (%s) has incorrect initial field (%c), expected (%c)", source, source[currentPosition], edmDurationCharacters[EDM_DURATION_FIELD_INITIAL]);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else if (source[currentPosition+1] == 0)
+    {
+        // This case we have optional (-|+) then 'P' by itself.  Technically legal by spec, so accept it.
+        return AGENT_DATA_TYPES_OK;
+    }
+
+    previousDurationField = EDM_DURATION_FIELD_INITIAL;
+    previousPosition = currentPosition;
+    currentPosition++;
+
+    while ((source[currentPosition] != 0) && (source[currentPosition] != '\"'))
+    {
+        EDM_DURATION_FIELD currentDurationField;
+        uint32_t value;
+
+        // Special case the 'T' field, which isn't preceeded by a set of digits.
+        if (source[currentPosition] == edmDurationCharacters[EDM_DURATION_FIELD_TIME])
+        {
+            if (previousDurationField >= EDM_DURATION_FIELD_TIME)
+            {
+                LogError("duration string (%s) has illegal field <%c> before <%c>", source, edmDurationCharacters[previousDurationField], edmDurationCharacters[EDM_DURATION_FIELD_TIME]);
+                return AGENT_DATA_TYPES_INVALID_ARG;
+            }
+            foundTimeField = true;
+            currentPosition++;
+            previousDurationField = EDM_DURATION_FIELD_TIME;
+            continue;
+        }
+
+        result = scanDigitsAndReadDurationLabel(source, &currentPosition, &value, &currentDurationField);
+        if (result != AGENT_DATA_TYPES_OK)
+        {
+            LogError("duration string (%s) failed processing digits and duration", source);
+            return result;
+        }
+
+        // The days, hours, minutes, seconds fields cannot come in arbitrary order (e.g. seconds before minutes).
+        // Because the enum field is ordered in same as the spec, we can just do simple <= check for validity.
+        if (currentDurationField <= previousDurationField)
+        {
+            LogError("duration string (%s) has incorrect field (%c), it may not follow (%c)", 
+                      source, edmDurationCharacters[currentDurationField], edmDurationCharacters[previousDurationField]);
+            return AGENT_DATA_TYPES_INVALID_ARG;
+        }
+        if (currentDurationField > EDM_DURATION_FIELD_TIME && !foundTimeField)
+        {
+            LogError("duration string (%s) has specified field (%c), but it never set (%c) time field first", 
+                      source, edmDurationCharacters[currentDurationField], edmDurationCharacters[EDM_DURATION_FIELD_TIME]);
+            return AGENT_DATA_TYPES_INVALID_ARG;
+        }
+
+        switch (currentDurationField)
+        {
+            case EDM_DURATION_FIELD_DAYS:
+            {
+                agentData->value.edmDuration.days = value;
+            }
+            break;
+
+            case EDM_DURATION_FIELD_HOURS:
+            {
+                agentData->value.edmDuration.hours = value;
+            }
+            break;
+
+            case EDM_DURATION_FIELD_MINUTES:
+            {
+                agentData->value.edmDuration.minutes = value;
+            }
+            break;
+
+            case EDM_DURATION_FIELD_SECONDS_DECIMAL:
+            {
+                // In a (e.g.) 123.456ss, we have read up to "123.".  So this part is stored as-is.
+                agentData->value.edmDuration.seconds = value;
+                secondsDecimalParseStatus = EDM_SECONDS_DECIMAL_PARSE_PROCESSING;
+            }
+            break;
+
+            case EDM_DURATION_FIELD_SECONDS_MARKER:
+            {
+                if (secondsDecimalParseStatus == EDM_SECONDS_DECIMAL_PARSE_PROCESSING)
+                {
+                    // In a (e.g.) 123.456ss, we have read the "456s" part.  To set the fractional component,
+                    // divide this by 10^(number digits).  In this case, we'd want 456 / 10^3.
+                    agentData->value.edmDuration.seconds += (value / pow(10, (int)(currentPosition - previousPosition - 1)));
+                    secondsDecimalParseStatus = EDM_SECONDS_DECIMAL_PARSE_FINISHED;
+                }
+                else
+                {
+                    // There was never a "." in 1st place, so we have a simple (e.g.) 123s.  Just store.
+                    agentData->value.edmDuration.seconds = value;
+                }
+            }
+            break;
+
+            default:
+            {
+                LogError("duration string (%s) processing unexpected (%c) after digit/label parse",
+                          source, edmDurationCharacters[currentDurationField], edmDurationCharacters[currentDurationField]);
+                return AGENT_DATA_TYPES_INVALID_ARG;
+            }
+            break;
+        }
+
+        previousDurationField = currentDurationField;
+        previousPosition = currentPosition;
+    }
+
+    if (secondsDecimalParseStatus == EDM_SECONDS_DECIMAL_PARSE_PROCESSING)
+    {
+        LogError("Duration string <%s> has opening <%c> but not closing <%c>", source, 
+                  edmDurationCharacters[EDM_DURATION_FIELD_SECONDS_DECIMAL], edmDurationCharacters[EDM_DURATION_FIELD_SECONDS_MARKER]);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+
+    agentData->type = EDM_DURATION_TYPE;
+    return AGENT_DATA_TYPES_OK;
+}
+
+
+AGENT_DATA_TYPES_RESULT CreateGeographyPointData_From_GeographyPoint(const char* source, AGENT_DATA_TYPE* agentData)
+{
+    char* nextRead;
+    const char* currentRead = source;
+
+    memset(&agentData->value.edmGeographyPoint, 0, sizeof(agentData->value.edmGeographyPoint));
+
+    errno = 0;
+    agentData->value.edmGeographyPoint.longitude = strtod(currentRead, &nextRead);
+    if ((currentRead == nextRead) || ((agentData->value.edmGeographyPoint.longitude == HUGE_VALL) && (errno != 0)))
+    {
+        LogError("Unable to read longitude in parsing geographyPoint <%s>", source);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+
+    if (*nextRead != ' ')
+    {
+        LogError("Missing ' ' between longitude and latitude for geographyPoint <%s>", source);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+
+    currentRead = nextRead + 1;
+    errno = 0;
+    agentData->value.edmGeographyPoint.latitude = strtod(currentRead, &nextRead);
+    if ((currentRead == nextRead) || ((agentData->value.edmGeographyPoint.latitude == HUGE_VALL) && (errno != 0)))
+    {
+        LogError("Unable to read latitude in parsing geographyPoint <%s>", source);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+
+    if (*nextRead == '"')
+    {
+        // We've reached end of string.  Optional altitude is not set, so done.
+        agentData->type = EDM_GEOGRAPHY_POINT_TYPE;
+        return AGENT_DATA_TYPES_OK;
+    }
+    else if (*nextRead != ' ')
+    {
+        LogError("Missing ' ' between latitude and altitude for geographyPoint <%s>", source);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+
+    currentRead = nextRead + 1;
+    errno = 0;
+    agentData->value.edmGeographyPoint.altitude = strtod(currentRead, &nextRead);
+    if ((currentRead == nextRead) || ((agentData->value.edmGeographyPoint.altitude == HUGE_VALL) && (errno != 0)))
+    {
+        LogError("Unable to read altitude in parsing geographyPoint <%s>", source);
+        return AGENT_DATA_TYPES_INVALID_ARG;
+    }
+
+    if (*nextRead != '"')
+    {
+        LogError("Non null character after altitude in parsing geographyPoint <%s>", source);
+        return AGENT_DATA_TYPES_INVALID_ARG;    
+    }
+
+    agentData->value.edmGeographyPoint.altitudeSet = true;
+    agentData->type = EDM_GEOGRAPHY_POINT_TYPE;
+    return AGENT_DATA_TYPES_OK;
+}
+
+
+AGENT_DATA_TYPES_RESULT CreateStringData_From_String(const char* source, AGENT_DATA_TYPE* agentData, AGENT_DATA_TYPE_TYPE type)
+{
+    AGENT_DATA_TYPES_RESULT result;
+
+    size_t strLength = strlen(source);
+    if ((strLength < 2) ||
+        (source[0] != '"') ||
+        (source[strLength - 1] != '"'))
+    {
+        /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+    }
+    else
+    {
+        char* temp;
+        if ((temp = (char*)malloc(strLength - 1)) == NULL)
+        {
+            result = AGENT_DATA_TYPES_ERROR;
+            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+        }
+        else if (strncpy_s(temp, strLength - 1, source + 1, strLength - 2) != 0)
+        {
+            free(temp);
+
+            result = AGENT_DATA_TYPES_ERROR;
+            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+        }
+        else
+        {
+            temp[strLength - 2] = 0;
+            EDM_STRING *edmAssignmentString = (type == EDM_STRING_TYPE) ? &agentData->value.edmString : &agentData->value.edmStringSecret;
+
+            agentData->type = type;
+            edmAssignmentString->chars = temp;
+            edmAssignmentString->length = strLength - 2;
+            result = AGENT_DATA_TYPES_OK;
+        }
+    }
+
+    return result;
+}
+
+
+// ParseDateTimeOffset reads from source into edmDateTimeOffset, setting lastRead to be start of where we left
+// off reading to support timespan case.
+AGENT_DATA_TYPES_RESULT ParseDateTimeOffset(const char* source, EDM_DATE_TIME_OFFSET* edmDateTimeOffset, const char expectedClosingChar, size_t *lastRead)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int min;
+    int sec = 0;
+    int hourOffset;
+    int minOffset;
+    unsigned long long fractionalSeconds = 0;
+
+    (void)expectedClosingChar;
+
+    size_t pos = 0;
+    int sign;
+    scanOptionalMinusSign(source, 1, &pos, &sign);
+
+    edmDateTimeOffset->hasFractionalSecond = 0;
+    edmDateTimeOffset->hasTimeZone = 0;
+    /* The value of tm_isdst is positive if Daylight Saving Time is in effect, zero if Daylight
+       Saving Time is not in effect, and negative if the information is not available.*/
+    edmDateTimeOffset->dateTime.tm_isdst = -1;
+    
+    if ((scanAndReadNDigitsInt(source, &pos, &year, 4) != 0) ||
+        (source[pos++] != '-') ||
+        (scanAndReadNDigitsInt(source, &pos, &month, 2) != 0) ||
+        (source[pos++] != '-') ||
+        (scanAndReadNDigitsInt(source, &pos, &day, 2) != 0) ||
+        (source[pos++] != 'T') ||
+        (scanAndReadNDigitsInt(source, &pos, &hour, 2) != 0) ||
+        (source[pos++] != ':') ||
+        (scanAndReadNDigitsInt(source, &pos, &min, 2) != 0))
+    {
+        /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+    }
+    else
+    {
+        const char* pos2;
+        year = year*sign;
+        if ((pos2 = strchr(source, ':')) == NULL)
+        {
+            /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+            result = AGENT_DATA_TYPES_INVALID_ARG;
+            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+        }
+        else
+        {
+            pos2 += 3;
+            if (*pos2 == ':')
+            {
+                if (sscanf2d(pos2, &sec) != 1)
+                {
+                    pos2 = NULL;
+                }
+                else
+                {
+                    pos2 += 3;
+                }
+            }
+
+            if ((pos2 != NULL) &&
+                (*pos2 == '.'))
+            {
+                if (sscanfdotllu(pos2, &fractionalSeconds) != 1)
+                {
+                    pos2 = NULL;
+                }
+                else
+                {
+                    pos2++;
+
+                    edmDateTimeOffset->hasFractionalSecond = 1;
+
+                    while ((*pos2 != '\0') &&
+                        (IS_DIGIT(*pos2)))
+                    {
+                        pos2++;
+                    }
+
+                    if (*pos2 == '\0')
+                    {
+                        pos2 = NULL;
+                    }
+                }
+            }
+
+            if (pos2 == NULL)
+            {
+                /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+                result = AGENT_DATA_TYPES_INVALID_ARG;
+                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+            }
+            else
+            {
+                size_t charsConsumed = 0;
+                hourOffset = 0;
+                minOffset = 0;
+
+                if (sscanf3d2d(pos2, &hourOffset, &minOffset, &charsConsumed) == 2)
+                {
+                    edmDateTimeOffset->hasTimeZone = 1;
+                }
+
+                if (!edmDateTimeOffset->hasTimeZone && (pos2[0] != 'Z') && (pos2[1] != expectedClosingChar))
+                {
+                    // Without timezone, string must end with Z<closingChar>.
+                    result = AGENT_DATA_TYPES_INVALID_ARG;
+                    LogError("DateTime offset <%s> does not have legal closing Z%c tag", source, expectedClosingChar);
+                }
+                else if (edmDateTimeOffset->hasTimeZone && (pos2[charsConsumed] != expectedClosingChar))
+                {
+                    // With timezone, no Z but we still need the closing character to match
+                    result = AGENT_DATA_TYPES_INVALID_ARG;
+                    LogError("DateTime offset <%s> does not have legal closing Z%c tag", source, expectedClosingChar);
+                }
+                else
+                {
+                    // String itself is good.  Now parse to make sure data is legit.
+                    if ((ValidateDate(year, month, day) != 0) ||
+                        (hour < 0) ||
+                        (hour > 23) ||
+                        (min < 0) ||
+                        (min > 59) ||
+                        (sec < 0) ||
+                        (sec > 59) ||
+                        (fractionalSeconds > 999999999999) ||
+                        (hourOffset < -23) ||
+                        (hourOffset > 23) ||
+                        (minOffset < 0) ||
+                        (minOffset > 59))
+                    {
+                        /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+                        result = AGENT_DATA_TYPES_INVALID_ARG;
+                        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                    }
+                    else
+                    {
+                        edmDateTimeOffset->dateTime.tm_year= year-1900;
+                        edmDateTimeOffset->dateTime.tm_mon = month-1;
+                        edmDateTimeOffset->dateTime.tm_mday = day;
+                        edmDateTimeOffset->dateTime.tm_hour = hour;
+                        edmDateTimeOffset->dateTime.tm_min = min;
+                        edmDateTimeOffset->dateTime.tm_sec = sec;
+                        /*fill in tm_wday and tm_yday*/
+                        fill_tm_yday_and_tm_wday(&edmDateTimeOffset->dateTime);
+                        edmDateTimeOffset->fractionalSecond = (uint64_t)fractionalSeconds;
+                        edmDateTimeOffset->timeZoneHour = (int8_t)hourOffset;
+                        edmDateTimeOffset->timeZoneMinute = (uint8_t)minOffset;
+
+                        // Indicate to caller where we last read off, namely for timespan where this is invoked multiple times.
+                        if (edmDateTimeOffset->hasTimeZone)
+                        {
+                            *lastRead = (pos2 + charsConsumed - source);
+                        }
+                        else
+                        {
+                            *lastRead = (pos2 + 1 - source);
+                        }
+                        result = AGENT_DATA_TYPES_OK;
+                    }
+                }
+             }
+        }
+    }
+
+    return result;
+}
+
 AGENT_DATA_TYPES_RESULT CreateAgentDataType_From_String(const char* source, AGENT_DATA_TYPE_TYPE type, AGENT_DATA_TYPE* agentData)
 {
-
     AGENT_DATA_TYPES_RESULT result;
 
     /* Codes_SRS_AGENT_TYPE_SYSTEM_99_073:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is NULL.] */
@@ -3433,22 +4322,7 @@ AGENT_DATA_TYPES_RESULT CreateAgentDataType_From_String(const char* source, AGEN
             /* Codes_SRS_AGENT_TYPE_SYSTEM_99_078:[ EDM_DATETIMEOFFSET] */
             case EDM_DATE_TIME_OFFSET_TYPE:
             {
-                int year;
-                int month;
-                int day;
-                int hour;
-                int min;
-                int sec = 0;
-                int hourOffset;
-                int minOffset;
-                unsigned long long fractionalSeconds = 0;
                 size_t strLength = strlen(source);
-
-                agentData->value.edmDateTimeOffset.hasFractionalSecond = 0;
-                agentData->value.edmDateTimeOffset.hasTimeZone = 0;
-                /* The value of tm_isdst is positive if Daylight Saving Time is in effect, zero if Daylight
-                   Saving Time is not in effect, and negative if the information is not available.*/
-                agentData->value.edmDateTimeOffset.dateTime.tm_isdst = -1;
 
                 if ((strLength < 2) ||
                     (source[0] != '"') ||
@@ -3460,139 +4334,50 @@ AGENT_DATA_TYPES_RESULT CreateAgentDataType_From_String(const char* source, AGEN
                 }
                 else
                 {
-                    size_t pos = 1;
-                    int sign;
-                    scanOptionalMinusSign(source, 2, &pos, &sign);
-                    
-                    if ((scanAndReadNDigitsInt(source, &pos, &year, 4) != 0) ||
-                        (source[pos++] != '-') ||
-                        (scanAndReadNDigitsInt(source, &pos, &month, 2) != 0) ||
-                        (source[pos++] != '-') ||
-                        (scanAndReadNDigitsInt(source, &pos, &day, 2) != 0) ||
-                        (source[pos++] != 'T') ||
-                        (scanAndReadNDigitsInt(source, &pos, &hour, 2) != 0) ||
-                        (source[pos++] != ':') ||
-                        (scanAndReadNDigitsInt(source, &pos, &min, 2) != 0))
+                    size_t lastRead;
+                    result = ParseDateTimeOffset(source + 1, &agentData->value.edmDateTimeOffset, '\"', &lastRead);
+                    if (result == AGENT_DATA_TYPES_OK)
                     {
-                        /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
-                        result = AGENT_DATA_TYPES_INVALID_ARG;
-                        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                        agentData->type = EDM_DATE_TIME_OFFSET_TYPE;
+                    }
+                }
+                break;
+            }
+
+            case EDM_TIMESPAN_TYPE:
+            {
+                size_t strLength = strlen(source);
+
+                if ((strLength < 2) ||
+                    (source[0] != '"') ||
+                    (source[strLength - 1] != '"'))
+                {
+                    /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+                    result = AGENT_DATA_TYPES_INVALID_ARG;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else
+                {
+                    size_t lastRead;
+                    EDM_DATE_TIME_OFFSET beginTime;
+                    EDM_DATE_TIME_OFFSET endTime;
+                    
+                    
+                    if (AGENT_DATA_TYPES_OK != (result = ParseDateTimeOffset(source + 1, &beginTime, '/', &lastRead)))
+                    {
+                        LogError("ParseDateTimeOffset fails parsing the beginning time of <%s>", source);
+                    }
+                    else if (AGENT_DATA_TYPES_OK != (result = ParseDateTimeOffset((source + 1) + (lastRead + 1), &endTime, '\"', &lastRead)))
+                    {
+                        LogError("ParseDateTimeOffset fails parsing the ending time of <%s>", source);
                     }
                     else
                     {
-                        const char* pos2;
-                        year = year*sign;
-                        if ((pos2 = strchr(source, ':')) == NULL)
-                        {
-                            /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
-                            result = AGENT_DATA_TYPES_INVALID_ARG;
-                            LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                        }
-                        else
-                        {
-                            pos2 += 3;
-                            if (*pos2 == ':')
-                            {
-                                if (sscanf2d(pos2, &sec) != 1)
-                                {
-                                    pos2 = NULL;
-                                }
-                                else
-                                {
-                                    pos2 += 3;
-                                }
-                            }
-
-                            if ((pos2 != NULL) &&
-                                (*pos2 == '.'))
-                            {
-                                if (sscanfdotllu(pos2, &fractionalSeconds) != 1)
-                                {
-                                    pos2 = NULL;
-                                }
-                                else
-                                {
-                                    pos2++;
-
-                                    agentData->value.edmDateTimeOffset.hasFractionalSecond = 1;
-
-                                    while ((*pos2 != '\0') &&
-                                        (IS_DIGIT(*pos2)))
-                                    {
-                                        pos2++;
-                                    }
-
-                                    if (*pos2 == '\0')
-                                    {
-                                        pos2 = NULL;
-                                    }
-                                }
-                            }
-
-                            if (pos2 == NULL)
-                            {
-                                /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
-                                result = AGENT_DATA_TYPES_INVALID_ARG;
-                                LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                            }
-                            else
-                            {
-                                hourOffset = 0;
-                                minOffset = 0;
-
-                                if (sscanf3d2d(pos2, &hourOffset, &minOffset) == 2)
-                                {
-                                    agentData->value.edmDateTimeOffset.hasTimeZone = 1;
-                                }
-
-                                if ((strcmp(pos2, "Z\"") == 0) ||
-                                    agentData->value.edmDateTimeOffset.hasTimeZone)
-                                {
-                                    if ((ValidateDate(year, month, day) != 0) ||
-                                        (hour < 0) ||
-                                        (hour > 23) ||
-                                        (min < 0) ||
-                                        (min > 59) ||
-                                        (sec < 0) ||
-                                        (sec > 59) ||
-                                        (fractionalSeconds > 999999999999) ||
-                                        (hourOffset < -23) ||
-                                        (hourOffset > 23) ||
-                                        (minOffset < 0) ||
-                                        (minOffset > 59))
-                                    {
-                                        /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
-                                        result = AGENT_DATA_TYPES_INVALID_ARG;
-                                        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                                    }
-                                    else
-                                    {
-                                        agentData->type = EDM_DATE_TIME_OFFSET_TYPE;
-                                        agentData->value.edmDateTimeOffset.dateTime.tm_year= year-1900;
-                                        agentData->value.edmDateTimeOffset.dateTime.tm_mon = month-1;
-                                        agentData->value.edmDateTimeOffset.dateTime.tm_mday = day;
-                                        agentData->value.edmDateTimeOffset.dateTime.tm_hour = hour;
-                                        agentData->value.edmDateTimeOffset.dateTime.tm_min = min;
-                                        agentData->value.edmDateTimeOffset.dateTime.tm_sec = sec;
-                                        /*fill in tm_wday and tm_yday*/
-                                        fill_tm_yday_and_tm_wday(&agentData->value.edmDateTimeOffset.dateTime);
-                                        agentData->value.edmDateTimeOffset.fractionalSecond = (uint64_t)fractionalSeconds;
-                                        agentData->value.edmDateTimeOffset.timeZoneHour = (int8_t)hourOffset;
-                                        agentData->value.edmDateTimeOffset.timeZoneMinute = (uint8_t)minOffset;
-                                        result = AGENT_DATA_TYPES_OK;
-                                    }
-                                }
-                                else
-                                {
-                                    /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
-                                    result = AGENT_DATA_TYPES_INVALID_ARG;
-                                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                                }
-                            }
-                        }
+                        agentData->value.edmTimespan.beginTime = beginTime;
+                        agentData->value.edmTimespan.endTime = endTime;
+                        agentData->type = EDM_TIMESPAN_TYPE;
                     }
                 }
-
                 break;
             }
 
@@ -3712,43 +4497,12 @@ result = AGENT_DATA_TYPES_OK;
 
             /* Codes_SRS_AGENT_TYPE_SYSTEM_99_086:[ EDM_STRING] */
             case EDM_STRING_TYPE:
+            case EDM_STRING_SECRET_TYPE:
             {
-                size_t strLength = strlen(source);
-                if ((strLength < 2) ||
-                    (source[0] != '"') ||
-                    (source[strLength - 1] != '"'))
-                {
-                    /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
-                    result = AGENT_DATA_TYPES_INVALID_ARG;
-                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                }
-                else
-                {
-                    char* temp;
-                    if ((temp = (char*)malloc(strLength - 1)) == NULL)
-                    {
-                        result = AGENT_DATA_TYPES_ERROR;
-                        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                    }
-                    else if (strncpy_s(temp, strLength - 1, source + 1, strLength - 2) != 0)
-                    {
-                        free(temp);
-
-                        result = AGENT_DATA_TYPES_ERROR;
-                        LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
-                    }
-                    else
-                    {
-                        temp[strLength - 2] = 0;
-
-                        agentData->type = EDM_STRING_TYPE;
-                        agentData->value.edmString.chars = temp;
-                        agentData->value.edmString.length = strLength - 2;
-                        result = AGENT_DATA_TYPES_OK;
-                    }
-                }
+                result = CreateStringData_From_String(source, agentData, type);
                 break;
             }
+                
             /* Codes_SRS_AGENT_TYPE_SYSTEM_01_004: [EDM_STRING_NO_QUOTES] */
             case EDM_STRING_NO_QUOTES_TYPE:
             {
@@ -3962,6 +4716,42 @@ result = AGENT_DATA_TYPES_OK;
                             }
                         }
                     }
+                }
+                break;
+            }
+
+            case EDM_DURATION_TYPE:
+            {
+                size_t strLength = strlen(source);
+                if ((strLength < 2) ||
+                    (source[0] != '"') ||
+                    (source[strLength - 1] != '"'))
+                {
+                    /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+                    result = AGENT_DATA_TYPES_INVALID_ARG;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else 
+                {
+                    result = CreateDurationData_From_String(source + 1, agentData);
+                }
+                break;
+            }
+
+            case EDM_GEOGRAPHY_POINT_TYPE:
+            {
+                size_t strLength = strlen(source);
+                if ((strLength < 2) ||
+                    (source[0] != '"') ||
+                    (source[strLength - 1] != '"'))
+                {
+                    /* Codes_SRS_AGENT_TYPE_SYSTEM_99_087:[ CreateAgentDataType_From_String shall return AGENT_DATA_TYPES_INVALID_ARG if source is not a valid string for a value of type type.] */
+                    result = AGENT_DATA_TYPES_INVALID_ARG;
+                    LogError("(result = %s)", ENUM_TO_STRING(AGENT_DATA_TYPES_RESULT, result));
+                }
+                else 
+                {
+                    result = CreateGeographyPointData_From_GeographyPoint(source + 1, agentData);
                 }
                 break;
             }

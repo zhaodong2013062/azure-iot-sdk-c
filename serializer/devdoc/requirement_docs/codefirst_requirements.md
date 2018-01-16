@@ -320,9 +320,9 @@ METHODRETURN_HANDLE CodeFirst_InvokeMethod(DEVICE_HANDLE deviceHandle, void* cal
 
 **SRS_CODEFIRST_02_056: [** `CodeFirst_InvokeMethod` shall locate the model in the codefirst data. **]**
 
-**SRS_CODEFIRST_02_057: [** `CodeFirst_InvokeMethod` shall locate the method in the model data. **]**
+**SRS_CODEFIRST_02_057: [** `CodeFirst_InvokeMethod` shall locate the method or the method with return type in the model data. **]**
 
-**SRS_CODEFIRST_02_058: [** `CodeFirst_InvokeMethod` shall call the methodCallback and return what the methodCallback returns. **]**
+**SRS_CODEFIRST_02_058: [** `CodeFirst_InvokeMethod` shall call the methodCallback or the method with return type callback and return what it returns. **]**
 
 **SRS_CODEFIRST_02_059: [** If any of the above fails then `CodeFirst_InvokeMethod` shall fail and return `NULL`. **]**
 

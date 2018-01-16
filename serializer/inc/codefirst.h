@@ -23,9 +23,12 @@ extern "C" {
 
 typedef char* ascii_char_ptr;
 typedef char* ascii_char_ptr_no_quotes;
+typedef char* ascii_char_ptr_secret;
 
 typedef enum REFLECTION_TYPE_TAG
 {
+    REFLECTION_METHOD_WITH_RETURN_TYPE_TYPE,
+    REFLECTION_INFORMATION_TYPE,
     REFLECTION_METHOD_TYPE,
     REFLECTION_DESIRED_PROPERTY_TYPE,
     REFLECTION_REPORTED_PROPERTY_TYPE,
@@ -116,12 +119,34 @@ typedef struct REFLECTION_MODEL_TAG
     const char* name;
 } REFLECTION_MODEL;
 
+typedef struct REFLECTION_INFORMATION_TAG
+{
+    const char* modelName;
+    const char* schemaVersion;
+    const char* id;
+    const char* version;
+    const char* description;
+} REFLECTION_INFORMATION;
+
+
+typedef struct REFLECTION_METHOD_WITH_RETURN_TYPE_TAG
+{
+    const char* returnType;
+    const char* name;
+    size_t nArguments;
+    const WRAPPER_ARGUMENT* arguments;
+    methodWrapper wrapper; 
+    const char* modelName;
+}REFLECTION_METHOD_WITH_RETURN_TYPE;
+
 typedef struct REFLECTED_SOMETHING_TAG
 {
     REFLECTION_TYPE type;
     const struct REFLECTED_SOMETHING_TAG* next;
     struct what
     {
+        REFLECTION_METHOD_WITH_RETURN_TYPE methodWithReturnType;
+        REFLECTION_INFORMATION information;
         REFLECTION_METHOD method;
         REFLECTION_DESIRED_PROPERTY desiredProperty;
         REFLECTION_REPORTED_PROPERTY reportedProperty;

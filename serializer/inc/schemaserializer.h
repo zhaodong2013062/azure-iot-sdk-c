@@ -6,6 +6,7 @@
 
 #include "schema.h"
 #include "azure_c_shared_utility/strings.h"
+#include "azure_c_shared_utility/macro_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +19,9 @@ extern "C" {
 
 DEFINE_ENUM(SCHEMA_SERIALIZER_RESULT, SCHEMA_SERIALIZER_RESULT_VALUES)
 
-extern SCHEMA_SERIALIZER_RESULT SchemaSerializer_SerializeCommandMetadata(SCHEMA_MODEL_TYPE_HANDLE modelHandle, STRING_HANDLE schemaText);
+#include "azure_c_shared_utility/umock_c_prod.h"
+MOCKABLE_FUNCTION(,SCHEMA_SERIALIZER_RESULT, SchemaSerializer_SerializeCommandMetadata, SCHEMA_MODEL_TYPE_HANDLE, modelHandle, STRING_HANDLE, schemaText);
+MOCKABLE_FUNCTION(, char*, SchemaSerializer_SerializeModelToJSON, SCHEMA_MODEL_TYPE_HANDLE, handle);
 
 #ifdef __cplusplus
 }

@@ -11,7 +11,7 @@ These macros are:
 #define WITH_DATA (type, name) /*...*/
 #define WITH_ACTION(name, param1Type, param1Name, ...) /*...*/
 
-#define WITH_METHOD(name, param1Type, param1Name, ...) /*...*/
+#define WITH_METHOD([returnType,] name, param1Type, param1Name, ...) /*...*/
 
 #define WITH_REPORTED_PROPERTY(type,name)
 
@@ -128,7 +128,7 @@ An action defines a command which the IOT service can invoke on any device that 
 
 **SRS_SERIALIZER_H_99_046: [**  If an AGENT_DATA_TYPE argument passed to the conversion function does not match the expected type, the function shall return DATAPROVIDER_INVALID_ARG. **]**
 
-### WITH_METHOD(name, param1Type, param1Name, ...)
+### WITH_METHOD([returnType,] name, param1Type, param1Name, ...)
 
 A method is a C function which the IoT service can invoke on any device that is associated (via device registration) with the model.
 
@@ -140,11 +140,13 @@ A method is a C function which the IoT service can invoke on any device that is 
 
 **SRS_SERIALIZER_H_02_028: [** WITH_METHOD's field<n>Type argument, which describes the type of the nth parameter in the method's function prototype, shall be one of the data types permitted for model properties. **]**
 
-**SRS_SERIALIZER_H_02_029: [** WITH_METHOD shall declare a function with the signature 'METHODRETURN_HANDLE name(param1Type param1Name, ...)', which the developer can define to receive corresponding commands from the IoT service. **]**
+**SRS_SERIALIZER_H_02_029: [** WITH_METHOD(name, param1Type, param1Name, ... ) shall declare a function with the signature 'METHODRETURN_HANDLE name(param1Type param1Name, ...)', which the developer can define to receive corresponding commands from the IoT service. **]**
+
+**SRS_SERIALIZER_H_02_036: [** WITH_METHOD(returnType, name, param1Type, param1Name, ... ) shall declare a function with the signature 'returnType name(param1Type param1Name, ...)', which the developer can define to receive corresponding commands from the IoT service. **]**
 
 **SRS_SERIALIZER_H_02_030: [** It is valid for a method function not to have any parameters. **]**
 
-**SRS_SERIALIZER_H_02_034: [** WITH_METHOD shall result in the declaration of a conversion function with the prototype METHODRETURN_HANDLE nameWRAPPER(size_t ParameterCount, const AGENT_DATA_TYPE* values)' **]**
+**SRS_SERIALIZER_H_02_034: [** WITH_METHOD without a return type shall result in the declaration of a conversion function with the prototype METHODRETURN_HANDLE nameWRAPPER(size_t ParameterCount, const AGENT_DATA_TYPE* values)' **]**
 
 **SRS_SERIALIZER_H_02_031: [** The function shall convert the input arguments to the types declared in the method parameter list and then call the user-defined method function. **]**
 
@@ -212,6 +214,16 @@ It supports the same types as WITH_DATA.
 **SRS_SERIALIZER_H_02_019: [** The WITH_REPORTED_PROPERTY declaration shall insert metadata describing a reported property in the model. **]**
 
  **SRS_SERIALIZER_H_02_020: [** WITH_REPORTED_PROPERTY's name argument shall uniquely identify the reported property within the model. **]**
+
+### WITH_INFORMATION
+```c
+WITH_INFORMATION(schemaVersion, id, version, description)
+```
+
+`WITH_INFORMATION` adds to a model a schemaVersion, an id, a version and a description.
+
+**SRS_SERIALIZER_H_02_035: [** If `WITH_INFORMATION` is missing, then the model shall behave as if a `WITH_INFORMATION("", "00000000-0000-0000-0000-000000000000", "", "")` would have been supplied. **]**
+
 
 ### SERIALIZE_REPORTED_PROPERTIES
 ```c

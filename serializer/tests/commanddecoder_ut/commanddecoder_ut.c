@@ -145,6 +145,7 @@ static size_t nCall = 0;
 static AGENT_DATA_TYPE StateAgentDataType;
 
 static SCHEMA_METHOD_HANDLE TEST_MODEL_METHOD_HANDLE = (SCHEMA_METHOD_HANDLE)0x56;
+static SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE TEST_MODEL_METHOD_WITH_RETURN_TYPE_HANDLE = (SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE)0x59;
 static SCHEMA_METHOD_ARGUMENT_HANDLE TEST_METHOD_ARGUMENT_HANDLE_0 = (SCHEMA_METHOD_ARGUMENT_HANDLE)0x57;
 static SCHEMA_METHOD_ARGUMENT_HANDLE TEST_METHOD_ARGUMENT_HANDLE_1 = (SCHEMA_METHOD_ARGUMENT_HANDLE)0x58;
 
@@ -320,6 +321,8 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         REGISTER_UMOCK_ALIAS_TYPE(pfOnDesiredProperty, void*);
         REGISTER_UMOCK_ALIAS_TYPE(SCHEMA_METHOD_HANDLE, void*);
         REGISTER_UMOCK_ALIAS_TYPE(SCHEMA_METHOD_ARGUMENT_HANDLE, void*);
+        REGISTER_UMOCK_ALIAS_TYPE(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE, void*);
+        
         
         
         REGISTER_UMOCK_ALIAS_TYPE(JSON_DECODER_RESULT, int);
@@ -355,6 +358,7 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelDesiredProperty_pfOnDesiredProperty, NULL);
         REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelModelByName_OnDesiredProperty, NULL);
         REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodByName, TEST_MODEL_METHOD_HANDLE);
+        
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(Schema_GetModelMethodArgumentByIndex, NULL);
 
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(Schema_GetMethodArgumentName, NULL);
@@ -363,8 +367,10 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         
 
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(Schema_GetModelMethodByName, NULL);
+
         REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodArgumentCount, SCHEMA_OK);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(Schema_GetModelMethodArgumentCount, SCHEMA_ERROR);
+        
         
 
         REGISTER_GLOBAL_MOCK_HOOK(mallocAndStrcpy_s, real_mallocAndStrcpy_s);
@@ -414,6 +420,12 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         StateAgentDataType.value.edmString.chars = (char*)OtherArgValue;
 
         isIoTHubMessage_GetData_writing_to_outputs = true;
+
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeByName, TEST_MODEL_METHOD_WITH_RETURN_TYPE_HANDLE);
+        REGISTER_GLOBAL_MOCK_FAIL_RETURN(Schema_GetModelMethodWithReturnTypeByName, NULL);
+
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeArgumentCount, SCHEMA_OK);
+        REGISTER_GLOBAL_MOCK_FAIL_RETURN(Schema_GetModelMethodWithReturnTypeArgumentCount, SCHEMA_ERROR);
     }
 
     TEST_FUNCTION_CLEANUP(TestMethodCleanup)
@@ -3528,11 +3540,11 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
     /*Tests_SRS_COMMAND_DECODER_02_017: [ CommandDecoder_ExecuteMethod shall get the SCHEMA_HANDLE associated with the modelHandle passed at CommandDecoder_Create. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_018: [ CommandDecoder_ExecuteMethod shall validate that consecutive segments of the fullMethodName exist in the model. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_019: [ CommandDecoder_ExecuteMethod shall locate the final model to which the methodName applies. ]*/
-    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method called methodName. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method or a method with return type called methodName. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_022: [ CommandDecoder_ExecuteMethod shall call methodCallback passing the context, the methodName, number of arguments and the AGENT_DATA_TYPE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_024: [ Otherwise, CommandDecoder_ExecuteMethod shall return what methodCallback returns. ]*/
-    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_NULL_payload_hapy_path)
+    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_NULL_payload_happy_path)
     {
         /*this TEST_FUNCTION assumes that there is a method in the root model called "methodA" that takes no arguments*/
 
@@ -3555,7 +3567,7 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
     }
 
     /*Tests_SRS_COMMAND_DECODER_02_023: [ If any of the previous operations fail, then CommandDecoder_ExecuteMethod shall return NULL. ]*/
-    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_NULL_payload_unhapy_paths)
+    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_NULL_payload_unhappy_paths)
     {
         /*this TEST_FUNCTION assumes that there is a method in the root model called "methodA" that takes no arguments*/
 
@@ -3564,8 +3576,12 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
         umock_c_reset_all_calls();
 
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeByName, NULL);
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeArgumentCount, SCHEMA_ERROR);
+
         umock_c_negative_tests_init();
         CommandDecoder_ExecuteMethod_with_NULL_payload_inert_path(&zero);
+        
         umock_c_negative_tests_snapshot();
 
         for (size_t i = 0; i < umock_c_negative_tests_call_count(); i++)
@@ -3589,6 +3605,91 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         CommandDecoder_Destroy(commandDecoderHandle);
         umock_c_negative_tests_deinit();
     }
+
+    static void CommandDecoder_ExecuteMethod_with_NULL_payload_method_with_return_type_inert_path(size_t* zero)
+    {
+        STRICT_EXPECTED_CALL(Schema_GetSchemaForModelType(TEST_MODEL_HANDLE));
+        STRICT_EXPECTED_CALL(gballoc_malloc(1)); /*this is the string "" for relative relativeMethodPath*/
+        STRICT_EXPECTED_CALL(Schema_GetModelMethodByName(TEST_MODEL_HANDLE, "methodWithReturnTypeA"))
+            .SetReturn(NULL);
+        STRICT_EXPECTED_CALL(Schema_GetModelMethodWithReturnTypeByName(TEST_MODEL_HANDLE, "methodWithReturnTypeA"));
+        STRICT_EXPECTED_CALL(Schema_GetModelMethodWithReturnTypeArgumentCount(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+            .IgnoreArgument_methodWithReturnTypeHandle()
+            .IgnoreArgument_argumentCount()
+            .CopyOutArgumentBuffer_argumentCount(zero, sizeof(*zero));
+
+        STRICT_EXPECTED_CALL(methodCallbackMock(TEST_CALLBACK_CONTEXT_VALUE, "", "methodWithReturnTypeA", 0, NULL));
+        STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG)) /*this is freeing the relativeMethodPath*/
+            .IgnoreArgument_ptr();
+    }
+
+    /*Tests_SRS_COMMAND_DECODER_02_016: [ If methodPayload is not NULL then CommandDecoder_ExecuteMethod shall build a MULTITREE_HANDLE out of methodPayload. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_017: [ CommandDecoder_ExecuteMethod shall get the SCHEMA_HANDLE associated with the modelHandle passed at CommandDecoder_Create. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_018: [ CommandDecoder_ExecuteMethod shall validate that consecutive segments of the fullMethodName exist in the model. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_019: [ CommandDecoder_ExecuteMethod shall locate the final model to which the methodName applies. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method or a method with return type called methodName. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_022: [ CommandDecoder_ExecuteMethod shall call methodCallback passing the context, the methodName, number of arguments and the AGENT_DATA_TYPE. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_024: [ Otherwise, CommandDecoder_ExecuteMethod shall return what methodCallback returns. ]*/
+    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_NULL_payload_method_with_return_type_happy_path)
+    {
+        /*this TEST_FUNCTION assumes that there is a method with return type in the root model called "methodWithReturnTypeA" that takes no arguments*/
+
+        ///arrange
+        size_t zero = 0;
+        COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
+        umock_c_reset_all_calls();
+
+        CommandDecoder_ExecuteMethod_with_NULL_payload_method_with_return_type_inert_path(&zero);
+
+        ///act
+        METHODRETURN_HANDLE methodReturn = CommandDecoder_ExecuteMethod(commandDecoderHandle, "methodWithReturnTypeA", NULL);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+        ASSERT_ARE_EQUAL(void_ptr, g_methodReturnValue, methodReturn);
+
+        ///cleanup
+        CommandDecoder_Destroy(commandDecoderHandle);
+    }
+
+    /*Tests_SRS_COMMAND_DECODER_02_023: [ If any of the previous operations fail, then CommandDecoder_ExecuteMethod shall return NULL. ]*/
+    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_NULL_payload_method_with_return_type_unhappy_paths)
+    {
+        /*this TEST_FUNCTION assumes that there is a method in the root model called "methodA" that takes no arguments*/
+
+        ///arrange
+        size_t zero = 0;
+        COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
+        umock_c_reset_all_calls();
+
+        umock_c_negative_tests_init();
+        CommandDecoder_ExecuteMethod_with_NULL_payload_method_with_return_type_inert_path(&zero);
+        umock_c_negative_tests_snapshot();
+
+        for (size_t i = 0; i < umock_c_negative_tests_call_count(); i++)
+        {
+            if (
+                (i != 2) /*Schema_GetModelMethodByName*/ &&
+                (i != 6) /*gballoc_free*/
+                )
+            {
+                umock_c_negative_tests_reset();
+                umock_c_negative_tests_fail_call(i);
+
+                ///act
+                METHODRETURN_HANDLE methodReturn = CommandDecoder_ExecuteMethod(commandDecoderHandle, "methodWithReturnTypeA", NULL);
+
+                ///assert
+                ASSERT_IS_NULL(methodReturn);
+            }
+        }
+
+        ///cleanup
+        CommandDecoder_Destroy(commandDecoderHandle);
+        umock_c_negative_tests_deinit();
+    }
+
 
     static void CommandDecoder_ExecuteMethod_with_1_arg_payload_inert_path(size_t* one, const char* methodPayload, const char** aValue)
     {
@@ -3652,7 +3753,7 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
     /*Tests_SRS_COMMAND_DECODER_02_017: [ CommandDecoder_ExecuteMethod shall get the SCHEMA_HANDLE associated with the modelHandle passed at CommandDecoder_Create. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_018: [ CommandDecoder_ExecuteMethod shall validate that consecutive segments of the fullMethodName exist in the model. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_019: [ CommandDecoder_ExecuteMethod shall locate the final model to which the methodName applies. ]*/
-    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method called methodName. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method or a method with return type called methodName. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_022: [ CommandDecoder_ExecuteMethod shall call methodCallback passing the context, the methodName, number of arguments and the AGENT_DATA_TYPE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_024: [ Otherwise, CommandDecoder_ExecuteMethod shall return what methodCallback returns. ]*/
@@ -3693,6 +3794,9 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
         umock_c_reset_all_calls();
 
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeByName, NULL);
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeArgumentCount, SCHEMA_ERROR);
+
         umock_c_negative_tests_init();
         CommandDecoder_ExecuteMethod_with_1_arg_payload_inert_path(&one, methodPayload, &aValue);
         umock_c_negative_tests_snapshot();
@@ -3713,6 +3817,143 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
 
                 ///act
                 METHODRETURN_HANDLE methodReturn = CommandDecoder_ExecuteMethod(commandDecoderHandle, "methodA", methodPayload);
+
+                ///assert
+                ASSERT_IS_NULL(methodReturn);
+            }
+        }
+
+        ///cleanup
+        CommandDecoder_Destroy(commandDecoderHandle);
+        umock_c_negative_tests_deinit();
+    }
+
+    static void CommandDecoder_ExecuteMethod_with_1_arg_payload_method_with_return_type_inert_path(size_t* one, const char* methodPayload, const char** aValue)
+    {
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, methodPayload))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(JSONDecoder_JSON_To_MultiTree(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+            .IgnoreArgument_json()
+            .IgnoreArgument_multiTreeHandle();
+        STRICT_EXPECTED_CALL(Schema_GetSchemaForModelType(TEST_MODEL_HANDLE));
+        STRICT_EXPECTED_CALL(gballoc_malloc(1)); /*this is the string "" for relative relativeMethodPath*/
+        STRICT_EXPECTED_CALL(Schema_GetModelMethodByName(TEST_MODEL_HANDLE, "methodWithReturnTypeA"))
+            .SetReturn(NULL);
+        STRICT_EXPECTED_CALL(Schema_GetModelMethodWithReturnTypeByName(TEST_MODEL_HANDLE, "methodWithReturnTypeA"));
+        STRICT_EXPECTED_CALL(Schema_GetModelMethodWithReturnTypeArgumentCount(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+            .IgnoreArgument_methodWithReturnTypeHandle()
+            .IgnoreArgument_argumentCount()
+            .CopyOutArgumentBuffer_argumentCount(one, sizeof(*one));
+
+        STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG)) /*this is the array holding 1 x AGENT_DATA_TYPE */
+            .IgnoreArgument_size();
+
+        STRICT_EXPECTED_CALL(Schema_GetModelMethodWithReturnTypeArgumentByIndex(TEST_MODEL_METHOD_WITH_RETURN_TYPE_HANDLE, 0))
+            .SetReturn(TEST_METHOD_ARGUMENT_HANDLE_0);
+        STRICT_EXPECTED_CALL(Schema_GetMethodArgumentName(TEST_METHOD_ARGUMENT_HANDLE_0))
+            .SetReturn("a");
+        STRICT_EXPECTED_CALL(Schema_GetMethodArgumentType(TEST_METHOD_ARGUMENT_HANDLE_0))
+            .SetReturn("int");
+
+        STRICT_EXPECTED_CALL(MultiTree_GetChildByName(IGNORED_PTR_ARG, "a", IGNORED_PTR_ARG))
+            .IgnoreArgument_treeHandle()
+            .IgnoreArgument_childHandle();
+
+        { /*scope for DecodeValueFromNode*/
+            STRICT_EXPECTED_CALL(CodeFirst_GetPrimitiveType("int"))
+                .SetReturn(EDM_INT32_TYPE);
+            STRICT_EXPECTED_CALL(MultiTree_GetValue(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+                .IgnoreArgument_treeHandle()
+                .IgnoreArgument_destination()
+                .CopyOutArgumentBuffer_destination(aValue, sizeof(aValue));
+            STRICT_EXPECTED_CALL(CreateAgentDataType_From_String("2", EDM_INT32_TYPE, IGNORED_PTR_ARG))
+                .IgnoreArgument_agentData();
+        }
+
+        STRICT_EXPECTED_CALL(methodCallbackMock(TEST_CALLBACK_CONTEXT_VALUE, "", "methodWithReturnTypeA", 1, IGNORED_PTR_ARG))
+            .IgnoreArgument_parameterValues();
+
+        STRICT_EXPECTED_CALL(Destroy_AGENT_DATA_TYPE(IGNORED_PTR_ARG))
+            .IgnoreArgument_agentData();
+        STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG))
+            .IgnoreArgument_ptr();
+
+        STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG)) /*this is freeing the relativeMethodPath*/
+            .IgnoreArgument_ptr();
+
+        STRICT_EXPECTED_CALL(MultiTree_Destroy(IGNORED_PTR_ARG))
+            .IgnoreArgument_treeHandle();
+        STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG))
+            .IgnoreArgument_ptr();
+
+    }
+
+    /*Tests_SRS_COMMAND_DECODER_02_016: [ If methodPayload is not NULL then CommandDecoder_ExecuteMethod shall build a MULTITREE_HANDLE out of methodPayload. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_017: [ CommandDecoder_ExecuteMethod shall get the SCHEMA_HANDLE associated with the modelHandle passed at CommandDecoder_Create. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_018: [ CommandDecoder_ExecuteMethod shall validate that consecutive segments of the fullMethodName exist in the model. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_019: [ CommandDecoder_ExecuteMethod shall locate the final model to which the methodName applies. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method or a method with return type called methodName. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_022: [ CommandDecoder_ExecuteMethod shall call methodCallback passing the context, the methodName, number of arguments and the AGENT_DATA_TYPE. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_024: [ Otherwise, CommandDecoder_ExecuteMethod shall return what methodCallback returns. ]*/
+    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_1_arg_payload_method_with_return_type_happy_path)
+    {
+        /*this TEST_FUNCTION assumes that there is a method in the root model called "methodA" that takes 1x arguments*/
+
+        ///arrange
+        size_t one = 1;
+        const char* aValue = "2";
+        const char* methodPayload = "{\"a\":2}";
+        COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
+        umock_c_reset_all_calls();
+
+        CommandDecoder_ExecuteMethod_with_1_arg_payload_method_with_return_type_inert_path(&one, methodPayload, &aValue);
+
+        ///act
+        METHODRETURN_HANDLE methodReturn = CommandDecoder_ExecuteMethod(commandDecoderHandle, "methodWithReturnTypeA", methodPayload);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+        ASSERT_ARE_EQUAL(void_ptr, g_methodReturnValue, methodReturn);
+
+        ///cleanup
+        CommandDecoder_Destroy(commandDecoderHandle);
+    }
+
+
+    /*Tests_SRS_COMMAND_DECODER_02_023: [ If any of the previous operations fail, then CommandDecoder_ExecuteMethod shall return NULL. ]*/
+    TEST_FUNCTION(CommandDecoder_ExecuteMethod_with_1_arg_payload_method_with_return_type_unhappy_paths)
+    {
+        /*this TEST_FUNCTION assumes that there is a method in the root model called "methodA" that takes 1x arguments*/
+
+        ///arrange
+        size_t one = 1;
+        const char* aValue = "2";
+        const char* methodPayload = "{\"a\":2}";
+        COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
+        umock_c_reset_all_calls();
+
+        umock_c_negative_tests_init();
+        CommandDecoder_ExecuteMethod_with_1_arg_payload_method_with_return_type_inert_path(&one, methodPayload, &aValue);
+        umock_c_negative_tests_snapshot();
+
+        for (size_t i = 0; i < umock_c_negative_tests_call_count(); i++)
+        {
+            if (
+                (i != 4) && /*Schema_GetModelMethodByName*/
+                (i != 12) && /*gballoc_free*/
+                (i != 16) && /*Destroy_AGENT_DATA_TYPE*/
+                (i != 17) && /*gballoc_free*/
+                (i != 18) && /*gballoc_free*/
+                (i != 19) && /*MultiTree_Destroy*/
+                (i != 20)  /*gballoc_free*/
+                )
+            {
+                umock_c_negative_tests_reset();
+                umock_c_negative_tests_fail_call(i);
+
+                ///act
+                METHODRETURN_HANDLE methodReturn = CommandDecoder_ExecuteMethod(commandDecoderHandle, "methodWithReturnTypeA", methodPayload);
 
                 ///assert
                 ASSERT_IS_NULL(methodReturn);
@@ -3813,7 +4054,7 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
     /*Tests_SRS_COMMAND_DECODER_02_017: [ CommandDecoder_ExecuteMethod shall get the SCHEMA_HANDLE associated with the modelHandle passed at CommandDecoder_Create. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_018: [ CommandDecoder_ExecuteMethod shall validate that consecutive segments of the fullMethodName exist in the model. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_019: [ CommandDecoder_ExecuteMethod shall locate the final model to which the methodName applies. ]*/
-    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method called methodName. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method or a method with return type called methodName. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_022: [ CommandDecoder_ExecuteMethod shall call methodCallback passing the context, the methodName, number of arguments and the AGENT_DATA_TYPE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_024: [ Otherwise, CommandDecoder_ExecuteMethod shall return what methodCallback returns. ]*/
@@ -3856,6 +4097,9 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
         umock_c_reset_all_calls();
 
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeByName, NULL);
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeArgumentCount, SCHEMA_ERROR);
+
         umock_c_negative_tests_init();
         CommandDecoder_ExecuteMethod_with_2_arg_payload_inert_path(&two, methodPayload, &aValue, &bValue);
         umock_c_negative_tests_snapshot();
@@ -3875,6 +4119,7 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
                 umock_c_negative_tests_reset();
                 umock_c_negative_tests_fail_call(i);
 
+                printf("executing for i=%zu\n", i);
                 ///act
                 METHODRETURN_HANDLE methodReturn = CommandDecoder_ExecuteMethod(commandDecoderHandle, "methodA", methodPayload);
 
@@ -3982,7 +4227,7 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
     /*Tests_SRS_COMMAND_DECODER_02_017: [ CommandDecoder_ExecuteMethod shall get the SCHEMA_HANDLE associated with the modelHandle passed at CommandDecoder_Create. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_018: [ CommandDecoder_ExecuteMethod shall validate that consecutive segments of the fullMethodName exist in the model. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_019: [ CommandDecoder_ExecuteMethod shall locate the final model to which the methodName applies. ]*/
-    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method called methodName. ]*/
+    /*Tests_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method or a method with return type called methodName. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_022: [ CommandDecoder_ExecuteMethod shall call methodCallback passing the context, the methodName, number of arguments and the AGENT_DATA_TYPE. ]*/
     /*Tests_SRS_COMMAND_DECODER_02_024: [ Otherwise, CommandDecoder_ExecuteMethod shall return what methodCallback returns. ]*/
@@ -4025,8 +4270,12 @@ BEGIN_TEST_SUITE(CommandDecoder_ut)
         COMMAND_DECODER_HANDLE commandDecoderHandle = CommandDecoder_Create(TEST_MODEL_HANDLE, ActionCallbackMock, TEST_CALLBACK_CONTEXT_VALUE, methodCallbackMock, TEST_CALLBACK_CONTEXT_VALUE);
         umock_c_reset_all_calls();
 
+
+
         umock_c_negative_tests_init();
         CommandDecoder_ExecuteMethod_model_in_model_with_2_arg_payload_inert_path(&two, methodPayload, &aValue, &bValue);
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeByName, NULL);
+        REGISTER_GLOBAL_MOCK_RETURN(Schema_GetModelMethodWithReturnTypeArgumentCount, SCHEMA_ERROR);
         umock_c_negative_tests_snapshot();
 
         for (size_t i = 0; i < umock_c_negative_tests_call_count(); i++)

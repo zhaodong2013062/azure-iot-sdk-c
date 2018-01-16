@@ -12,6 +12,13 @@
 
 DEFINE_ENUM_STRINGS(SCHEMA_RESULT, SCHEMA_RESULT_VALUES);
 
+typedef struct SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE_DATA_TAG
+{
+    char* returnType;
+    char* methodWithReturnTypeName;
+    VECTOR_HANDLE methodWithReturnTypeArguments; /*holds SCHEMA_METHOD_ARGUMENT_HANDLE*/
+} SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE_DATA;
+
 typedef struct SCHEMA_PROPERTY_HANDLE_DATA_TAG
 {
     const char* PropertyName;
@@ -68,9 +75,19 @@ typedef struct MODEL_IN_MODEL_TAG
     SCHEMA_MODEL_TYPE_HANDLE modelHandle;
 } MODEL_IN_MODEL;
 
+typedef struct INFORMATION_TAG
+{
+    char* schemaVersion;
+    char* id;
+    char* version;
+    char* description;
+}INFORMATION;
+
 typedef struct SCHEMA_MODEL_TYPE_HANDLE_DATA_TAG
 {
+    INFORMATION *information; /*NULL if the model has no information, that'd be an invalid model*/
     VECTOR_HANDLE methods; /*holds SCHEMA_METHOD_HANDLE*/
+    VECTOR_HANDLE methodsWithReturnType; /*contains SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE*/
     VECTOR_HANDLE desiredProperties; /*holds SCHEMA_DESIRED_PROPERTY_HANDLE_DATA*/
     const char* Name;
     SCHEMA_HANDLE SchemaHandle;
@@ -172,7 +189,6 @@ static void DestroyMethods(SCHEMA_MODEL_TYPE_HANDLE modelHandle)
     VECTOR_destroy(modelHandle->methods);
 }
 
-
 static void DestroyStruct(SCHEMA_STRUCT_TYPE_HANDLE structTypeHandle)
 {
     size_t i;
@@ -190,6 +206,34 @@ static void DestroyStruct(SCHEMA_STRUCT_TYPE_HANDLE structTypeHandle)
         free(structType);
     }
 }
+
+static void DestroyMethodWithReturnType(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle)
+{
+    size_t nArguments = VECTOR_size(methodWithReturnTypeHandle->methodWithReturnTypeArguments);
+
+    for (size_t j = 0; j < nArguments; j++)
+    {
+        SCHEMA_METHOD_ARGUMENT_HANDLE* methodArgumentHandle = VECTOR_element(methodWithReturnTypeHandle->methodWithReturnTypeArguments, j);
+        DestroyMethodArgument(*methodArgumentHandle);
+    }
+    free(methodWithReturnTypeHandle->returnType);
+    free(methodWithReturnTypeHandle->methodWithReturnTypeName);
+    VECTOR_destroy(methodWithReturnTypeHandle->methodWithReturnTypeArguments);
+    free(methodWithReturnTypeHandle);
+}
+
+static void DestroyMethodsWithReturnType(SCHEMA_MODEL_TYPE_HANDLE modelHandle)
+{
+    size_t nMethodsWithReturnType = VECTOR_size(modelHandle->methodsWithReturnType);
+
+    for (size_t j = 0; j < nMethodsWithReturnType; j++)
+    {
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE* methodWithReturnTypeHandle = VECTOR_element(modelHandle->methodsWithReturnType, j);
+        DestroyMethodWithReturnType(*methodWithReturnTypeHandle);
+    }
+    VECTOR_destroy(modelHandle->methodsWithReturnType);
+}
+
 
 static void DestroyModel(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
 {
@@ -212,6 +256,16 @@ static void DestroyModel(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
     }
 
     DestroyMethods(modelType);
+
+    DestroyMethodsWithReturnType(modelType);
+    if (modelType->information != NULL)
+    {
+        free(modelType->information->schemaVersion);
+        free(modelType->information->id);
+        free(modelType->information->version);
+        free(modelType->information->description);
+        free(modelType->information);
+    }
 
     /*destroy the vector holding the added models. This does not destroy the said models, however, their names shall be*/
     for (i = 0; i < VECTOR_size(modelType->models); i++)
@@ -244,6 +298,7 @@ static void DestroyModel(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
     VECTOR_destroy(modelType->models);
 
     free(modelType->Actions);
+
     free(modelType);
 }
 
@@ -689,7 +744,7 @@ SCHEMA_MODEL_TYPE_HANDLE Schema_CreateModelType(SCHEMA_HANDLE schemaHandle, cons
                             {
                                 if ((modelType->methods = VECTOR_create(sizeof(SCHEMA_METHOD_HANDLE))) == NULL)
                                 {
-                                    LogError("failure in VECTOR_create (desired properties)");
+                                    LogError("failure in VECTOR_create (methods properties)");
                                     VECTOR_destroy(modelType->desiredProperties);
                                     VECTOR_destroy(modelType->reportedProperties);
                                     VECTOR_destroy(modelType->models);
@@ -699,17 +754,32 @@ SCHEMA_MODEL_TYPE_HANDLE Schema_CreateModelType(SCHEMA_HANDLE schemaHandle, cons
                                 }
                                 else
                                 {
-                                    modelType->PropertyCount = 0;
-                                    modelType->Properties = NULL;
-                                    modelType->ActionCount = 0;
-                                    modelType->Actions = NULL;
-                                    modelType->SchemaHandle = schemaHandle;
-                                    modelType->DeviceCount = 0;
+                                    if ((modelType->methodsWithReturnType = VECTOR_create(sizeof(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE))) == NULL)
+                                    {
+                                        LogError("failure in VECTOR_create (methods with return type)");
+                                        VECTOR_destroy(modelType->methods);
+                                        VECTOR_destroy(modelType->desiredProperties);
+                                        VECTOR_destroy(modelType->reportedProperties);
+                                        VECTOR_destroy(modelType->models);
+                                        free((void*)modelType->Name);
+                                        free((void*)modelType);
+                                        result = NULL;
+                                    }
+                                    else
+                                    {
+                                        modelType->information = NULL;
+                                        modelType->PropertyCount = 0;
+                                        modelType->Properties = NULL;
+                                        modelType->ActionCount = 0;
+                                        modelType->Actions = NULL;
+                                        modelType->SchemaHandle = schemaHandle;
+                                        modelType->DeviceCount = 0;
 
-                                    schema->ModelTypes[schema->ModelTypeCount] = modelType;
-                                    schema->ModelTypeCount++;
-                                    /* Codes_SRS_SCHEMA_99_008:[On success, a non-NULL handle shall be returned.] */
-                                    result = (SCHEMA_MODEL_TYPE_HANDLE)modelType;
+                                        schema->ModelTypes[schema->ModelTypeCount] = modelType;
+                                        schema->ModelTypeCount++;
+                                        /* Codes_SRS_SCHEMA_99_008:[On success, a non-NULL handle shall be returned.] */
+                                        result = modelType;
+                                    }
                                 }
                             }
                         }
@@ -1340,12 +1410,15 @@ SCHEMA_REPORTED_PROPERTY_HANDLE Schema_GetModelReportedPropertyByIndex(SCHEMA_MO
 
         /*Codes_SRS_SCHEMA_02_016: [ If a reported property with index equal to index exists then Schema_GetModelReportedPropertyByIndex shall succeed and return the non-NULL handle of that REPORTED_PROPERTY. ]*/
         /*Codes_SRS_SCHEMA_02_017: [ Otherwise Schema_GetModelReportedPropertyByIndex shall fail and return NULL. ]*/
-        if ((result = VECTOR_element(modelType->reportedProperties, index)) == NULL)
+        SCHEMA_REPORTED_PROPERTY_HANDLE* temp = VECTOR_element(modelType->reportedProperties, index);
+        if (temp == NULL)
         {
             LogError("index %zu is invalid", index);
+            result = NULL;
         }
         else
         {
+            result = *temp;
             /*return as is*/
         }
     }
@@ -1441,8 +1514,6 @@ SCHEMA_METHOD_HANDLE Schema_GetModelMethodByName(SCHEMA_MODEL_TYPE_HANDLE modelT
         SCHEMA_METHOD_HANDLE* found = VECTOR_find_if(modelTypeHandle->methods, matchModelMethod, methodName);
         if (found == NULL)
         {
-            /*Codes_SRS_SCHEMA_02_118: [ Otherwise, Schema_GetModelMethodByName shall fail and return NULL. ]*/
-            LogError("no such method by name = %s", methodName);
             result = NULL;
         }
         else
@@ -3215,6 +3286,706 @@ void* Schema_GetMetadata(SCHEMA_HANDLE schemaHandle)
     {
         /*Codes_SRS_SCHEMA_02_092: [ Otherwise, Schema_GetMetadata shall succeed and return the saved metadata pointer. ]*/
         result = ((SCHEMA_HANDLE_DATA*)schemaHandle)->metadata;
+    }
+    return result;
+}
+
+SCHEMA_RESULT Schema_AddModelInformation(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle, const char* schemaVersion, const char* id, const char* version, const char* description)
+{
+    SCHEMA_RESULT result;
+    /*Codes_SRS_SCHEMA_02_129: [ If modelTypeHandle is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_130: [ If schemaVersion is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_131: [ If id is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_132: [ If version is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_133: [ If description is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    if (
+        (modelTypeHandle == NULL) ||
+        (schemaVersion == NULL) ||
+        (id == NULL) ||
+        (version == NULL) ||
+        (description == NULL)
+        )
+    {
+        LogError("invalid argument: SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p, const char* schemaVersion=%s, const char* id=%s, const char* version=%s, const char* description=%s",
+            modelTypeHandle,
+            P_OR_NULL(schemaVersion),
+            P_OR_NULL(id),
+            P_OR_NULL(version),
+            P_OR_NULL(description));
+        result = SCHEMA_INVALID_ARG;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_191: [ If model information has already been attached to the model, then Schema_AddModelInformation shall fail and return SCHEMA_ERROR. ]*/
+        if (modelTypeHandle->information != NULL)
+        {
+            LogError("model already has information attached");
+            result = SCHEMA_ERROR;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_134: [ Schema_AddModelInformation shall save modelTypeHandle, schemaVersion, id and description. ]*/
+            modelTypeHandle->information = (INFORMATION*)malloc(sizeof(INFORMATION));
+            if (modelTypeHandle->information == NULL)
+            {
+                LogError("failure in malloc");
+                result = SCHEMA_ERROR;
+            }
+            else
+            {
+                if (mallocAndStrcpy_s(&(modelTypeHandle->information->schemaVersion), schemaVersion) == 0)
+                {
+                    if (mallocAndStrcpy_s(&(modelTypeHandle->information->id), id) == 0)
+                    {
+                        if (mallocAndStrcpy_s(&(modelTypeHandle->information->version), version) == 0)
+                        {
+                            if (mallocAndStrcpy_s(&(modelTypeHandle->information->description), description) == 0)
+                            {
+                                /*Codes_SRS_SCHEMA_02_136: [ Otherwise, Schema_AddModelInformation shall succeed and return SCHEMA_OK. ]*/
+                                result = SCHEMA_OK;
+                                goto allGood;
+                            }
+                            free(modelTypeHandle->information->version);
+                        }
+                        free(modelTypeHandle->information->id);
+                    }
+                    free(modelTypeHandle->information->schemaVersion);
+                }
+                /*Codes_SRS_SCHEMA_02_135: [ If saving modelTypeHandle, schemaVersion, id and description fails then Schema_AddModelInformation shall fail and return SCHEMA_ERROR. ]*/
+                result = SCHEMA_ERROR;
+                free(modelTypeHandle->information);
+                modelTypeHandle->information = NULL;
+            allGood:;
+            }
+        }
+    }
+    return result;
+}
+
+const char* Schema_GetModelSchemaVersion(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_137: [ If modelTypeHandle is NULL then Schema_GetModelSchemaVersion shall fail and return NULL. ]*/
+    if (modelTypeHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p", modelTypeHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_138: [ If the model does not have the information, then Schema_GetModelSchemaVersion shall fail and return NULL. ]*/
+        if (modelTypeHandle->information == NULL)
+        {
+            LogError("not a valid model");
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_139: [ Otherwise, Schema_GetModelSchemaVersion shall succeed and return a non-NULL value. ]*/
+            result = modelTypeHandle->information->schemaVersion;
+        }
+    }
+    return result;
+}
+
+const char* Schema_GetModelId(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_140: [ If modelTypeHandle is NULL then Schema_GetModelId shall fail and return NULL. ]*/
+    if (modelTypeHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p", modelTypeHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_141: [ If the model does not have the information, then Schema_GetModelId shall fail and return NULL. ]*/
+        if (modelTypeHandle->information == NULL)
+        {
+            LogError("not a valid model");
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_142: [ Otherwise, Schema_GetModelId shall succeed and return a non-NULL value. ]*/
+            result = modelTypeHandle->information->id;
+        }
+    }
+    return result;
+}
+const char* Schema_GetModelVersion(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_143: [ If modelTypeHandle is NULL then Schema_GetModelVersion shall fail and return NULL. ]*/
+    if (modelTypeHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p", modelTypeHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_144: [ If the model does not have the information, then Schema_GetModelVersion shall fail and return NULL. ]*/
+        if (modelTypeHandle->information == NULL)
+        {
+            LogError("not a valid model");
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_145: [ Otherwise, Schema_GetModelVersion shall succeed and return a non-NULL value. ]*/
+            result = modelTypeHandle->information->version;
+        }
+    }
+    return result;
+}
+
+const char* Schema_GetModelDescription(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_146: [ If modelTypeHandle is NULL then Schema_GetModelDescription shall fail and return NULL. ]*/
+    if (modelTypeHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p", modelTypeHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_147: [ If the model does not have the information, then Schema_GetModelDescription shall fail and return NULL. ]*/
+        if (modelTypeHandle->information == NULL)
+        {
+            LogError("not a valid model");
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_148: [ Otherwise, Schema_GetModelDescription shall succeed and return a non-NULL value. ]*/
+            result = modelTypeHandle->information->description;
+        }
+    }
+    return result;
+}
+
+const char* Schema_GetReportedPropertyType(SCHEMA_REPORTED_PROPERTY_HANDLE reportedPropertyHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_149: [ If reportedPropertyHandle is NULL then Schema_GetReportedPropertyType shall fail and return NULL. ]*/
+    if (reportedPropertyHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_REPORTED_PROPERTY_HANDLE reportedPropertyHandle = %p", reportedPropertyHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_150: [ Otherwise, Schema_GetReportedPropertyType shall succeed and return a non-NULL value. ]*/
+        result = reportedPropertyHandle->reportedPropertyType;
+    }
+    return result;
+}
+
+const char* Schema_GetReportedPropertyName(SCHEMA_REPORTED_PROPERTY_HANDLE reportedPropertyHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_151: [ If reportedPropertyHandle is NULL then Schema_GetReportedPropertyName shall fail and return NULL. ]*/
+    if (reportedPropertyHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_REPORTED_PROPERTY_HANDLE reportedPropertyHandle = %p", reportedPropertyHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_152: [ Otherwise Schema_GetReportedPropertyName shall succeed and return a non-NULL value. ]*/
+        result = reportedPropertyHandle->reportedPropertyName;
+    }
+    return result;
+}
+
+const char* Schema_GetDesiredPropertyType(SCHEMA_DESIRED_PROPERTY_HANDLE desiredPropertyHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_153: [ If desiredPropertyHandle is NULL then Schema_GetDesiredPropertyType shall fail and return NULL. ]*/
+    if (desiredPropertyHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_DESIRED_PROPERTY_HANDLE desiredPropertyHandle = %p", desiredPropertyHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_154: [ Otherwise Schema_GetDesiredPropertyType shall succeed and return a non-NULL value. ]*/
+        result = desiredPropertyHandle->desiredPropertyType;
+    }
+    return result;
+}
+
+const char* Schema_GetDesiredPropertyName(SCHEMA_DESIRED_PROPERTY_HANDLE desiredPropertyHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_192: [ If desiredPropertyHandle is NULL then Schema_GetDesiredPropertyName shall fail and return NULL. ]*/
+    if (desiredPropertyHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_DESIRED_PROPERTY_HANDLE desiredPropertyHandle = %p", desiredPropertyHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_193: [ Otherwise Schema_GetDesiredPropertyName shall succeed and return a non-NULL value. ]*/
+        result = desiredPropertyHandle->desiredPropertyName;
+    }
+    return result;
+}
+
+
+
+SCHEMA_RESULT Schema_GetModelMethodWithReturnTypeArgumentCount(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle, size_t* argumentCount)
+{
+    SCHEMA_RESULT result;
+    /*Codes_SRS_SCHEMA_02_155: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeArgumentCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_156: [ If argumentCount is NULL then Schema_GetModelMethodWithReturnTypeArgumentCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    if ((methodWithReturnTypeHandle == NULL) ||
+        (argumentCount == NULL))
+    {
+        result = SCHEMA_INVALID_ARG;
+        LogError("(result=%s)", ENUM_TO_STRING(SCHEMA_RESULT, result));
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_157: [ Otherwise, Schema_GetModelMethodWithReturnTypeArgumentCount shall succeed, return SCHEMA_OK and shall write in *argumentCount the number of arguments the method with return type has. ]*/
+        *argumentCount = VECTOR_size(methodWithReturnTypeHandle->methodWithReturnTypeArguments);
+        result = SCHEMA_OK;
+    }
+
+    return result;
+}
+
+
+SCHEMA_RESULT Schema_GetModelMethodWithReturnTypeCount(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle, size_t* methodWithReturnCount)
+{
+    SCHEMA_RESULT result;
+    /*Codes_SRS_SCHEMA_02_158: [ If modelTypehandle is NULL then Schema_GetModelMethodWithReturnTypeCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_159: [ If methodWithReturnCount is NULL then Schema_GetModelMethodWithReturnTypeCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    if (
+        (modelTypeHandle == NULL) ||
+        (methodWithReturnCount == NULL)
+        )
+    {
+        LogError("invalif arg SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p, size_t* methodWithReturnCount=%p", modelTypeHandle, methodWithReturnCount);
+        result = SCHEMA_INVALID_ARG;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_160: [ Otherwise, Schema_GetModelMethodWithReturnTypeCount shall succeed, return SCHEMA_OK and write in *methodWithReturnCount the number of methods with reeturn value the model has. ]*/
+        *methodWithReturnCount = VECTOR_size(modelTypeHandle->methodsWithReturnType);
+        result = SCHEMA_OK;
+    }
+    return result;
+}
+
+SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE Schema_GetModelMethodWithReturnTypeByIndex(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle, size_t index)
+{
+    SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE result;
+    /*Codes_SRS_SCHEMA_02_161: [ If modelTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeByIndex shall fail and return NULL. ]*/
+    if (modelTypeHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p, size_t index=%zu", modelTypeHandle, index);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_162: [ If index is out of bounds, then Schema_GetModelMethodWithReturnTypeByIndex shall fail and return NULL. ]*/
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE* temp = VECTOR_element(modelTypeHandle->methodsWithReturnType, index);
+        if (temp == NULL)
+        {
+            LogError("failure in VECTOR_element [likely out of bounds]");
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_163: [ Otherwise, Schema_GetModelMethodWithReturnTypeByIndex shall succeed and return non-NULL value. ]*/
+            result = *temp;
+        }
+    }
+    return result;
+}
+
+const char* Schema_GetMethodWithReturnTypeName(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_164: [ If methodWithReturnTypeHandle is NULL then Schema_GetMethodWithReturnTypeName shall fail and return NULL. ]*/
+    if (methodWithReturnTypeHandle == NULL)
+    {
+        LogError("invalud arg SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle=%p", methodWithReturnTypeHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_165: [ Otherwise Schema_GetMethodWithReturnTypeName shall succeed and return a non-NULL value. ]*/
+        result = methodWithReturnTypeHandle->methodWithReturnTypeName;
+    }
+    return result;
+}
+
+static bool schemaContainsModel(const void* schema, const void* modelTypeHandle)
+{
+    SCHEMA_HANDLE* pSchemaHandle = (SCHEMA_HANDLE*)schema;
+    size_t i;
+    for (i = 0;i < (*pSchemaHandle)->ModelTypeCount;i++)
+    {
+        if (((*pSchemaHandle)->ModelTypes)[i] == modelTypeHandle)
+        {
+            break;
+        }
+    }
+    return i != (*pSchemaHandle)->ModelTypeCount;
+}
+
+SCHEMA_HANDLE Schema_GetModelSchema(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle)
+{
+    SCHEMA_HANDLE result;
+    /*Codes_SRS_SCHEMA_02_166: [ If modelTypeHandle is NULL then Schema_GetModelSchema shall fail and return NULL. ]*/
+    if (modelTypeHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p", modelTypeHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_167: [ Otherwise, Schema_GetModelSchema shall succeed and return a non-NULL value. ]*/
+        SCHEMA_HANDLE* whereIsIt = (SCHEMA_HANDLE*)VECTOR_find_if(g_schemas, schemaContainsModel, modelTypeHandle);
+        if (whereIsIt == NULL)
+        {
+            /*Codes_SRS_SCHEMA_02_194: [ If the schema for the model cannot be located, then Schema_GetModelSchema shall fail and return NULL. ]*/
+            result = NULL;
+        }
+        else
+        {
+            result = *whereIsIt;
+        }
+    }
+    return result;
+}
+
+/*return NULL if it fails, otherwise returns the newly created methodWithReturnTypeHandle*/
+SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE Schema_CreateModelMethodWithReturnType(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle, const char* returnType, const char* methodWithReturnTypeName)
+{
+    SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE result;
+    /*Codes_SRS_SCHEMA_02_168: [ If modelTypeHandle is NULL then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+    /*Codes_SRS_SCHEMA_02_169: [ If returnType is NULL then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+    /*Codes_SRS_SCHEMA_02_170: [ If methodWithReturnTypeName is NULL then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+    if (
+        (modelTypeHandle == NULL) ||
+        (methodWithReturnTypeName == NULL) ||
+        (returnType == NULL)
+        )
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p, const char* returnType=%s, const char* methodWithReturnTypeName=%s", modelTypeHandle, P_OR_NULL(returnType), P_OR_NULL(methodWithReturnTypeName));
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_171: [ Schema_CreateModelMethodWithReturnType shall allocate resources for a newly created method with return type, copying returnType and methodWithReturnTypeName. ]*/
+        result = (SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE_DATA*)malloc(sizeof(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE_DATA));
+        if (result == NULL)
+        {
+            LogError("failure in malloc");
+            /*return as is*/
+        }
+        else
+        {
+            if (mallocAndStrcpy_s(&(result->returnType), returnType) != 0)
+            {
+                /*Codes_SRS_SCHEMA_02_172: [ If any operation fails, then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+                LogError("failure in mallocAndStrcpy_s");
+                free(result);
+                result = NULL;
+            }
+            else
+            {
+                if (mallocAndStrcpy_s(&(result->methodWithReturnTypeName), methodWithReturnTypeName) != 0)
+                {
+                    /*Codes_SRS_SCHEMA_02_172: [ If any operation fails, then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+                    LogError("failure in mallocAndStrcpy_s");
+                    free(result->returnType);
+                    free(result);
+                    result = NULL;
+                }
+                else
+                {
+                    result->methodWithReturnTypeArguments = VECTOR_create(sizeof(SCHEMA_METHOD_ARGUMENT_HANDLE));
+                    if (result->methodWithReturnTypeArguments == NULL)
+                    {
+                        /*Codes_SRS_SCHEMA_02_172: [ If any operation fails, then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+                        LogError("Failure in VECTOR_create");
+                        free(result->methodWithReturnTypeName);
+                        free(result->returnType);
+                        free(result);
+                        result = NULL;
+                    }
+                    else
+                    {
+                        if (VECTOR_push_back(modelTypeHandle->methodsWithReturnType, &result, 1) != 0)
+                        {
+                            /*Codes_SRS_SCHEMA_02_172: [ If any operation fails, then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+                            LogError("failure in VECTOR_push_back");
+                            VECTOR_destroy(result->methodWithReturnTypeArguments);
+                            free(result->returnType);
+                            free(result->methodWithReturnTypeName);
+                            free(result);
+                            result = NULL;
+                        }
+                        else
+                        {
+                            /*Codes_SRS_SCHEMA_02_173: [ Otherwise, Schema_CreateModelMethodWithReturnType shall succeed and return a non-NULL value. ]*/
+                            /*all is fine*/
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+SCHEMA_RESULT Schema_AddModelMethodWithReturnTypeArgument(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle, const char* argumentName, const char* argumentType)
+{
+    SCHEMA_RESULT result;
+    /*Codes_SRS_SCHEMA_02_174: [ If methodWithReturnTypeHandle is NULL then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_175: [ If argumentName is NULL then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_176: [ If argumentType is NULL then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+    if ((methodWithReturnTypeHandle == NULL) ||
+        (argumentName == NULL) ||
+        (argumentType == NULL))
+    {
+        result = SCHEMA_INVALID_ARG;
+        LogError("(result = %s)", ENUM_TO_STRING(SCHEMA_RESULT, result));
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_195: [ If argumentName already exists, then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+        if (VECTOR_find_if(methodWithReturnTypeHandle->methodWithReturnTypeArguments, methodFindArgumentByBame, argumentName) != NULL)
+        {
+            LogError("an argument with name %s already exists", argumentName);
+            result = SCHEMA_INVALID_ARG;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_177: [ Schema_AddModelMethodWithReturnTypeArgument allocate resources for a copy of argumentName and argumentType. ]*/
+            SCHEMA_METHOD_ARGUMENT_HANDLE_DATA* argument = malloc(sizeof(SCHEMA_METHOD_ARGUMENT_HANDLE_DATA));
+            if (argument == NULL)
+            {
+                /*Codes_SRS_SCHEMA_02_178: [ If allocating resources fails, then Schema_AddModelMethodWithReturnTypeArgument shall fail and return NULL. ]*/
+                LogError("failure to malloc");
+                result = SCHEMA_ERROR;
+            }
+            else
+            {
+                /*Codes_SRS_SCHEMA_02_177: [ Schema_AddModelMethodWithReturnTypeArgument allocate resources for a copy of argumentName and argumentType. ]*/
+                if (mallocAndStrcpy_s(&argument->Name, argumentName) != 0)
+                {
+                    /*Codes_SRS_SCHEMA_02_178: [ If allocating resources fails, then Schema_AddModelMethodWithReturnTypeArgument shall fail and return NULL. ]*/
+                    LogError("failure in mallocAndStrcpy_s");
+                    free(argument);
+                    result = SCHEMA_ERROR;
+                }
+                else
+                {
+                    /*Codes_SRS_SCHEMA_02_177: [ Schema_AddModelMethodWithReturnTypeArgument allocate resources for a copy of argumentName and argumentType. ]*/
+                    if (mallocAndStrcpy_s(&argument->Type, argumentType) != 0)
+                    {
+                        /*Codes_SRS_SCHEMA_02_178: [ If allocating resources fails, then Schema_AddModelMethodWithReturnTypeArgument shall fail and return NULL. ]*/
+                        LogError("failure in mallocAndStrcpy_s");
+                        free(argument->Name);
+                        free(argument);
+                        result = SCHEMA_ERROR;
+                    }
+                    else
+                    {
+                        /*Codes_SRS_SCHEMA_02_177: [ Schema_AddModelMethodWithReturnTypeArgument allocate resources for a copy of argumentName and argumentType. ]*/
+                        if (VECTOR_push_back(methodWithReturnTypeHandle->methodWithReturnTypeArguments, &argument, 1) != 0)
+                        {
+                            /*Codes_SRS_SCHEMA_02_178: [ If allocating resources fails, then Schema_AddModelMethodWithReturnTypeArgument shall fail and return NULL. ]*/
+                            LogError("failure in VECTOR_push_back");
+                            free(argument->Name);
+                            free(argument->Type);
+                            free(argument);
+                            result = SCHEMA_ERROR;
+                        }
+                        else
+                        {
+                            /*Codes_SRS_SCHEMA_02_179: [ Otherwise, Schema_AddModelMethodWithReturnTypeArgument shall succeed and return a non-NULL value. ]*/
+                            result = SCHEMA_OK;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+static bool matchModelMethodWithReturnType(const void* element, const void* value)
+{
+    /*element is a pointer to SCHEMA_METHOD_HANDLE_DATA*/
+    const SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE* decodedElement = (const SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE*)element;
+    const char* name = (const char*)value;
+    return (strcmp((*decodedElement)->methodWithReturnTypeName, name) == 0);
+}
+
+SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE Schema_GetModelMethodWithReturnTypeByName(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle, const char* methodWithReturnTypeName)
+{
+    SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE result;
+    /*Codes_SRS_SCHEMA_02_180: [ If modelTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeByName shall fail and return NULL. ]*/
+    /*Codes_SRS_SCHEMA_02_181: [ If methodWithReturnTypeName is NULL then Schema_GetModelMethodWithReturnTypeByName shall fail and return NULL. ]*/
+    if ((modelTypeHandle == NULL) ||
+        (methodWithReturnTypeName == NULL))
+    {
+        result = NULL;
+        LogError("invalid arguments SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p, const char* methodWithReturnTypeName=%p", modelTypeHandle, methodWithReturnTypeName);
+    }
+    else
+    {
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE* found = VECTOR_find_if(modelTypeHandle->methodsWithReturnType, matchModelMethodWithReturnType, methodWithReturnTypeName);
+        if (found == NULL)
+        {
+            /*Codes_SRS_SCHEMA_02_183: [ Otherwise, Schema_GetModelMethodWithReturnTypeByName shall fail and return NULL. ]*/
+            LogError("no such method with return type by name = %s", methodWithReturnTypeName);
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_182: [ If a method with return type by name methodWithReturnTypeName exists, Schema_GetModelMethodWithReturnTypeByName shall succeed and return a non-NULL value. ]*/
+            result = *found;
+        }
+    }
+
+    return result;
+}
+
+SCHEMA_METHOD_ARGUMENT_HANDLE Schema_GetModelMethodWithReturnTypeArgumentByIndex(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle, size_t argumentIndex)
+{
+    SCHEMA_METHOD_ARGUMENT_HANDLE result;
+
+    /*Codes_SRS_SCHEMA_02_184: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeArgumentByIndex shall fail and return NULL. ]*/
+    if (methodWithReturnTypeHandle == NULL)
+    {
+        result = NULL;
+        LogError("(Error code:%s)", ENUM_TO_STRING(SCHEMA_RESULT, SCHEMA_INVALID_ARG));
+    }
+    else
+    {
+        SCHEMA_METHOD_ARGUMENT_HANDLE *temp = VECTOR_element(methodWithReturnTypeHandle->methodWithReturnTypeArguments, argumentIndex);
+        if (temp == NULL)
+        {
+            /*Codes_SRS_SCHEMA_02_186: [ Otherwise, Schema_GetModelMethodWithReturnTypeArgumentByIndex shall fail and return a NULL value. ]*/
+            LogError("failure in VECTOR_element [out of bounds?]");
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_185: [ If argumentIndex is a valid index, then Schema_GetModelMethodWithReturnTypeArgumentByIndex shall succeed and return a non-NULL value. ]*/
+            result = *temp;
+        }
+    }
+
+    return result;
+}
+
+const char* Schema_GetModelMethodWithReturnTypeName(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_187: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeName shall fail and return NULL. ]*/
+    if (methodWithReturnTypeHandle == NULL)
+    {
+        result = NULL;
+        LogError("invalid arg SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle=%p", methodWithReturnTypeHandle);
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_188: [ Otherwise, Schema_GetModelMethodWithReturnTypeName shall succeed and return a non-NULL value. ]*/
+        result = methodWithReturnTypeHandle->methodWithReturnTypeName;
+    }
+
+    return result;
+}
+
+const char* Schema_GetModelMethodWithReturnTypeReturnType(SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_189: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeReturnType shall fail and return NULL. ]*/
+    if (methodWithReturnTypeHandle == NULL)
+    {
+        result = NULL;
+        LogError("invalid arg SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle=%p", methodWithReturnTypeHandle);
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_190: [ Otherwise, Schema_GetModelMethodWithReturnTypeReturnType shall succeed and and return a non-NULL value. ]*/
+        result = methodWithReturnTypeHandle->returnType;
+    }
+
+    return result;
+}
+
+SCHEMA_RESULT Schema_GetModelMethodCount(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle, size_t* methodCount)
+{
+    SCHEMA_RESULT result;
+    /*CodesSRS_SCHEMA_02_196: [ If modelTypeHandle is NULL then Schema_GetModelMethodCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    /*Codes_SRS_SCHEMA_02_197: [ If methodCount is NULL then Schema_GetModelMethodCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    if (
+        (modelTypeHandle == NULL) ||
+        (methodCount == NULL)
+        )
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p, size_t* methodCount=%p", modelTypeHandle, methodCount);
+        result = SCHEMA_INVALID_ARG;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_198: [ Otherwise, Schema_GetModelMethodCount shall succeed, return SCHEMA_OK and write in methodCount the method count. ]*/
+        *methodCount = VECTOR_size(modelTypeHandle->methods);
+        result = SCHEMA_OK;
+    }
+    return result;
+}
+
+SCHEMA_METHOD_HANDLE Schema_GetModelMethodByIndex(SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle, size_t methodIndex)
+{
+    SCHEMA_METHOD_HANDLE result;
+    /*Codes_SRS_SCHEMA_02_200: [ If modelTypeHandle is NULL then Schema_GetModelMethodByIndex shall fail and return NULL. ]*/
+    if (modelTypeHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle=%p, size_t methodIndex=%zu", modelTypeHandle, methodIndex);
+        result = NULL;
+    }
+    else
+    {
+        SCHEMA_METHOD_HANDLE* temp = VECTOR_element(modelTypeHandle->methods, methodIndex);
+        if (temp == NULL)
+        {
+            /*Codes_SRS_SCHEMA_02_201: [ If methodIndex is not a valid index, then Schema_GetModelMethodByIndex shall fail and return NULL. ]*/
+            LogError("element in vector not found");
+            result = NULL;
+        }
+        else
+        {
+            /*Codes_SRS_SCHEMA_02_202: [ Otherwise, Schema_GetModelMethodByIndex shall succeed and return a non-NULL value. ]*/
+            result = *temp;
+        }
+    }
+    return result;
+}
+
+const char* Schema_GetModelMethodName(SCHEMA_METHOD_HANDLE methodHandle)
+{
+    const char* result;
+    /*Codes_SRS_SCHEMA_02_203: [ If methodHandle is NULL then Schema_GetModelMethodName shall fail and return NULL. ]*/
+    if (methodHandle == NULL)
+    {
+        LogError("invalid argument SCHEMA_METHOD_HANDLE methodHandle=%p", methodHandle);
+        result = NULL;
+    }
+    else
+    {
+        /*Codes_SRS_SCHEMA_02_204: [ Otherwise, Schema_GetModelMethodNameshall return a non-NULL value. ]*/
+        result = methodHandle->methodName;
     }
     return result;
 }

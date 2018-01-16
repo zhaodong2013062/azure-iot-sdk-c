@@ -57,7 +57,7 @@
 #include "codefirst.h"
 #include "agenttypesystem.h"
 #include "schema.h"
-
+#include "schemaserializer.h"
 
 
 #ifdef __cplusplus
@@ -164,6 +164,8 @@ extern "C"
 #define CREATE_DESIRED_PROPERTY_CALLBACK_MODEL_DESIRED_PROPERTY(type, name, ...) IF(COUNT_ARG(__VA_ARGS__), void __VA_ARGS__ (void*);, )
 #define CREATE_DESIRED_PROPERTY_CALLBACK_MODEL_PROPERTY(...)
 #define CREATE_DESIRED_PROPERTY_CALLBACK_MODEL_REPORTED_PROPERTY(...) 
+#define CREATE_DESIRED_PROPERTY_CALLBACK_MODEL_INFORMATION(...)
+#define CREATE_DESIRED_PROPERTY_CALLBACK_MODEL_METHOD_WITH_RETURN_TYPE(...)
 
 #define CREATE_DESIRED_PROPERTY_CALLBACK(...) CREATE_DESIRED_PROPERTY_CALLBACK_##__VA_ARGS__
 
@@ -227,6 +229,8 @@ extern "C"
 
 #define WITH_DESIRED_PROPERTY(type, name, ...) MODEL_DESIRED_PROPERTY(type, name, __VA_ARGS__)
 
+#define WITH_INFORMATION(schemaVersion, id, version, description) MODEL_INFORMATION(schemaVersion, id, version, description)
+
 /**
  * @def   WITH_ACTION(name, ...)
  * The ::WITH_ACTION macro allows declaring a model action.
@@ -241,17 +245,42 @@ extern "C"
 
 
 /**
-* @def   WITH_METHOD(name, ...)
-* The ::WITH_METHOD macro allows declaring a model method.
+* @def   WITH_METHOD([returnType,] name, ...)
+* The ::WITH_METHOD macro allows declaring a model method with return type or a model method returning a non-typed result (METHODRETURN_HANDLE)
+*
+* @param   returnType              The return type of the method with return type. This is optional. If it is missing, then the method is assumed to return METHODRETURN_HANDLE
+* @param   name                    Specifies the method with return type name.
+* @param   argXtype, argXName...   Defines the type and name for the X<sup>th</sup>
+*                                  argument of the method with return type. The type can be any of
+*                                  the primitive types or a struct type.
+*/
+#define WITH_METHOD(...) IF(MOD2(COUNT_ARG(__VA_ARGS__)), MODEL_METHOD(__VA_ARGS__), MODEL_METHOD_WITH_RETURN_TYPE(__VA_ARGS__))
+
+/**
+* @def   WITH_METHOD_NO_RETURN_TYPE(name, ...)
+* The ::WITH_METHOD_NO_RETURN_TYPE macro allows declaring a model method.
 *
 * @param   name                    Specifies the method name.
 * @param   argXtype, argXName...   Defines the type and name for the X<sup>th</sup>
 *                                  argument of the method. The type can be any of
 *                                  the primitive types or a struct type.
 */
-/*Codes_SRS_SERIALIZER_H_02_029: [ WITH_METHOD shall declare a function with the signature 'METHODRETURN_HANDLE name(param1Type param1Name, ...)', which the developer can define to receive corresponding commands from the IoT service. ]*/
-#define WITH_METHOD(name, ...)  MODEL_METHOD(name, __VA_ARGS__)
+/*Codes_SRS_SERIALIZER_H_02_029: [ WITH_METHOD(name, param1Type, param1Name, ... ) shall declare a function with the signature 'METHODRETURN_HANDLE name(param1Type param1Name, ...)', which the developer can define to receive corresponding commands from the IoT service. ]*/
+#define WITH_METHOD_NO_RETURN_TYPE(name, ...)  MODEL_METHOD(name, __VA_ARGS__)
 
+/**
+* @def   WITH_METHOD_WITH_RETURN_TYPE(returnType, name, ...)
+* The ::WITH_METHOD_WITH_RETURN_TYPE macro allows declaring a model method with return type.
+*
+* @param   returnType              The return type of the method with return type
+* @param   name                    Specifies the method with return type name.
+* @param   argXtype, argXName...   Defines the type and name for the X<sup>th</sup>
+*                                  argument of the method with return type. The type can be any of
+*                                  the primitive types or a struct type.
+*/
+
+/*Codes_SRS_SERIALIZER_H_02_036: [ WITH_METHOD(returnType, name, param1Type, param1Name, ... ) shall declare a function with the signature 'returnType name(param1Type param1Name, ...)', which the developer can define to receive corresponding commands from the IoT service. ]*/
+#define WITH_METHOD_WITH_RETURN_TYPE(returnType, name, ...)  MODEL_METHOD_WITH_RETURN_TYPE(returnType, name, __VA_ARGS__)
 
 /**
  * @def   GET_MODEL_HANDLE(schemaNamespace, modelName)
@@ -390,7 +419,11 @@ Actions are discarded, since no marshalling will be done for those when sending 
 
 #define TO_AGENT_DT_EXPAND_MODEL_ACTION(...) 
 
+#define TO_AGENT_DT_EXPAND_MODEL_INFORMATION(...) 
+
 #define TO_AGENT_DT_EXPAND_MODEL_METHOD(...) 
+
+#define TO_AGENT_DT_EXPAND_MODEL_METHOD_WITH_RETURN_TYPE(...)
 
 #define TO_AGENT_DT_EXPAND_ELEMENT_ARGS(N, ...) TO_AGENT_DT_EXPAND_##__VA_ARGS__
 
@@ -440,19 +473,21 @@ Actions are discarded, since no marshalling will be done for those when sending 
 #define REFLECTED_LIST_HEAD(name) \
     static const REFLECTED_DATA_FROM_DATAPROVIDER ALL_REFLECTED(name) = { &C2(REFLECTED_, C1(DEC(__COUNTER__))) };
 #define REFLECTED_STRUCT(name) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_STRUCT_TYPE,               &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {TOSTRING(name)}, {0}, {0}, {0}, {0}} };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_STRUCT_TYPE,               &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {TOSTRING(name)}, {0}, {0}, {0}, {0}} };
 #define REFLECTED_FIELD(XstructName, XfieldType, XfieldName) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_FIELD_TYPE,                &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {TOSTRING(XfieldName), TOSTRING(XfieldType), TOSTRING(XstructName)}, {0}, {0}, {0} } };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_FIELD_TYPE,                &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {0}, {TOSTRING(XfieldName), TOSTRING(XfieldType), TOSTRING(XstructName)}, {0}, {0}, {0} } };
 #define REFLECTED_MODEL(name) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_MODEL_TYPE,                &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {0}, {0}, {TOSTRING(name)} } };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_MODEL_TYPE,                &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {TOSTRING(name)} } };
 #define REFLECTED_PROPERTY(type, name, modelName) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_PROPERTY_TYPE,             &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {TOSTRING(name), TOSTRING(type), Create_AGENT_DATA_TYPE_From_Ptr_##modelName##name, offsetof(modelName, name), sizeof(type), TOSTRING(modelName)}, {0}, {0} } };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_PROPERTY_TYPE,             &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {0}, {0}, {TOSTRING(name), TOSTRING(type), Create_AGENT_DATA_TYPE_From_Ptr_##modelName##name, offsetof(modelName, name), sizeof(type), TOSTRING(modelName)}, {0}, {0} } };
 #define REFLECTED_REPORTED_PROPERTY(type, name, modelName) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_REPORTED_PROPERTY_TYPE,    &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {TOSTRING(name), TOSTRING(type), Create_AGENT_DATA_TYPE_From_Ptr_##modelName##name, offsetof(modelName, name), sizeof(type), TOSTRING(modelName)}, {0}, {0}, {0}, {0}, {0} } };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_REPORTED_PROPERTY_TYPE,    &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {TOSTRING(name), TOSTRING(type), Create_AGENT_DATA_TYPE_From_Ptr_##modelName##name, offsetof(modelName, name), sizeof(type), TOSTRING(modelName)}, {0}, {0}, {0}, {0}, {0} } };
 
+#define REFLECTED_INFORMATION(modelName, schemaVersion, id, version, description) \
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_INFORMATION_TYPE,      &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {TOSTRING(modelName), schemaVersion, id, version, description}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}} };
 
 #define REFLECTED_DESIRED_PROPERTY_WITH_ON_DESIRED_PROPERTY_CHANGE(type, name, modelName, COUNTER, onDesiredPropertyChange) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(COUNTER))) =      { REFLECTION_DESIRED_PROPERTY_TYPE,     &C2(REFLECTED_, C1(DEC(COUNTER))),         { {0}, {onDesiredPropertyChange, DesiredPropertyInitialize_##modelName##name, DesiredPropertyDeinitialize_##modelName##name, TOSTRING(name), TOSTRING(type), (int(*)(const AGENT_DATA_TYPE*, void*))FromAGENT_DATA_TYPE_##type, offsetof(modelName, name), sizeof(type), TOSTRING(modelName)}, {0}, {0}, {0}, {0}, {0}, {0}} };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(COUNTER))) =      { REFLECTION_DESIRED_PROPERTY_TYPE,     &C2(REFLECTED_, C1(DEC(COUNTER))),         { {0}, {0}, {0}, {onDesiredPropertyChange, DesiredPropertyInitialize_##modelName##name, DesiredPropertyDeinitialize_##modelName##name, TOSTRING(name), TOSTRING(type), (int(*)(const AGENT_DATA_TYPE*, void*))FromAGENT_DATA_TYPE_##type, offsetof(modelName, name), sizeof(type), TOSTRING(modelName)}, {0}, {0}, {0}, {0}, {0}, {0}} };
 
 #define REFLECTED_DESIRED_PROPERTY(type, name, modelName, ...)                                                              \
     IF(COUNT_ARG(__VA_ARGS__),                                                                                              \
@@ -461,14 +496,16 @@ Actions are discarded, since no marshalling will be done for those when sending 
     )                                                                                                                       \
 
 #define REFLECTED_ACTION(name, argc, argv, fn, modelName) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_ACTION_TYPE,               &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {0}, {TOSTRING(name), argc, argv, fn, TOSTRING(modelName)}, {0}} };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_ACTION_TYPE,               &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {TOSTRING(name), argc, argv, fn, TOSTRING(modelName)}, {0}} };
 
 #define REFLECTED_METHOD(name, argc, argv, fn, modelName) \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_METHOD_TYPE,               &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {TOSTRING(name), argc, argv, fn, TOSTRING(modelName)}, {0}, {0}, {0}, {0}, {0}, {0}, {0}} };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_METHOD_TYPE,               &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { {0}, {0}, {TOSTRING(name), argc, argv, fn, TOSTRING(modelName)}, {0}, {0}, {0}, {0}, {0}, {0}, {0}} };
 
+#define REFLECTED_METHOD_WITH_RETURN_TYPE(returnType, name, argc, argv, fn, modelName) \
+    static const REFLECTED_SOMETHING C2(REFLECTED_, C1(INC(__COUNTER__))) = { REFLECTION_METHOD_WITH_RETURN_TYPE_TYPE,          &C2(REFLECTED_, C1(DEC(DEC(__COUNTER__)))), { TOSTRING(returnType), TOSTRING(name), argc, argv, fn, TOSTRING(modelName), {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}} };
 
 #define REFLECTED_END_OF_LIST \
-    static const REFLECTED_SOMETHING C2(REFLECTED_, __COUNTER__) = {          REFLECTION_NOTHING,                   NULL,                                       { {0},{0}, {0}, {0}, {0}, {0}, {0}, {0}} };
+    static const REFLECTED_SOMETHING C2(REFLECTED_, __COUNTER__) = {          REFLECTION_NOTHING,                   NULL,                                       { {0}, {0}, {0},{0}, {0}, {0}, {0}, {0}, {0}, {0}} };
 
 #define EXPAND_MODEL_PROPERTY(type, name) EXPAND_ARGS(MODEL_PROPERTY, type, name)
 
@@ -476,9 +513,13 @@ Actions are discarded, since no marshalling will be done for those when sending 
 
 #define EXPAND_MODEL_DESIRED_PROPERTY(type, name, ...) EXPAND_ARGS(MODEL_DESIRED_PROPERTY, type, name, __VA_ARGS__)
 
+#define EXPAND_MODEL_INFORMATION(schemaVersion, id, version, description) EXPAND_ARGS(MODEL_INFORMATION, schemaVersion, id, version, description)
+
 #define EXPAND_MODEL_ACTION(...) EXPAND_ARGS(MODEL_ACTION, __VA_ARGS__)
 
 #define EXPAND_MODEL_METHOD(...) EXPAND_ARGS(MODEL_METHOD, __VA_ARGS__)
+
+#define EXPAND_MODEL_METHOD_WITH_RETURN_TYPE(...) EXPAND_ARGS(MODEL_METHOD_WITH_RETURN_TYPE, __VA_ARGS__)
 
 #define BUILD_MODEL_STRUCT(elem) INSERT_FIELD_FOR_##elem
 
@@ -518,6 +559,8 @@ Actions are discarded, since no marshalling will be done for those when sending 
 
 #define INSERT_FIELD_FOR_MODEL_ACTION(name, ...) /* action isn't a part of the model struct */
 #define INSERT_FIELD_FOR_MODEL_METHOD(name, ...) /* method isn't a part of the model struct */
+#define INSERT_FIELD_FOR_MODEL_INFORMATION(name, ...) /* method isn't a part of the model struct */
+#define INSERT_FIELD_FOR_MODEL_METHOD_WITH_RETURN_TYPE(name, ...) /* method with return type isn't a part of the model struct */
 
 #define CREATE_GLOBAL_INITIALIZE_MODEL_ACTION(...) /*do nothing*/
 #define CREATE_GLOBAL_DEINITIALIZE_MODEL_ACTION(...) /*do nothing*/
@@ -525,8 +568,225 @@ Actions are discarded, since no marshalling will be done for those when sending 
 #define CREATE_GLOBAL_INITIALIZE_MODEL_METHOD(...) /*do nothing*/
 #define CREATE_GLOBAL_DEINITIALIZE_MODEL_METHOD(...) /*do nothing*/
 
+#define CREATE_GLOBAL_INITIALIZE_MODEL_METHOD_WITH_RETURN_TYPE(...) /*do nothing*/
+#define CREATE_GLOBAL_DEINITIALIZE_MODEL_METHOD_WITH_RETURN_TYPE(...) /*do nothing*/
+
+#define CREATE_GLOBAL_INITIALIZE_MODEL_INFORMATION(...) /*do nothing*/
+#define CREATE_GLOBAL_DEINITIALIZE_MODEL_INFORMATION(...) /*do nothing*/
+
 #define CREATE_MODEL_PROPERTY(modelName, type, name) \
     IMPL_PROPERTY(type, name, modelName)
+
+#define CREATE_MODEL_INFORMATION(modelName, schemaVersion, id, version, description) \
+    IMPL_INFORMATION(modelName, schemaVersion, id, version, description)
+
+#define IMPL_INFORMATION(modelName, schemaVersion, id, version, description) \
+    REFLECTED_INFORMATION(modelName, schemaVersion, id, version, description)
+
+#define IMPL_REPORTED_PROPERTY(propertyType, propertyName, modelName) \
+    static int Create_AGENT_DATA_TYPE_From_Ptr_##modelName##propertyName(void* param, AGENT_DATA_TYPE* dest) \
+    { \
+        return C1(ToAGENT_DATA_TYPE_##propertyType)(dest, *(propertyType*)param); \
+    } \
+    REFLECTED_REPORTED_PROPERTY(propertyType, propertyName, modelName)
+
+#define IMPL_DESIRED_PROPERTY(propertyType, propertyName, modelName, ...)           \
+    static void DesiredPropertyInitialize_##modelName##propertyName(void* destination)                             \
+    {                                                                                                   \
+        GlobalInitialize_##propertyType(destination);                                                   \
+    }                                                                                                   \
+    static void DesiredPropertyDeinitialize_##modelName##propertyName(void* destination)                           \
+    {                                                                                                   \
+       GlobalDeinitialize_##propertyType(destination);                                                  \
+    }                                                                                                   \
+    REFLECTED_DESIRED_PROPERTY(propertyType, propertyName, modelName, __VA_ARGS__)          \
+
+#define CREATE_MODEL_ACTION(modelName, actionName, ...) \
+    DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(modelName##actionName, 1); \
+    EXECUTE_COMMAND_RESULT actionName (modelName* device FOR_EACH_2(DEFINE_FUNCTION_PARAMETER, __VA_ARGS__)); \
+    static EXECUTE_COMMAND_RESULT C2(actionName, WRAPPER)(void* device, size_t ParameterCount, const AGENT_DATA_TYPE* values); \
+    /*for macro purposes, this array always has at least 1 element*/ \
+    /*Codes_SRS_SERIALIZER_99_043:[ It is valid for a method not to have any parameters.]*/ \
+    DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 1); \
+    static const WRAPPER_ARGUMENT C2(actionName, WRAPPERARGUMENTS)[DIV2(INC(INC(COUNT_ARG(__VA_ARGS__))))] = { FOR_EACH_2_COUNTED(MAKE_WRAPPER_ARGUMENT, __VA_ARGS__) IFCOMMA(INC(INC(COUNT_ARG(__VA_ARGS__)))) {0} }; \
+    REFLECTED_ACTION(actionName, DIV2(COUNT_ARG(__VA_ARGS__)), C2(actionName, WRAPPERARGUMENTS), C2(actionName, WRAPPER), modelName) \
+    /*Codes_SRS_SERIALIZER_99_040:[ In addition to declaring the function, DECLARE_IOT_METHOD shall provide a definition for a wrapper that takes as parameters a size_t parameterCount and const AGENT_DATA_TYPE*.] */ \
+    /*Codes_SRS_SERIALIZER_99_041:[ This wrapper shall convert all the arguments to predefined types and then call the function written by the data provider developer.]*/ \
+    static EXECUTE_COMMAND_RESULT C2(actionName, WRAPPER)(void* device, size_t ParameterCount, const AGENT_DATA_TYPE* values) \
+    { \
+        EXECUTE_COMMAND_RESULT result; \
+        DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 2); \
+        /*Codes_SRS_SERIALIZER_99_045:[ If the number of passed parameters doesn't match the number of declared parameters, wrapper execution shall fail and return DATA_PROVIDER_INVALID_ARG;]*/ \
+        if(ParameterCount != DIV2(COUNT_ARG(__VA_ARGS__))) \
+        { \
+            result = EXECUTE_COMMAND_ERROR; \
+        } \
+        else \
+        { \
+            /*the below line takes care of initialized but not referenced parameter warning*/ \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 3); \
+            IF(DIV2(COUNT_ARG(__VA_ARGS__)), size_t iParameter = 0;, ) \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 4); \
+            /*the below line takes care of an unused parameter when values is really never questioned*/ \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 5); \
+            FOR_EACH_2(DEFINE_LOCAL_PARAMETER, __VA_ARGS__) \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 6); \
+            IF(DIV2(COUNT_ARG(__VA_ARGS__)), , (void)values;) \
+            { \
+               DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 7); \
+            } \
+            FOR_EACH_2_KEEP_1(START_BUILD_LOCAL_PARAMETER, EXECUTE_COMMAND_ERROR, __VA_ARGS__) \
+            { \
+               DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 8); \
+            } \
+            result = actionName((modelName*)device FOR_EACH_2(PUSH_LOCAL_PARAMETER, __VA_ARGS__)); \
+            FOR_EACH_2_REVERSE(END_BUILD_LOCAL_PARAMETER, __VA_ARGS__) \
+        } \
+        return result; \
+    }
+
+#define CREATE_MODEL_METHOD(modelName, methodName, ...) \
+    DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(modelName##methodName, 1); \
+    METHODRETURN_HANDLE methodName (modelName* device FOR_EACH_2(DEFINE_FUNCTION_PARAMETER, __VA_ARGS__)); \
+    static METHODRETURN_HANDLE C2(methodName, WRAPPER)(void* device, size_t ParameterCount, const AGENT_DATA_TYPE* values); \
+    /*for macro purposes, this array always has at least 1 element*/ \
+    /*Codes_SRS_SERIALIZER_H_02_030: [ It is valid for a method function not to have any parameters. ]*/ \
+    DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 1); \
+    static const WRAPPER_ARGUMENT C2(methodName, WRAPPERARGUMENTS)[DIV2(INC(INC(COUNT_ARG(__VA_ARGS__))))] = { FOR_EACH_2_COUNTED(MAKE_WRAPPER_ARGUMENT, __VA_ARGS__) IFCOMMA(INC(INC(COUNT_ARG(__VA_ARGS__)))) {0} }; \
+    REFLECTED_METHOD(methodName, DIV2(COUNT_ARG(__VA_ARGS__)), C2(methodName, WRAPPERARGUMENTS), C2(methodName, WRAPPER), modelName) \
+    /*Codes_SRS_SERIALIZER_H_02_034: [ WITH_METHOD_NO_RETURN_TYPE shall result in the declaration of a conversion function with the prototype METHODRETURN_HANDLE nameWRAPPER(size_t ParameterCount, const AGENT_DATA_TYPE* values)' ]*/ \
+    /*Codes_SRS_SERIALIZER_H_02_031: [ The function shall convert the input arguments to the types declared in the method parameter list and then call the user-defined method function. ]*/ \
+    static METHODRETURN_HANDLE C2(methodName, WRAPPER)(void* device, size_t ParameterCount, const AGENT_DATA_TYPE* values) \
+    { \
+        METHODRETURN_HANDLE result; \
+        DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 2); \
+        /*Codes_SRS_SERIALIZER_H_02_032: [ If the number of arguments passed to the conversion function does not match the expected count, the function shall return DATAPROVIDER_INVALID_ARG. ]*/ \
+        if(ParameterCount != DIV2(COUNT_ARG(__VA_ARGS__))) \
+        { \
+            LogError("expected parameter count (%zu) does not match the actual parameter count (%zu)", ParameterCount, COUNT_ARG(__VA_ARGS__)); \
+            result = NULL; \
+        } \
+        else \
+        { \
+            /*the below line takes care of initialized but not referenced parameter warning*/ \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 3); \
+            IF(DIV2(COUNT_ARG(__VA_ARGS__)), size_t iParameter = 0;, ) \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 4); \
+            /*the below line takes care of an unused parameter when values is really never questioned*/ \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 5); \
+            FOR_EACH_2(DEFINE_LOCAL_PARAMETER, __VA_ARGS__) \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 6); \
+            IF(DIV2(COUNT_ARG(__VA_ARGS__)), , (void)values;) \
+            { \
+               DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 7); \
+            } \
+            FOR_EACH_2_KEEP_1(START_BUILD_LOCAL_PARAMETER, NULL,__VA_ARGS__) \
+            { \
+               DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 8); \
+            } \
+            result = methodName((modelName*)device FOR_EACH_2(PUSH_LOCAL_PARAMETER, __VA_ARGS__)); \
+            FOR_EACH_2_REVERSE(END_BUILD_LOCAL_PARAMETER, __VA_ARGS__) \
+        } \
+        return result; \
+    }
+
+#define ISVOID
+
+#define CREATE_MODEL_METHOD_WITH_RETURN_TYPE_WHEN_RETURN_IS_VOID(modelName, returnType, methodName, ...) \
+methodName((modelName*)device FOR_EACH_2(PUSH_LOCAL_PARAMETER, __VA_ARGS__)); \
+result = MethodReturn_Create(200, "{}");\
+if(result == NULL) \
+{\
+    LogError("failede to create the method return for void"); \
+}\
+
+#define CREATE_MODEL_METHOD_WITH_RETURN_TYPE_WHEN_RETURN_IS_NOT_VOID(modelName, returnType, methodName, ... ) \
+returnType tempResult = methodName((modelName*)device FOR_EACH_2(PUSH_LOCAL_PARAMETER, __VA_ARGS__)); \
+/*convert typeName to JSON*/ \
+AGENT_DATA_TYPE resultAsAgentDataType; \
+if (ToAGENT_DATA_TYPE_##returnType(&resultAsAgentDataType, tempResult)!=AGENT_DATA_TYPES_OK) \
+{ \
+    LogError("failure in ToAGENT_DATA_TYPE_##typeName"); \
+    result = NULL; \
+} \
+else \
+{ \
+    STRING_HANDLE resultAsSTRING_HANDLE = STRING_new();\
+    if (resultAsSTRING_HANDLE == NULL)\
+    {\
+        LogError("failure in STRING_new");\
+        result = NULL;\
+    }\
+    else\
+    {\
+        if (AgentDataTypes_ToString(resultAsSTRING_HANDLE, &resultAsAgentDataType) != AGENT_DATA_TYPES_OK)\
+        {\
+            LogError("failure in AgentDataTypes_ToString");\
+            result = NULL;\
+        }\
+        else\
+        {\
+            result = MethodReturn_Create(200, STRING_c_str(resultAsSTRING_HANDLE));\
+            if(result == NULL) \
+            { \
+                LogError("failure in MethodReturn_Create"); \
+            } \
+        }\
+        STRING_delete(resultAsSTRING_HANDLE); \
+    }\
+    Destroy_AGENT_DATA_TYPE(&resultAsAgentDataType); \
+}  \
+
+#define ISVOID_void void, void
+
+#define IS_VOID(x) DIV2(COUNT_ARG(ISVOID_##x))
+
+#define CREATE_MODEL_METHOD_WITH_RETURN_TYPE(modelName, returnType, methodName, ...) \
+    DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(modelName##methodName, 1); \
+    returnType methodName (modelName* device FOR_EACH_2(DEFINE_FUNCTION_PARAMETER, __VA_ARGS__)); \
+    static METHODRETURN_HANDLE C2(methodName, WRAPPER)(void* device, size_t ParameterCount, const AGENT_DATA_TYPE* values); \
+    /*for macro purposes, this array always has at least 1 element*/ \
+    /*Codes_SRS_SERIALIZER_H_02_030: [ It is valid for a method function not to have any parameters. ]*/ \
+    DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 1); \
+    static const WRAPPER_ARGUMENT C2(methodName, WRAPPERARGUMENTS)[DIV2(INC(INC(COUNT_ARG(__VA_ARGS__))))] = { FOR_EACH_2_COUNTED(MAKE_WRAPPER_ARGUMENT, __VA_ARGS__) IFCOMMA(INC(INC(COUNT_ARG(__VA_ARGS__)))) {0} }; \
+    REFLECTED_METHOD_WITH_RETURN_TYPE(returnType, methodName, DIV2(COUNT_ARG(__VA_ARGS__)), C2(methodName, WRAPPERARGUMENTS), C2(methodName, WRAPPER), modelName) \
+    /*Codes_SRS_SERIALIZER_H_02_034: [ WITH_METHOD_NO_RETURN_TYPE shall result in the declaration of a conversion function with the prototype METHODRETURN_HANDLE nameWRAPPER(size_t ParameterCount, const AGENT_DATA_TYPE* values)' ]*/ \
+    /*Codes_SRS_SERIALIZER_H_02_031: [ The function shall convert the input arguments to the types declared in the method parameter list and then call the user-defined method function. ]*/ \
+    static METHODRETURN_HANDLE C2(methodName, WRAPPER)(void* device, size_t ParameterCount, const AGENT_DATA_TYPE* values) \
+    { \
+        METHODRETURN_HANDLE result; \
+        DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 2); \
+        /*Codes_SRS_SERIALIZER_H_02_032: [ If the number of arguments passed to the conversion function does not match the expected count, the function shall return DATAPROVIDER_INVALID_ARG. ]*/ \
+        if(ParameterCount != DIV2(COUNT_ARG(__VA_ARGS__))) \
+        { \
+            LogError("expected parameter count (%zu) does not match the actual parameter count (%zu)", ParameterCount, COUNT_ARG(__VA_ARGS__)); \
+            result = NULL; \
+        } \
+        else \
+        { \
+            /*the below line takes care of initialized but not referenced parameter warning*/ \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 3); \
+            IF(DIV2(COUNT_ARG(__VA_ARGS__)), size_t iParameter = 0;, ) \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 4); \
+            /*the below line takes care of an unused parameter when values is really never questioned*/ \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 5); \
+            FOR_EACH_2(DEFINE_LOCAL_PARAMETER, __VA_ARGS__) \
+            DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 6); \
+            IF(DIV2(COUNT_ARG(__VA_ARGS__)), , (void)values;) \
+            { \
+               DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 7); \
+            } \
+            FOR_EACH_2_KEEP_1(START_BUILD_LOCAL_PARAMETER, NULL,__VA_ARGS__) \
+            { \
+               DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(actionName, 8); \
+            } \
+            { \
+                IF(IS_VOID(returnType), CREATE_MODEL_METHOD_WITH_RETURN_TYPE_WHEN_RETURN_IS_VOID(modelName, returnType, methodName, __VA_ARGS__), CREATE_MODEL_METHOD_WITH_RETURN_TYPE_WHEN_RETURN_IS_NOT_VOID( modelName, returnType, methodName, __VA_ARGS__)) \
+            } \
+            FOR_EACH_2_REVERSE(END_BUILD_LOCAL_PARAMETER, __VA_ARGS__) \
+        } \
+        return result; \
+    }
 
 #define CREATE_MODEL_REPORTED_PROPERTY(modelName, type, name) \
     IMPL_REPORTED_PROPERTY(type, name, modelName)
@@ -612,7 +872,7 @@ Actions are discarded, since no marshalling will be done for those when sending 
     DEFINITION_THAT_CAN_SUSTAIN_A_COMMA_STEAL(methodName, 1); \
     static const WRAPPER_ARGUMENT C2(methodName, WRAPPERARGUMENTS)[DIV2(INC(INC(COUNT_ARG(__VA_ARGS__))))] = { FOR_EACH_2_COUNTED(MAKE_WRAPPER_ARGUMENT, __VA_ARGS__) IFCOMMA(INC(INC(COUNT_ARG(__VA_ARGS__)))) {0} }; \
     REFLECTED_METHOD(methodName, DIV2(COUNT_ARG(__VA_ARGS__)), C2(methodName, WRAPPERARGUMENTS), C2(methodName, WRAPPER), modelName) \
-    /*Codes_SRS_SERIALIZER_H_02_034: [ WITH_METHOD shall result in the declaration of a conversion function with the prototype METHODRETURN_HANDLE nameWRAPPER(size_t ParameterCount, const AGENT_DATA_TYPE* values)' ]*/ \
+    /*Codes_SRS_SERIALIZER_H_02_034: [ WITH_METHOD_NO_RETURN_TYPE shall result in the declaration of a conversion function with the prototype METHODRETURN_HANDLE nameWRAPPER(size_t ParameterCount, const AGENT_DATA_TYPE* values)' ]*/ \
     /*Codes_SRS_SERIALIZER_H_02_031: [ The function shall convert the input arguments to the types declared in the method parameter list and then call the user-defined method function. ]*/ \
     static METHODRETURN_HANDLE C2(methodName, WRAPPER)(void* device, size_t ParameterCount, const AGENT_DATA_TYPE* values) \
     { \
@@ -1194,6 +1454,55 @@ static void C2(GlobalDeinitialize_, ascii_char_ptr)(void* dest)
     }
 }
 
+
+static AGENT_DATA_TYPES_RESULT C2(ToAGENT_DATA_TYPE_, ascii_char_ptr_secret)(AGENT_DATA_TYPE* dest, ascii_char_ptr_secret source)
+{
+    return Create_AGENT_DATA_TYPE_from_charz_secret(dest, source);
+}
+
+static AGENT_DATA_TYPES_RESULT C2(FromAGENT_DATA_TYPE_, ascii_char_ptr_secret)(const AGENT_DATA_TYPE* agentData, ascii_char_ptr_secret* dest)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    if (agentData->type != EDM_STRING_SECRET_TYPE)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else
+    {
+        if (*dest != NULL)
+        {
+            free(*dest);
+            *dest = NULL;
+        }
+
+        if (mallocAndStrcpy_s(dest, agentData->value.edmStringSecret.chars) != 0)
+        {
+            LogError("failure in mallocAndStrcpy_s");
+            result = AGENT_DATA_TYPES_ERROR;
+        }
+        else
+        {
+            result = AGENT_DATA_TYPES_OK;
+        }
+        
+    }
+    return result;
+}
+
+static void C2(GlobalInitialize_, ascii_char_ptr_secret)(void* dest)
+{
+    *(ascii_char_ptr_secret*)dest = NULL;
+}
+
+static void C2(GlobalDeinitialize_, ascii_char_ptr_secret)(void* dest)
+{
+    if (*(ascii_char_ptr*)dest != NULL)
+    {
+        free(*(ascii_char_ptr_secret*)dest);
+    }
+}
+
+
 static AGENT_DATA_TYPES_RESULT C2(ToAGENT_DATA_TYPE_, ascii_char_ptr_no_quotes)(AGENT_DATA_TYPE* dest, ascii_char_ptr_no_quotes source)
 {
     return Create_AGENT_DATA_TYPE_from_charz_no_quotes(dest, source);
@@ -1271,6 +1580,40 @@ static void C2(GlobalDeinitialize_, EDM_DATE_TIME_OFFSET)(void* dest)
 {
     (void)(dest);
 }
+
+
+/* EDM_TIMESPAN */
+static AGENT_DATA_TYPES_RESULT C2(ToAGENT_DATA_TYPE_, EDM_TIMESPAN)(AGENT_DATA_TYPE* dest, EDM_TIMESPAN source)
+{
+    return Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN(dest, source);
+}
+
+static AGENT_DATA_TYPES_RESULT C2(FromAGENT_DATA_TYPE_, EDM_TIMESPAN)(const AGENT_DATA_TYPE* agentData, EDM_TIMESPAN* dest)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    if (agentData->type != EDM_TIMESPAN_TYPE)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else
+    {
+        *dest = agentData->value.edmTimespan;
+        result = AGENT_DATA_TYPES_OK;
+    }
+    return result;
+}
+
+static void C2(GlobalInitialize_, EDM_TIMESPAN)(void* dest)
+{
+    memset(dest, 0, sizeof(EDM_TIMESPAN));
+}
+
+static void C2(GlobalDeinitialize_, EDM_TIMESPAN)(void* dest)
+{
+    (void)(dest);
+}
+
+
 
 /*Codes_SRS_SERIALIZER_99_072:[ EDM_GUID]*/
 /*Codes_SRS_SERIALIZER_99_073:[ Create_AGENT_DATA_TYPE_from_EDM_GUID]*/
@@ -1359,6 +1702,76 @@ static void C2(destroyLocalParameter, EDM_BINARY)(EDM_BINARY* value)
     }
 }
 
+static AGENT_DATA_TYPES_RESULT C2(ToAGENT_DATA_TYPE_, EDM_DURATION)(AGENT_DATA_TYPE* dest, EDM_DURATION source)
+{
+    return Create_AGENT_DATA_TYPE_from_EDM_DURATION(dest, source);
+}
+
+static AGENT_DATA_TYPES_RESULT C2(FromAGENT_DATA_TYPE_, EDM_DURATION)(const AGENT_DATA_TYPE* agentData, EDM_DURATION* dest)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    if (agentData->type != EDM_DURATION_TYPE)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else
+    {
+        *dest = agentData->value.edmDuration;
+        result = AGENT_DATA_TYPES_OK;
+    }
+    return result;
+}
+
+static void C2(GlobalInitialize_, EDM_DURATION)(void* dest)
+{
+    memset(dest, 0, sizeof(EDM_DURATION));
+}
+
+static void C2(GlobalDeinitialize_, EDM_DURATION)(void* dest)
+{
+    (void)(dest);
+}
+
+static void C2(destroyLocalParameter, EDM_DURATION)(EDM_DURATION* value)
+{
+    (void)value;
+}
+
+static AGENT_DATA_TYPES_RESULT C2(ToAGENT_DATA_TYPE_, EDM_GEOGRAPHY_POINT)(AGENT_DATA_TYPE* dest, EDM_GEOGRAPHY_POINT source)
+{
+    return Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT(dest, source);
+}
+
+static AGENT_DATA_TYPES_RESULT C2(FromAGENT_DATA_TYPE_, EDM_GEOGRAPHY_POINT)(const AGENT_DATA_TYPE* agentData, EDM_GEOGRAPHY_POINT* dest)
+{
+    AGENT_DATA_TYPES_RESULT result;
+    if (agentData->type != EDM_GEOGRAPHY_POINT_TYPE)
+    {
+        result = AGENT_DATA_TYPES_INVALID_ARG;
+    }
+    else
+    {
+        *dest = agentData->value.edmGeographyPoint;
+        result = AGENT_DATA_TYPES_OK;
+    }
+    return result;
+}
+
+static void C2(GlobalInitialize_, EDM_GEOGRAPHY_POINT)(void* dest)
+{
+    memset(dest, 0, sizeof(EDM_GEOGRAPHY_POINT));
+}
+
+static void C2(GlobalDeinitialize_, EDM_GEOGRAPHY_POINT)(void* dest)
+{
+    (void)(dest);
+}
+
+static void C2(destroyLocalParameter, EDM_GEOGRAPHY_POINT)(EDM_GEOGRAPHY_POINT* value)
+{
+    (void)value;
+}
+
 static void C2(destroyLocalParameter, EDM_BOOLEAN)(EDM_BOOLEAN* value)
 {
     (void)value;
@@ -1379,6 +1792,11 @@ static void C2(destroyLocalParameter, EDM_DATE_TIME_OFFSET)(EDM_DATE_TIME_OFFSET
     (void)value;
 }
 
+static void C2(destroyLocalParameter, EDM_TIMESPAN)(EDM_TIMESPAN* value)
+{
+    (void)value;
+}
+
 static void C2(destroyLocalParameter, EDM_DECIMAL)(EDM_DECIMAL* value)
 {
     if (value != NULL)
@@ -1391,16 +1809,6 @@ static void C2(destroyLocalParameter, EDM_DECIMAL)(EDM_DECIMAL* value)
 static void C2(destroyLocalParameter, EDM_DOUBLE)(EDM_DOUBLE* value)
 {
     (void)value;
-}
-
-static void C2(destroyLocalParameter, EDM_DURATION)(EDM_DURATION* value)
-{
-    if (value != NULL)
-    {
-        free(value->digits);
-        value->digits = NULL;
-        value->nDigits = 0;
-    }
 }
 
 static void C2(destroyLocalParameter, EDM_GUID)(EDM_GUID* value)
@@ -1504,6 +1912,14 @@ static void C2(destroyLocalParameter, ascii_char_ptr)(ascii_char_ptr* value)
 }
 
 static void C2(destroyLocalParameter, ascii_char_ptr_no_quotes)(ascii_char_ptr_no_quotes* value)
+{
+    if (value != NULL)
+    {
+        free(*value);
+    }
+}
+
+static void C2(destroyLocalParameter, ascii_char_ptr_secret)(ascii_char_ptr_no_quotes* value)
 {
     if (value != NULL)
     {

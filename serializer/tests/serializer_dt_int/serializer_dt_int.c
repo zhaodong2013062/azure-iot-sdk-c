@@ -38,8 +38,114 @@ template <> static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::T
 }
 #endif
 
+static int _Bool_Compare(bool left, bool right)
+{
+    return left != right;
+}
+
+static void _Bool_ToString(char* string, size_t bufferSize, bool val)
+{
+    (void)bufferSize;
+    (void)strcpy(string, val ? "true" : "false");
+}
+
 TEST_DEFINE_ENUM_TYPE(SERIALIZER_RESULT, SERIALIZER_RESULT_VALUES);
 TEST_DEFINE_ENUM_TYPE(CODEFIRST_RESULT, CODEFIRST_RESULT_VALUES);
+
+#define EXPECTED_DURATION_STRING  "\"P15DT19H21M22.2S\""
+TEST_DEFINE_ENUM_TYPE(EDM_DURATION_SIGN, EDM_DURATION_SIGN_VALUES);
+static void InitializeDurationForSerializationTests(EDM_DURATION *edmDuration)
+{
+    edmDuration->edmDurationSign = EDM_DURATION_SIGN_POSITIVE;
+    edmDuration->days = 15;
+    edmDuration->hours = 19;
+    edmDuration->minutes = 21;
+    edmDuration->seconds = 22.2;
+}
+
+static void isDurationsExpected(const EDM_DURATION *edmDuration)
+{
+    ASSERT_ARE_EQUAL(EDM_DURATION_SIGN, edmDuration->edmDurationSign, EDM_DURATION_SIGN_POSITIVE);
+    ASSERT_ARE_EQUAL(int, edmDuration->days, 15);
+    ASSERT_ARE_EQUAL(int, edmDuration->hours, 19);
+    ASSERT_ARE_EQUAL(int, edmDuration->minutes, 21);
+    ASSERT_ARE_EQUAL(double, edmDuration->seconds, 22.2);
+}
+
+#define EXPECTED_GEOGRAPHY_POINT_STRING  "\"-179.8 55 123.11\""
+static void InitializeGeographyPointForSerializationTests(EDM_GEOGRAPHY_POINT *edmGeographyPoint)
+{
+    edmGeographyPoint->altitudeSet = true;
+    edmGeographyPoint->longitude = -179.8;
+    edmGeographyPoint->latitude = 55;
+    edmGeographyPoint->altitude = 123.11;
+}
+
+static void isGeographyPointExpected(const EDM_GEOGRAPHY_POINT *edmGeographyPoint)
+{
+    ASSERT_ARE_EQUAL(bool, edmGeographyPoint->altitudeSet, true);
+    ASSERT_ARE_EQUAL(double, edmGeographyPoint->longitude, -179.8);
+    ASSERT_ARE_EQUAL(double, edmGeographyPoint->latitude, 55);
+    ASSERT_ARE_EQUAL(double, edmGeographyPoint->altitude, 123.11);
+}
+
+static void isTimespanExpected(const EDM_TIMESPAN *timespan)
+{
+    (void)timespan;
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_year, 114);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_year, 114);
+
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_mon,6 - 1);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_mon,6 - 1 + 1);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_mday,18);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_mday,18 + 1);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_hour,9);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_hour,9);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_min,41);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_min,41);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.dateTime.tm_sec,23);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.dateTime.tm_sec,23);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.hasFractionalSecond,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.hasFractionalSecond,0);
+    ASSERT_ARE_EQUAL(uint64_t, timespan->beginTime.fractionalSecond,0);
+    ASSERT_ARE_EQUAL(uint64_t, timespan->endTime.fractionalSecond,0);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.hasTimeZone,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.hasTimeZone,0);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.timeZoneHour,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.timeZoneHour,0);
+    ASSERT_ARE_EQUAL(int, timespan->beginTime.timeZoneMinute,0);
+    ASSERT_ARE_EQUAL(int, timespan->endTime.timeZoneMinute,0);
+	
+}
+
+static void SetTestDateTimeOffset(EDM_DATE_TIME_OFFSET *dateTimeOffset)
+{
+    dateTimeOffset->dateTime.tm_year = 114; /*so 2014*/
+    dateTimeOffset->dateTime.tm_mon = 6 - 1; 
+    dateTimeOffset->dateTime.tm_mday = 18;
+    dateTimeOffset->dateTime.tm_hour = 9;
+    dateTimeOffset->dateTime.tm_min = 41;
+    dateTimeOffset->dateTime.tm_sec = 23;
+    dateTimeOffset->hasFractionalSecond = 0;
+    dateTimeOffset->fractionalSecond = 0;
+    dateTimeOffset->hasTimeZone = 0;
+    dateTimeOffset->timeZoneHour = 0;
+    dateTimeOffset->timeZoneMinute = 0;
+}
+
+
+static void InitializeTimespan(EDM_TIMESPAN *timespan)
+{
+    SetTestDateTimeOffset(&timespan->beginTime);
+    SetTestDateTimeOffset(&timespan->endTime);
+
+    timespan->endTime.dateTime.tm_mon = timespan->endTime.dateTime.tm_mon + 1;
+    timespan->endTime.dateTime.tm_mday = timespan->endTime.dateTime.tm_mday + 1;
+}
+
+
+#define EXPECTED_TIMESPAN_STRING "\"2014-06-18T09:41:23Z/2014-07-19T09:41:23Z\""
+
 
 /*returns 0 is the two jsons are not equal, any other value means they are equal*/
 /*typically "left" is the output of SERIALIZE... and right is hand-coded JSON*/
@@ -90,9 +196,13 @@ DECLARE_DEVICETWIN_MODEL(basicModel_WithData15,
     WITH_DESIRED_PROPERTY(bool, with_desired_property_bool15, on_desired_property_bool15),
     WITH_DESIRED_PROPERTY(ascii_char_ptr, with_desired_property_ascii_char_ptr15, on_desired_property_ascii_char_ptr15),
     WITH_DESIRED_PROPERTY(ascii_char_ptr_no_quotes, with_desired_property_ascii_char_ptr_no_quotes15, on_desired_property_ascii_char_ptr_no_quotes15),
+    WITH_DESIRED_PROPERTY(ascii_char_ptr_secret, with_desired_property_ascii_char_ptr_secret15, on_desired_property_ascii_char_ptr_secret15),
     WITH_DESIRED_PROPERTY(EDM_DATE_TIME_OFFSET, with_desired_property_EdmDateTimeOffset15, on_desired_property_EdmDateTimeOffset15),
+    WITH_DESIRED_PROPERTY(EDM_TIMESPAN, with_desired_property_EdmTimespan15, on_desired_property_EdmTimespan15),
     WITH_DESIRED_PROPERTY(EDM_GUID, with_desired_property_EdmGuid15, on_desired_property_EdmGuid15),
     WITH_DESIRED_PROPERTY(EDM_BINARY, with_desired_property_EdmBinary15, on_desired_property_EdmBinary15),
+    WITH_DESIRED_PROPERTY(EDM_DURATION, with_desired_property_EdmDuration15, on_desired_property_EdmDuration15),
+    WITH_DESIRED_PROPERTY(EDM_GEOGRAPHY_POINT, with_desired_property_EdmGeographyPoint15, on_desired_property_EdmGeographyPoint15),
     WITH_METHOD(methodA, int, a, int, b),
     WITH_REPORTED_PROPERTY(int, with_reported_property_int15)
 )
@@ -119,9 +229,13 @@ MOCKABLE_FUNCTION(, void, on_desired_property_double15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_bool15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_ascii_char_ptr15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_ascii_char_ptr_no_quotes15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_ascii_char_ptr_secret15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_EdmDateTimeOffset15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_EdmTimespan15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_EdmGuid15, void*, v);
     MOCKABLE_FUNCTION(, void, on_desired_property_EdmBinary15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_EdmDuration15, void*, v);
+    MOCKABLE_FUNCTION(, void, on_desired_property_EdmGeographyPoint15, void*, v);
     MOCKABLE_FUNCTION(, METHODRETURN_HANDLE, methodA, basicModel_WithData15 *, model, int, a, int, b);
     MOCKABLE_FUNCTION(, void, sendReportedStateCallback, int, status_code, void*, userContextCallback);
 #undef ENABLE_MOCKS
@@ -349,9 +463,13 @@ BEGIN_TEST_SUITE(serializer_dt_int)
             \"with_desired_property_bool15\" : true,                                                           \
             \"with_desired_property_ascii_char_ptr15\" : \"e/leven\",                                          \
             \"with_desired_property_ascii_char_ptr_no_quotes15\" : \"twelve\",                                 \
+            \"with_desired_property_ascii_char_ptr_secret15\" : \"thirteen\",                                  \
             \"with_desired_property_EdmDateTimeOffset15\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+            \"with_desired_property_EdmTimespan15\": " EXPECTED_TIMESPAN_STRING  ",                            \
             \"with_desired_property_EdmGuid15\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-            \"with_desired_property_EdmBinary15\": \"MzQ1\"                                                    \
+            \"with_desired_property_EdmBinary15\": \"MzQ1\",                                                    \
+            \"with_desired_property_EdmDuration15\": " EXPECTED_DURATION_STRING  ",                            \
+            \"with_desired_property_EdmGeographyPoint15\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
         }}";
 
         (void)SERIALIZER_REGISTER_NAMESPACE(basic15);
@@ -378,9 +496,13 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         STRICT_EXPECTED_CALL(on_desired_property_bool15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr_no_quotes15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr_secret15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmDateTimeOffset15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmTimespan15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmGuid15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmBinary15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmDuration15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmGeographyPoint15(modelWithData));
 
         ///act
         g_SerializerIngest_fp(DEVICE_TWIN_UPDATE_COMPLETE, (const unsigned char*)inputJsonAsString, strlen(inputJsonAsString), modelWithData);
@@ -401,6 +523,7 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         ASSERT_IS_TRUE(modelWithData->with_desired_property_bool15);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",       modelWithData->with_desired_property_ascii_char_ptr15);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->with_desired_property_ascii_char_ptr_no_quotes15);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->with_desired_property_ascii_char_ptr_secret15);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_mday);
@@ -412,6 +535,7 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset15.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->with_desired_property_EdmDateTimeOffset15.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset15.timeZoneMinute);
+        isTimespanExpected(&modelWithData->with_desired_property_EdmTimespan15);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->with_desired_property_EdmGuid15.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->with_desired_property_EdmGuid15.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->with_desired_property_EdmGuid15.GUID[2]);
@@ -433,6 +557,9 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         ASSERT_ARE_EQUAL(uint8_t,   '3',            modelWithData->with_desired_property_EdmBinary15.data[0]);
         ASSERT_ARE_EQUAL(uint8_t,   '4',            modelWithData->with_desired_property_EdmBinary15.data[1]);
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->with_desired_property_EdmBinary15.data[2]);
+
+        isDurationsExpected(&modelWithData->with_desired_property_EdmDuration15);
+        isGeographyPointExpected(&modelWithData->with_desired_property_EdmGeographyPoint15);
 
         ///clean
         IoTHubDeviceTwin_DestroybasicModel_WithData15(modelWithData);
@@ -459,9 +586,13 @@ BEGIN_TEST_SUITE(serializer_dt_int)
             \"with_desired_property_bool15\" : true,                                                           \
             \"with_desired_property_ascii_char_ptr15\" : \"e/leven\",                                          \
             \"with_desired_property_ascii_char_ptr_no_quotes15\" : \"twelve\",                                 \
+            \"with_desired_property_ascii_char_ptr_secret15\" : \"thirteen\",                                  \
             \"with_desired_property_EdmDateTimeOffset15\" : \"2014-06-17T08:51:23.000000000005-08:01\",        \
+            \"with_desired_property_EdmTimespan15\": " EXPECTED_TIMESPAN_STRING  ",                            \
             \"with_desired_property_EdmGuid15\" : \"00112233-4455-6677-8899-AABBCCDDEEFF\",                    \
-            \"with_desired_property_EdmBinary15\": \"MzQ1\"                                                    \
+            \"with_desired_property_EdmBinary15\": \"MzQ1\",                                                   \
+            \"with_desired_property_EdmDuration15\": " EXPECTED_DURATION_STRING  ",                            \
+            \"with_desired_property_EdmGeographyPoint15\": " EXPECTED_GEOGRAPHY_POINT_STRING  "                \
         }}";
 
         (void)SERIALIZER_REGISTER_NAMESPACE(basic15);
@@ -488,9 +619,13 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         STRICT_EXPECTED_CALL(on_desired_property_bool15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr_no_quotes15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_ascii_char_ptr_secret15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmDateTimeOffset15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmTimespan15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmGuid15(modelWithData));
         STRICT_EXPECTED_CALL(on_desired_property_EdmBinary15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmDuration15(modelWithData));
+        STRICT_EXPECTED_CALL(on_desired_property_EdmGeographyPoint15(modelWithData));
 
         ///act
         g_SerializerIngest_fp(DEVICE_TWIN_UPDATE_COMPLETE, (const unsigned char*)inputJsonAsString, strlen(inputJsonAsString), modelWithData);
@@ -511,6 +646,7 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         ASSERT_IS_TRUE(modelWithData->with_desired_property_bool15);
         ASSERT_ARE_EQUAL(char_ptr,  "e/leven",       modelWithData->with_desired_property_ascii_char_ptr15);
         ASSERT_ARE_EQUAL(char_ptr,  "\"twelve\"",   modelWithData->with_desired_property_ascii_char_ptr_no_quotes15);
+        ASSERT_ARE_EQUAL(char_ptr,  "thirteen",     modelWithData->with_desired_property_ascii_char_ptr_secret15);
         ASSERT_ARE_EQUAL(int,       114,            modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_year);
         ASSERT_ARE_EQUAL(int,       6-1,            modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_mon);
         ASSERT_ARE_EQUAL(int,       17,             modelWithData->with_desired_property_EdmDateTimeOffset15.dateTime.tm_mday);
@@ -522,6 +658,7 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset15.hasTimeZone);
         ASSERT_ARE_EQUAL(int8_t,    -8,             modelWithData->with_desired_property_EdmDateTimeOffset15.timeZoneHour);
         ASSERT_ARE_EQUAL(uint8_t,   1,              modelWithData->with_desired_property_EdmDateTimeOffset15.timeZoneMinute);
+		isTimespanExpected(&modelWithData->with_desired_property_EdmTimespan15);
         ASSERT_ARE_EQUAL(uint8_t,   0x00,           modelWithData->with_desired_property_EdmGuid15.GUID[0]);
         ASSERT_ARE_EQUAL(uint8_t,   0x11,           modelWithData->with_desired_property_EdmGuid15.GUID[1]);
         ASSERT_ARE_EQUAL(uint8_t,   0x22,           modelWithData->with_desired_property_EdmGuid15.GUID[2]);
@@ -543,6 +680,9 @@ BEGIN_TEST_SUITE(serializer_dt_int)
         ASSERT_ARE_EQUAL(uint8_t,   '3',            modelWithData->with_desired_property_EdmBinary15.data[0]);
         ASSERT_ARE_EQUAL(uint8_t,   '4',            modelWithData->with_desired_property_EdmBinary15.data[1]);
         ASSERT_ARE_EQUAL(uint8_t,   '5',            modelWithData->with_desired_property_EdmBinary15.data[2]);
+
+        isDurationsExpected(&modelWithData->with_desired_property_EdmDuration15);
+        isGeographyPointExpected(&modelWithData->with_desired_property_EdmGeographyPoint15);
 
         ///clean
         IoTHubDeviceTwin_LL_DestroybasicModel_WithData15(modelWithData);

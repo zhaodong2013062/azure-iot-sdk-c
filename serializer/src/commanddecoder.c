@@ -292,6 +292,64 @@ static EXECUTE_COMMAND_RESULT DecodeAndExecuteModelAction(COMMAND_DECODER_HANDLE
     return result;
 }
 
+#define METHOD_TYPE_VALUES \
+    METHOD_TYPE_UNKNOWN, \
+    METHOD_TYPE_METHOD,\
+    METHOD_TYPE_METHOD_WITH_RETURN_TYPE
+
+DEFINE_ENUM(METHOD_TYPE, METHOD_TYPE_VALUES);
+
+typedef union WHAT_METHOD_CALL_TAG
+{
+    SCHEMA_METHOD_HANDLE methodHandle;
+    SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle;
+}WHAT_METHOD_CALL;
+
+typedef struct METHOD_TYPE_CALL_TAG
+{
+    METHOD_TYPE type;
+    WHAT_METHOD_CALL what;
+}METHOD_TYPE_CALL;
+
+/*sets methodType->type to UNKNOWN when it fails.*/
+/*this function exists to avoid some code contorsions later where the flow of the code would be disturbed*/
+static void DecodeAndExecuteModelMethod_SetMethodType(SCHEMA_MODEL_TYPE_HANDLE modelHandle, const char* methodName, METHOD_TYPE_CALL* methodType, size_t *nArguments)
+{
+    /*Codes_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method or a method with return type called methodName. ]*/
+    if ((methodType->what.methodHandle = Schema_GetModelMethodByName(modelHandle, methodName)) != NULL)
+    {
+        if (Schema_GetModelMethodArgumentCount(methodType->what.methodHandle, nArguments) != SCHEMA_OK)
+        {
+            LogError("failure in Schema_GetModelMethodArgumentCount");
+            methodType->type = METHOD_TYPE_UNKNOWN;
+        }
+        else
+        {
+            methodType->type = METHOD_TYPE_METHOD;
+        }
+    }
+    else
+    {
+        if ((methodType->what.methodWithReturnTypeHandle = Schema_GetModelMethodWithReturnTypeByName(modelHandle, methodName)) != NULL)
+        {
+            if (Schema_GetModelMethodWithReturnTypeArgumentCount(methodType->what.methodWithReturnTypeHandle, nArguments) != SCHEMA_OK)
+            {
+                LogError("failure in Schema_GetModelMethodWithReturnTypeArgumentCount");
+                methodType->type = METHOD_TYPE_UNKNOWN;
+            }
+            else
+            {
+                methodType->type = METHOD_TYPE_METHOD_WITH_RETURN_TYPE;
+            }
+        }
+        else
+        {
+            LogError("not such method or method with return type by name of %s", methodName);
+            methodType->type = METHOD_TYPE_UNKNOWN;
+        }
+    }
+}
+
 static METHODRETURN_HANDLE DecodeAndExecuteModelMethod(COMMAND_DECODER_HANDLE_DATA* commandDecoderInstance, SCHEMA_HANDLE schemaHandle, SCHEMA_MODEL_TYPE_HANDLE modelHandle, const char* relativeMethodPath, const char* methodName, MULTITREE_HANDLE methodTree)
 {
     METHODRETURN_HANDLE result;
@@ -305,25 +363,21 @@ static METHODRETURN_HANDLE DecodeAndExecuteModelMethod(COMMAND_DECODER_HANDLE_DA
     }
     else
     {
-        SCHEMA_METHOD_HANDLE modelMethodHandle;
+        METHOD_TYPE_CALL methodTypeCall;
         size_t argCount;
-
-#ifdef _MSC_VER
-#pragma warning(suppress: 6324) /* We intentionally use here strncpy */ 
-#endif
-        
-        /*Codes_SRS_COMMAND_DECODER_02_020: [ CommandDecoder_ExecuteMethod shall verify that the model has a method called methodName. ]*/
-        if (((modelMethodHandle = Schema_GetModelMethodByName(modelHandle, methodName)) == NULL) ||
-            (Schema_GetModelMethodArgumentCount(modelMethodHandle, &argCount) != SCHEMA_OK))
+        DecodeAndExecuteModelMethod_SetMethodType(modelHandle, methodName, &methodTypeCall, &argCount);
+        if (
+            (methodTypeCall.type != METHOD_TYPE_METHOD) &&
+            (methodTypeCall.type != METHOD_TYPE_METHOD_WITH_RETURN_TYPE)
+        )
         {
-            /*Codes_SRS_COMMAND_DECODER_02_023: [ If any of the previous operations fail, then CommandDecoder_ExecuteMethod shall return NULL. ]*/
-            LogError("Failed reading method %s from the schema", methodName);
+            LogError("failure in DecodeAndExecuteModelMethod_SetMethodType, method not found");
             result = NULL;
         }
         else
         {
-            /*Codes_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
             
+            /*Codes_SRS_COMMAND_DECODER_02_021: [ For every argument of methodName, CommandDecoder_ExecuteMethod shall build an AGENT_DATA_TYPE from the node with the same name from the MULTITREE_HANDLE. ]*/
             if (argCount == 0)
             {
                 /*no need for any parameters*/
@@ -344,6 +398,7 @@ static METHODRETURN_HANDLE DecodeAndExecuteModelMethod(COMMAND_DECODER_HANDLE_DA
                     size_t j;
                     result = NULL;
 
+                    size_t nProcessedArguments = 0;
                     for (i = 0; i < argCount; i++)
                     {
                         SCHEMA_METHOD_ARGUMENT_HANDLE methodArgumentHandle;
@@ -351,49 +406,91 @@ static METHODRETURN_HANDLE DecodeAndExecuteModelMethod(COMMAND_DECODER_HANDLE_DA
                         const char* argName;
                         const char* argType;
 
-                        if (((methodArgumentHandle = Schema_GetModelMethodArgumentByIndex(modelMethodHandle, i)) == NULL) ||
+                        switch (methodTypeCall.type)
+                        {
+                            case METHOD_TYPE_METHOD:
+                            {
+                                methodArgumentHandle = Schema_GetModelMethodArgumentByIndex(methodTypeCall.what.methodHandle, i);
+                                if (methodArgumentHandle == NULL)
+                                {
+                                    LogError("Failed getting the argument information from the schema");
+                                    i = argCount;
+                                }
+                                break;
+                            }
+                            case METHOD_TYPE_METHOD_WITH_RETURN_TYPE:
+                            {
+                                methodArgumentHandle = Schema_GetModelMethodWithReturnTypeArgumentByIndex(methodTypeCall.what.methodWithReturnTypeHandle, i);
+                                if (methodArgumentHandle == NULL)
+                                {
+                                    LogError("Failed getting the argument information from the schema");
+                                    i = argCount;
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                LogError("INTERNAL ERROR, unexpected enum value %d", methodTypeCall.type);
+                                methodArgumentHandle = NULL;
+                                i = argCount;
+                                break;
+                            }
+                        }
+
+                        if (i == argCount)
+                        {
+                            break; /*break has semantically different meaning in a switch statement or a for statement.*/
+                            /*this also avoids a possible out of bounds access (DecodeValueFromNode(schemaHandle, &arguments[i],...) later*/
+                        }
+
+                        if (
                             ((argName = Schema_GetMethodArgumentName(methodArgumentHandle)) == NULL) ||
-                            ((argType = Schema_GetMethodArgumentType(methodArgumentHandle)) == NULL))
+                            ((argType = Schema_GetMethodArgumentType(methodArgumentHandle)) == NULL)
+                            )
                         {
                             /*Codes_SRS_COMMAND_DECODER_02_023: [ If any of the previous operations fail, then CommandDecoder_ExecuteMethod shall return NULL. ]*/
                             LogError("Failed getting the argument information from the schema");
-                            result = NULL;
-                            break;
+                            i = argCount;
                         }
                         else if (MultiTree_GetChildByName(methodTree, argName, &argumentNode) != MULTITREE_OK)
                         {
                             /*Codes_SRS_COMMAND_DECODER_02_023: [ If any of the previous operations fail, then CommandDecoder_ExecuteMethod shall return NULL. ]*/
                             LogError("Missing argument %s", argName);
-                            result = NULL;
-                            break;
+                            i = argCount;
                         }
                         else if (DecodeValueFromNode(schemaHandle, &arguments[i], argumentNode, argType) != 0)
                         {
                             /*Codes_SRS_COMMAND_DECODER_02_023: [ If any of the previous operations fail, then CommandDecoder_ExecuteMethod shall return NULL. ]*/
                             LogError("failure in DecodeValueFromNode");
-                            result = NULL;
-                            break;
+                            i = argCount;
+                        }
+                        else
+                        {
+                            nProcessedArguments++;
                         }
                     }
 
-                    if (i == argCount)
+                    if (nProcessedArguments == argCount)
                     {
                         /*Codes_SRS_COMMAND_DECODER_02_022: [ CommandDecoder_ExecuteMethod shall call methodCallback passing the context, the methodName, number of arguments and the AGENT_DATA_TYPE. ]*/
                         /*Codes_SRS_COMMAND_DECODER_02_024: [ Otherwise, CommandDecoder_ExecuteMethod shall return what methodCallback returns. ]*/
                         result = commandDecoderInstance->methodCallback(commandDecoderInstance->methodCallbackContext, relativeMethodPath, methodName, argCount, arguments);
                     }
+                    else
+                    {
+                        LogError("not all arguments could be processed.");
+                        result = NULL;
+                    }
 
-                    for (j = 0; j < i; j++)
+                    for (j = 0; j < nProcessedArguments; j++)
                     {
                         Destroy_AGENT_DATA_TYPE(&arguments[j]);
                     }
 
                     free(arguments);
                 }
-
             }
         }
-        
     }
     return result;
 }

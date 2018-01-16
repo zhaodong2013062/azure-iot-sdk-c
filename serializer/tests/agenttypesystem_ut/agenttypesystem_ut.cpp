@@ -76,7 +76,17 @@ static size_t whenShallSTRING_concat_with_STRING_fail;
 static size_t currentSTRING_construct_n_call;
 static size_t whenShallSTRING_construct_n_fail;
 
+static int bool_Compare(bool left, bool right)
+{
+    return left != right;
+}
 
+static void bool_ToString(char* string, size_t bufferSize, bool val)
+{
+    (void)bufferSize;
+    (void)strcpy(string, val ? "true" : "false");
+}
+ 
 TYPED_MOCK_CLASS(CMocksForAgentTypeSytem, CGlobalMock)
 {
 public:
@@ -3398,6 +3408,48 @@ static CMocksForAgentTypeSytem * mocks = NULL;
 
 static MICROMOCK_GLOBAL_SEMAPHORE_HANDLE g_dllByDll;
 
+TEST_DEFINE_ENUM_TYPE(EDM_DURATION_SIGN, EDM_DURATION_SIGN_VALUES);
+
+static const EDM_DURATION edmExpectedZeroes = { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 0 };
+
+static const char *validGeographyPointStrings[] = {
+    // Longitude and latitude only
+    "\"12.4 -44.3\"",
+    "\"0 0\"",
+    "\"179.543 -179.123\"",
+    "\"5 2\"",
+    "\"-5 -2\"",
+    // Include altitude
+    "\"99.2 81.21 78\"",
+    "\"99.2 81.21 78.21\"",
+    "\"99.2 81.21 -78.21\"",
+    "\"99.2 81.21 0\"",
+    "\"0 0 0\"",
+    "\"77 12.4 -32\"",
+    "\"-72 -21.5 -32.123\"",
+};
+
+// Corresponds to validDurationStings order                
+static const EDM_GEOGRAPHY_POINT edmGeographyPoints[] = {
+    // Longitude and latitude only
+    { false, 12.4, -44.3, 0},
+    { false, 0, 0, 0},
+    { false, 179.543, -179.123, 0},
+    { false, 5, 2, 0 },
+    { false, -5, -2, 0 },
+    // Include altitude
+    { true, 99.2, 81.21, 78 },
+    { true, 99.2, 81.21, 78.21 },
+    { true, 99.2, 81.21, -78.21 },
+    { true, 99.2, 81.21, 0 },
+    { true, 0, 0, 0 },
+    { true, 77, 12.4, -32 },
+    { true, -72, -21.5, -32.123 },
+};
+
+static_assert(COUNT_OF(validGeographyPointStrings) == COUNT_OF(edmGeographyPoints), "Number of arguments in string and array do not agree");
+
+
 BEGIN_TEST_SUITE(AgentTypeSystem_ut)
 
     TEST_SUITE_INITIALIZE(TestClassInitialize)
@@ -4083,22 +4135,28 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
             Destroy_AGENT_DATA_TYPE(&ag);
         }
 
+        // Sets legit date/time offset as basis for further testing
+        static void SetTestDateTimeOffset(EDM_DATE_TIME_OFFSET *dateTimeOffset)
+        {
+            dateTimeOffset->dateTime.tm_year = 114; /*so 2014*/
+            dateTimeOffset->dateTime.tm_mon = 6 - 1; 
+            dateTimeOffset->dateTime.tm_mday = 18;
+            dateTimeOffset->dateTime.tm_hour = 9;
+            dateTimeOffset->dateTime.tm_min = 41;
+            dateTimeOffset->dateTime.tm_sec = 23;
+            dateTimeOffset->hasFractionalSecond = 0;
+            dateTimeOffset->fractionalSecond = 0;
+            dateTimeOffset->hasTimeZone = 0;
+            dateTimeOffset->timeZoneHour = 0;
+            dateTimeOffset->timeZoneMinute = 0;
+        }
+
         /*Tests_SRS_AGENT_TYPE_SYSTEM_99_034:[ Creates an AGENT_DATA_TYPE containing an EDM_DATE_TIME_OFFSET from a time_t.]*/
         TEST_FUNCTION(Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET_succeeds)
         {
             AGENT_DATA_TYPE ag;
             EDM_DATE_TIME_OFFSET someDateTimeOffset;
-            someDateTimeOffset.dateTime.tm_year = 114; /*so 2014*/
-            someDateTimeOffset.dateTime.tm_mon = 6 - 1; 
-            someDateTimeOffset.dateTime.tm_mday = 18;
-            someDateTimeOffset.dateTime.tm_hour = 9;
-            someDateTimeOffset.dateTime.tm_min = 41;
-            someDateTimeOffset.dateTime.tm_sec = 23;
-            someDateTimeOffset.hasFractionalSecond = 0;
-            someDateTimeOffset.fractionalSecond = 0;
-            someDateTimeOffset.hasTimeZone = 0;
-            someDateTimeOffset.timeZoneHour = 0;
-            someDateTimeOffset.timeZoneMinute = 0;
+            SetTestDateTimeOffset(&someDateTimeOffset);
 
             ///act
             auto res = Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(&ag, someDateTimeOffset);
@@ -4118,17 +4176,8 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
             ///arrange
 
             EDM_DATE_TIME_OFFSET someDateTimeOffset;
-            someDateTimeOffset.dateTime.tm_year = 114; /*so 2014*/
-            someDateTimeOffset.dateTime.tm_mon = 6 -1 ;
-            someDateTimeOffset.dateTime.tm_mday = 18;
-            someDateTimeOffset.dateTime.tm_hour = 9;
-            someDateTimeOffset.dateTime.tm_min = 41;
-            someDateTimeOffset.dateTime.tm_sec = 23;
-            someDateTimeOffset.hasFractionalSecond = 0;
-            someDateTimeOffset.fractionalSecond = 0;
-            someDateTimeOffset.hasTimeZone = 0;
-            someDateTimeOffset.timeZoneHour = 0;
-            someDateTimeOffset.timeZoneMinute = 0;
+            SetTestDateTimeOffset(&someDateTimeOffset);
+
             (void)Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(&ag, someDateTimeOffset);
 
             EXPECTED_CALL((*mocks), STRING_concat(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -4149,17 +4198,7 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
             ///arrange
             AGENT_DATA_TYPE ag;
             EDM_DATE_TIME_OFFSET someDateTimeOffset;
-            someDateTimeOffset.dateTime.tm_year = 114; /*so 2014*/
-            someDateTimeOffset.dateTime.tm_mon = 6 - 1;
-            someDateTimeOffset.dateTime.tm_mday = 18;
-            someDateTimeOffset.dateTime.tm_hour = 9;
-            someDateTimeOffset.dateTime.tm_min = 41;
-            someDateTimeOffset.dateTime.tm_sec = 23;
-            someDateTimeOffset.hasFractionalSecond = 0;
-            someDateTimeOffset.fractionalSecond = 0;
-            someDateTimeOffset.hasTimeZone = 0;
-            someDateTimeOffset.timeZoneHour = 0;
-            someDateTimeOffset.timeZoneMinute = 0;
+            SetTestDateTimeOffset(&someDateTimeOffset);
             (void)Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(&ag, someDateTimeOffset);
             (*mocks).ResetAllCalls();
 
@@ -6107,17 +6146,7 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
             AGENT_DATA_TYPE dst;
 
             EDM_DATE_TIME_OFFSET someDateTimeOffset;
-            someDateTimeOffset.dateTime.tm_year = 114; /*so 2014*/
-            someDateTimeOffset.dateTime.tm_mon = 6 - 1;
-            someDateTimeOffset.dateTime.tm_mday = 18;
-            someDateTimeOffset.dateTime.tm_hour = 9;
-            someDateTimeOffset.dateTime.tm_min = 41;
-            someDateTimeOffset.dateTime.tm_sec = 23;
-            someDateTimeOffset.hasFractionalSecond = 0;
-            someDateTimeOffset.fractionalSecond = 0;
-            someDateTimeOffset.hasTimeZone = 0;
-            someDateTimeOffset.timeZoneHour = 0;
-            someDateTimeOffset.timeZoneMinute = 0;
+            SetTestDateTimeOffset(&someDateTimeOffset);
 
             (void)Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(&src, someDateTimeOffset);
 
@@ -9097,6 +9126,71 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
 
             ///cleanup
             Destroy_AGENT_DATA_TYPE(&agentData);
+        }
+
+        TEST_FUNCTION(Create_AGENT_DATA_TYPE_From_AGENT_DATA_TYPE_With_charz_secret_Succeeds)
+        {
+            ///arrange
+            AGENT_DATA_TYPE src;
+            AGENT_DATA_TYPE dst;
+
+            (void)Create_AGENT_DATA_TYPE_from_charz_secret(&src, "42424242");
+
+            ///act
+            AGENT_DATA_TYPES_RESULT result = Create_AGENT_DATA_TYPE_from_AGENT_DATA_TYPE(&dst, &src);
+
+            ///assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, result);
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPE_TYPE, EDM_STRING_SECRET_TYPE, dst.type);
+            ASSERT_ARE_EQUAL(char_ptr, "42424242", (char*)dst.value.edmStringSecret.chars);
+
+            ///cleanup
+            Destroy_AGENT_DATA_TYPE(&src);
+            Destroy_AGENT_DATA_TYPE(&dst);
+        }
+
+        TEST_FUNCTION(AgentTypeSystem_CreateAgentDataType_From_String_EDM_STRING_SECRET_1_Char_Long_No_Quotes_Fails)
+        {
+            // arrange
+            AGENT_DATA_TYPE agentData;
+            const char* source = "a";
+
+            // act
+            AGENT_DATA_TYPES_RESULT result = CreateAgentDataType_From_String(source, EDM_STRING_SECRET_TYPE, &agentData);
+
+            // assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
+        }
+        
+        TEST_FUNCTION(AgentTypeSystem_CreateAgentDataType_From_String_EDM_STRING_SECRET_Empty_String_Succeeds)
+        {
+            // arrange
+            AGENT_DATA_TYPE agentData;
+            const char* source = "\"\"";
+
+            // act
+            AGENT_DATA_TYPES_RESULT result = CreateAgentDataType_From_String(source, EDM_STRING_SECRET_TYPE, &agentData);
+
+            // assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, result);
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPE_TYPE, EDM_STRING_SECRET_TYPE, agentData.type);
+            ASSERT_ARE_EQUAL(size_t, (size_t)0, agentData.value.edmString.length);
+
+            ///cleanup
+            Destroy_AGENT_DATA_TYPE(&agentData);
+        }
+
+        TEST_FUNCTION(AgentTypeSystem_CreateAgentDataType_From_String_EDM_STRING_SECRET_With_Only_Starting_Quote_And_Another_Char_Fails)
+        {
+            // arrange
+            AGENT_DATA_TYPE agentData;
+            const char* source = "\"a";
+
+            // act
+            AGENT_DATA_TYPES_RESULT result = CreateAgentDataType_From_String(source, EDM_STRING_SECRET_TYPE, &agentData);
+
+            // assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
         }
 
         /* Tests_SRS_AGENT_TYPE_SYSTEM_99_076:[ EDM_BOOLEAN_TYPE] */
@@ -12137,7 +12231,7 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
         {
             // arrange
             AGENT_DATA_TYPE agentData;
-            const char* source = "1.7976931348623159e+308";
+            const char* source = "1.7976931348623160e+308";
 
             // act
             AGENT_DATA_TYPES_RESULT result = CreateAgentDataType_From_String(source, EDM_DOUBLE_TYPE, &agentData);
@@ -12946,27 +13040,32 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
             }
         }
 
+        void InitializeDateTimeOffset(EDM_DATE_TIME_OFFSET *dateTimeOffset, size_t testVectorIndex)
+        {
+            dateTimeOffset->dateTime.tm_year = global_testVector[testVectorIndex].year - 1900;
+            dateTimeOffset->dateTime.tm_mon = global_testVector[testVectorIndex].month - 1;
+            dateTimeOffset->dateTime.tm_mday = global_testVector[testVectorIndex].day;
+            dateTimeOffset->dateTime.tm_hour = global_testVector[testVectorIndex].hour;
+            dateTimeOffset->dateTime.tm_min = global_testVector[testVectorIndex].min;
+            dateTimeOffset->dateTime.tm_sec = global_testVector[testVectorIndex].sec;
+            dateTimeOffset->hasFractionalSecond = global_testVector[testVectorIndex].hasFractionalSecond;
+            dateTimeOffset->fractionalSecond = global_testVector[testVectorIndex].fractionalSecond;
+            dateTimeOffset->hasTimeZone= global_testVector[testVectorIndex].hasTimeZone;
+            dateTimeOffset->timeZoneHour = global_testVector[testVectorIndex].timeZoneHour;
+            dateTimeOffset->timeZoneMinute = global_testVector[testVectorIndex].timeZoneMin;
+        }
+
         TEST_FUNCTION(AgentDataTypes_ToString_EDM_DATE_TIME_OFFSET_succeeds)
         {
             ///arrange
             AGENT_DATA_TYPE agentData;
             
-            
             for (size_t i = 0; i < sizeof(global_testVector) / sizeof(global_testVector[0]); i++)
             {
                 ///arrange
                 EDM_DATE_TIME_OFFSET temp;
-                temp.dateTime.tm_year = global_testVector[i].year - 1900;
-                temp.dateTime.tm_mon = global_testVector[i].month - 1;
-                temp.dateTime.tm_mday = global_testVector[i].day;
-                temp.dateTime.tm_hour = global_testVector[i].hour;
-                temp.dateTime.tm_min = global_testVector[i].min;
-                temp.dateTime.tm_sec = global_testVector[i].sec;
-                temp.hasFractionalSecond = global_testVector[i].hasFractionalSecond;
-                temp.fractionalSecond = global_testVector[i].fractionalSecond;
-                temp.hasTimeZone= global_testVector[i].hasTimeZone;
-                temp.timeZoneHour = global_testVector[i].timeZoneHour;
-                temp.timeZoneMinute = global_testVector[i].timeZoneMin;
+                InitializeDateTimeOffset(&temp, i);
+
                 STRING_empty(global_bufferTemp);
                 auto resultCreate = Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET(&agentData, temp);
 
@@ -12983,6 +13082,29 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
             }
         }
 
+        static void VerifyDateTimeOffsetExpected(const EDM_DATE_TIME_OFFSET* dateTimeOffsetActual, size_t testVectorIndex)
+        {
+            ASSERT_ARE_EQUAL(int, global_testVector[testVectorIndex].year-1900, dateTimeOffsetActual->dateTime.tm_year);
+            ASSERT_ARE_EQUAL(int, global_testVector[testVectorIndex].month-1, dateTimeOffsetActual->dateTime.tm_mon);
+            ASSERT_ARE_EQUAL(int, global_testVector[testVectorIndex].day, dateTimeOffsetActual->dateTime.tm_mday);
+            ASSERT_ARE_EQUAL(int, global_testVector[testVectorIndex].hour, dateTimeOffsetActual->dateTime.tm_hour);
+            ASSERT_ARE_EQUAL(int, global_testVector[testVectorIndex].min, dateTimeOffsetActual->dateTime.tm_min);
+            ASSERT_ARE_EQUAL(int, global_testVector[testVectorIndex].sec, dateTimeOffsetActual->dateTime.tm_sec);
+            ASSERT_ARE_EQUAL(int, global_testVector[testVectorIndex].hasFractionalSecond, global_testVector[testVectorIndex].hasFractionalSecond);
+            ASSERT_ARE_EQUAL(uint8_t, (uint8_t)global_testVector[testVectorIndex].fractionalSecond, (uint8_t)global_testVector[testVectorIndex].fractionalSecond);
+            if (global_testVector[testVectorIndex].hasFractionalSecond)
+            {
+                ASSERT_ARE_EQUAL(uint64_t, global_testVector[testVectorIndex].fractionalSecond, dateTimeOffsetActual->fractionalSecond);
+            }
+            ASSERT_ARE_EQUAL(uint8_t, (uint8_t)global_testVector[testVectorIndex].hasTimeZone, (uint8_t)dateTimeOffsetActual->hasTimeZone);
+            if (global_testVector[testVectorIndex].hasTimeZone)
+            {
+                ASSERT_ARE_EQUAL(int8_t, (int8_t)global_testVector[testVectorIndex].timeZoneHour, (int8_t)dateTimeOffsetActual->timeZoneHour);
+                ASSERT_ARE_EQUAL(uint8_t, (uint8_t)global_testVector[testVectorIndex].timeZoneMin, (uint8_t)dateTimeOffsetActual->timeZoneMinute);
+            }
+
+        }
+
         TEST_FUNCTION(CreateAgentDataType_From_String_EDM_DATE_TIME_OFFSET_succeeds)
         {
             ///arrange
@@ -12991,31 +13113,13 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
 
             for (size_t i = 0; i < sizeof(global_testVector) / sizeof(global_testVector[0]); i++)
             {
-                
                 ///act
                 auto resFromString = CreateAgentDataType_From_String(global_testVector[i].expectedOutput, EDM_DATE_TIME_OFFSET_TYPE, &agentData);
-
                 ///assert
                 ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, resFromString);
                 ASSERT_ARE_EQUAL(AGENT_DATA_TYPE_TYPE, EDM_DATE_TIME_OFFSET_TYPE, agentData.type);
-                ASSERT_ARE_EQUAL(int, global_testVector[i].year-1900, agentData.value.edmDateTimeOffset.dateTime.tm_year);
-                ASSERT_ARE_EQUAL(int, global_testVector[i].month-1, agentData.value.edmDateTimeOffset.dateTime.tm_mon);
-                ASSERT_ARE_EQUAL(int, global_testVector[i].day, agentData.value.edmDateTimeOffset.dateTime.tm_mday);
-                ASSERT_ARE_EQUAL(int, global_testVector[i].hour, agentData.value.edmDateTimeOffset.dateTime.tm_hour);
-                ASSERT_ARE_EQUAL(int, global_testVector[i].min, agentData.value.edmDateTimeOffset.dateTime.tm_min);
-                ASSERT_ARE_EQUAL(int, global_testVector[i].sec, agentData.value.edmDateTimeOffset.dateTime.tm_sec);
-                ASSERT_ARE_EQUAL(int, global_testVector[i].hasFractionalSecond, global_testVector[i].hasFractionalSecond);
-                ASSERT_ARE_EQUAL(uint8_t, (uint8_t)global_testVector[i].fractionalSecond, (uint8_t)global_testVector[i].fractionalSecond);
-                if (global_testVector[i].hasFractionalSecond)
-                {
-                    ASSERT_ARE_EQUAL(uint64_t, global_testVector[i].fractionalSecond, agentData.value.edmDateTimeOffset.fractionalSecond);
-                }
-                ASSERT_ARE_EQUAL(uint8_t, (uint8_t)global_testVector[i].hasTimeZone, (uint8_t)agentData.value.edmDateTimeOffset.hasTimeZone);
-                if (global_testVector[i].hasTimeZone)
-                {
-                    ASSERT_ARE_EQUAL(int8_t, (int8_t)global_testVector[i].timeZoneHour, (int8_t)agentData.value.edmDateTimeOffset.timeZoneHour);
-                    ASSERT_ARE_EQUAL(uint8_t, (uint8_t)global_testVector[i].timeZoneMin, (uint8_t)agentData.value.edmDateTimeOffset.timeZoneMinute);
-                }
+                VerifyDateTimeOffsetExpected(&agentData.value.edmDateTimeOffset, i);
+
                 ///cleanup
                 Destroy_AGENT_DATA_TYPE(&agentData);
             }
@@ -13729,5 +13833,525 @@ BEGIN_TEST_SUITE(AgentTypeSystem_ut)
             }
         }
 
+        static void CheckDurationStringAgainstExpectedSucceeds(const char *durationString, const EDM_DURATION *edmDurationExpected)
+        {
+            ///act
+            AGENT_DATA_TYPE ag;
+            auto res = CreateAgentDataType_From_String(durationString, EDM_DURATION_TYPE, &ag);
+
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, res);
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPE_TYPE, EDM_DURATION_TYPE, ag.type);
+            ASSERT_ARE_EQUAL(EDM_DURATION_SIGN, ag.value.edmDuration.edmDurationSign, edmDurationExpected->edmDurationSign);
+            ASSERT_ARE_EQUAL(int, ag.value.edmDuration.days, edmDurationExpected->days);
+            ASSERT_ARE_EQUAL(int, ag.value.edmDuration.hours, edmDurationExpected->hours);
+            ASSERT_ARE_EQUAL(int, ag.value.edmDuration.minutes, edmDurationExpected->minutes);
+            ASSERT_ARE_EQUAL(double, ag.value.edmDuration.seconds, edmDurationExpected->seconds);
+
+            ///cleanup
+            Destroy_AGENT_DATA_TYPE(&ag);
+        }
+
+        // Tests legit EDM duration strings to make sure they're parsed correctly
+        TEST_FUNCTION(CreateAgentDataType_From_Duration_Succeeds)
+        {
+            static const char *validDurationStrings[] = {
+                // Days by themselves
+                "\"P3D\"",
+                "\"P123D\"",
+                "\"P\"",     // P without anything following it.  Technically the spec allows this and T without following chars, too.
+                "\"PT\"",    // T without anything following it.  
+                "\"P15DT\"", // T without anything following it.  
+                // Hours by themselves
+                "\"PT9H\"",
+                "\"PT4488H\"",
+                // Minutes by themselves
+                "\"PT191919M\"",
+                "\"PT1M\"",
+                // Seconds by themselves (no digit)
+                "\"PT55S\"",
+                "\"PT9S\"",
+                // Seconds with digits 
+                "\"PT55.1S\"",
+                "\"PT9.12345S\"",
+                // Sign
+                "\"+P17D\"",
+                "\"+P19DT2H\"",
+                "\"-P175DT4M\"",
+                "\"-P170DT2.22S\"",
+                // All fields are specified
+                "\"P1DT2H3M4S\"",
+                "\"P12345DT54321H12321M123.88S\"",
+                // Explicitly setting 0's at various fields
+                "\"P0DT0H0M0S\"",
+                "\"P0DT0H0M0.00000S\"",
+                "\"P0DT0H0.0S\"",
+                "\"P0D\"",
+                "\"PT0S\"",
+                // Test as close to int overflow as we can but still legal values
+                "\"-P4294967295DT4294967295H4294967295M4294967295.99999S\"",
+                // Test a few set fields and empty
+                "\"P9DT4H22.2S\"",
+                "\"PT4M88S\"",
+                "\"PT4H19S\"",
+                "\"P12DT4H19M\"",
+            };
+
+            // Corresponds to validDurationStings order                
+            static const EDM_DURATION edmExpected[] = {
+                // Days by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 3, 0, 0, 0 },
+                { EDM_DURATION_SIGN_POSITIVE, 123, 0, 0, 0 },
+                edmExpectedZeroes,
+                edmExpectedZeroes,
+                { EDM_DURATION_SIGN_POSITIVE, 15, 0, 0, 0 },
+                // Hours by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 0, 9, 0, 0 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 4488, 0, 0 },
+                // Minutes by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 191919, 0 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 1, 0 },
+                // Seconds by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 55 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 9 },
+                // Seconds by with digits 
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 55.1 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 9.12345 },
+                // Sign
+                { EDM_DURATION_SIGN_POSITIVE, 17, 0, 0, 0 },
+                { EDM_DURATION_SIGN_POSITIVE, 19, 2, 0, 0 },
+                { EDM_DURATION_SIGN_NEGATIVE, 175, 0, 4, 0 },
+                { EDM_DURATION_SIGN_NEGATIVE, 170, 0, 0, 2.22 },
+                // All fields are specified
+                { EDM_DURATION_SIGN_POSITIVE, 1, 2, 3, 4 },
+                { EDM_DURATION_SIGN_POSITIVE, 12345, 54321, 12321, 123.88 },
+                // Explicitly setting 0's at various fields
+                edmExpectedZeroes, 
+                edmExpectedZeroes,
+                edmExpectedZeroes,
+                edmExpectedZeroes,
+                edmExpectedZeroes,
+                // Test as close to int overflow as we can but still legal values
+                { EDM_DURATION_SIGN_NEGATIVE, UINT_MAX, UINT_MAX, UINT_MAX, 4294967295.99999 },
+                // Test a few set fields and empty
+                { EDM_DURATION_SIGN_POSITIVE, 9, 4, 0, 22.2 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 4, 88 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 4, 0, 19 },
+                { EDM_DURATION_SIGN_POSITIVE, 12, 4, 19, 0 },
+            };
+
+            static_assert(COUNT_OF(validDurationStrings) == COUNT_OF(edmExpected), "Number of arguments in string and array do not agree");
+
+            for (int i = 0; i < COUNT_OF(validDurationStrings); i++)
+            {
+                CheckDurationStringAgainstExpectedSucceeds(validDurationStrings[i], &edmExpected[i]);
+            }
+        }
+
+        TEST_FUNCTION(Create_AGENT_DATA_TYPE_from_EDM_DURATION_with_NULL_agentData_fails)
+        {
+            ///arrange
+            EDM_DURATION something;
+            memset(&something, 0, sizeof(EDM_DURATION));
+
+            ///act
+            auto result = Create_AGENT_DATA_TYPE_from_EDM_DURATION(NULL, something);
+
+            ///assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
+        }
+
+        // Tests invalid EDM duration strings to make sure they generate errors
+        TEST_FUNCTION(CreateAgentDataType_From_Duration_Fails)
+        {
+            const char *invalidDurationStrings[] = {
+                "\"\"",                 // Empty string
+                "\"Q\"",                // Illegal starting char 
+                "\">123D\"",            // Illegal starting char 
+                "\"+Q\"",               // Illegal starting char (after '+')
+                "\"P>\"",               // Illegal character after P
+                "\"P>17D\"",            // Illegal character after P
+                // Invalid 'D' and 'T' fields
+                "\"PD\"",               // No digit after D
+                "\"PDT\"",              // No digit before D
+                "\"P!!D4\"",            // Illegal digit for D
+                "\"P15D4\"",            // No field for digit after D
+                "\"P15DT4\"",           // No field for digit after T
+                "\"P15DT4.\"",          // No field for digit after T
+                // Invalid 'H' fields
+                "\"PH\"",               // No T before H
+                "\"PTH\"",              // No digit before H
+                "\"PT!!H\"",            // Illegal digit for H
+                "\"PT0H!\"",            // No field for digit after H
+                "\"PT15H22\"",          // No field for digit after H
+                "\"PT15H.\"",           // No field for digit after H
+                // Invalid 'M' fields
+                "\"PM\"",               // No T before M
+                "\"PTM\"",              // No digit after M
+                "\"PT!!M\"",            // Illegal digit for M
+                "\"PT0M!\"",            // No field for digit after M
+                "\"PT0M22\"",           // No field for digit after M
+                "\"PT0M0.\"",           // No field for digit after M
+                // Invalid 'S' fields
+                "\"PS\"",               // No T before S
+                "\"PTS\"",              // No digit after S
+                "\"PT!!S\"",            // Illegal digit for S
+                "\"PT0S!\"",            // No field for digit after S
+                "\"PT0S33\"",           // No field for digit after S
+                "\"PT0S.\"",            // No field for digit after S
+                "\"PT.33S\"",           // An explicit digit (even 0) is required before '.' for S
+                "\"PT0.33\"",           // Did not set field S when using '.'
+                "\"PT0.33!\"",          // Did not set field S when using '.'
+                // Invalid order of items
+                "\"PT12D\"",            // T comes before D
+                "\"PT0S0M\"",           // S comes before M
+                "\"PT12.0S3M\"",        // S comes before S
+                "\"PT12DT3\"",          // T comes before D
+                "\"P3S\"",              // Missing T
+                "\"P3ST\"",             // S comes before T
+                "\"PT4M2H\"",           // M comes before H
+                "\"PT4S2H\"",           // S comes before H
+                // Duplicate items
+                "\"P12D12D\"",          // D is duplicated
+                "\"P12DT5H5H\"",        // H is duplicated
+                "\"P12DT5M5M\"",        // M is duplicated
+                "\"PT02S02S\"",         // S is duplicated
+                "\"PT0.02S0.02S\"",     // S / . duplicated
+                // Integer overflow
+                "\"P4294967297D\"",     // Int overflow: 2^32 + 1 is one greater than what we can store
+                "\"P10000000000D\"",    // Int overflow
+            };
+
+            for (int i = 0; i < COUNT_OF(invalidDurationStrings); i++)
+            {
+                AGENT_DATA_TYPE ag;
+                auto res = CreateAgentDataType_From_String(invalidDurationStrings[i], EDM_DURATION_TYPE, &ag);
+                ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, res);
+                // Don't call Destroy_AGENT_DATA_TYPE();  It will succeed but put out false-positive log messages
+                // because on error case, we haven't set a type yet for 'ag'.                
+            }
+        }
+
+        void CheckDurationAgentDataType_ToStringSucceeds(const EDM_DURATION *edmDuration, const char *expectedDurationString)
+        {
+            AGENT_DATA_TYPE ag;
+            STRING_HANDLE durationStringHandle = BASEIMPLEMENTATION::STRING_new();;
+            
+            ag.type = EDM_DURATION_TYPE;
+            memcpy(&ag.value.edmDuration, edmDuration, sizeof(EDM_DURATION));
+
+            ///act
+            auto result = AgentDataTypes_ToString(durationStringHandle, &ag);
+
+            ///assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, result);
+            ASSERT_ARE_EQUAL(char_ptr, expectedDurationString, STRING_c_str(durationStringHandle));
+
+            ///cleanup
+            Destroy_AGENT_DATA_TYPE(&ag);
+            BASEIMPLEMENTATION::STRING_delete(durationStringHandle);
+        }
+
+        TEST_FUNCTION(AgentDataTypes_ToString_Duration_succeeds)
+        {
+            static const EDM_DURATION validDuration[] = {
+                // Days by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 3, 0, 0, 0 },
+                { EDM_DURATION_SIGN_POSITIVE, 123, 0, 0, 0 },
+                // Hours by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 0, 9, 0, 0 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 4488, 0, 0 },
+                // Minutes by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 191919, 0 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 1, 0 },
+                // Seconds by themselves
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 55 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 9 },
+                // Seconds by with digits 
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 55.1 },
+                { EDM_DURATION_SIGN_POSITIVE, 0, 0, 0, 9.12345 },
+                // Sign
+                { EDM_DURATION_SIGN_NEGATIVE, 175, 0, 4, 0 },
+                { EDM_DURATION_SIGN_NEGATIVE, 170, 0, 0, 2.22 },
+                // All fields are zeroes.
+                edmExpectedZeroes,
+                // All fields are specified
+                { EDM_DURATION_SIGN_POSITIVE, 1, 2, 3, 4 },
+                { EDM_DURATION_SIGN_POSITIVE, 12345, 54321, 12321, 123.88 },
+            };
+
+            // We cannot simply reuse the same data from CreateAgentDataType_From_Duration_Succeeds.
+            // CreateAgentDataType_From_Duration_Succeeds uses "unnatural" strings for test - e.g. PT0S -
+            // where our real AgentDataTypes_ToString would never add unneeded "T0S".
+            static const char *expectedDurationStrings[] = {
+                // Days by themselves
+                "\"P3D\"",
+                "\"P123D\"",
+                // Hours by themselves
+                "\"PT9H\"",
+                "\"PT4488H\"",
+                // Minutes by themselves
+                "\"PT191919M\"",
+                "\"PT1M\"",
+                // Seconds by themselves (no digit)
+                "\"PT55S\"",
+                "\"PT9S\"",
+                // Seconds with digits 
+                "\"PT55.1S\"",
+                "\"PT9.12345S\"",
+                // Sign
+                "\"-P175DT4M\"",
+                "\"-P170DT2.22S\"",
+                // All fields are zeroes.  By convention, we will custom generate string below.
+                "\"PT0S\"",
+                // All fields are specified
+                "\"P1DT2H3M4S\"",
+                "\"P12345DT54321H12321M123.88S\"",
+            };
+
+            static_assert(COUNT_OF(validDuration) == COUNT_OF(expectedDurationStrings), "Number of arguments in string and array do not agree");
+
+            for (int i = 0; i < COUNT_OF(validDuration); i++)
+            {
+                CheckDurationAgentDataType_ToStringSucceeds(&validDuration[i],expectedDurationStrings[i]);
+            }
+        }
+
+        static void CheckGeographyPointStringAgainstExpectedSucceeds(const char *geographyPointString, const EDM_GEOGRAPHY_POINT *edmGeographyPointExpected)
+        {
+            ///act
+            AGENT_DATA_TYPE ag;
+            auto res = CreateAgentDataType_From_String(geographyPointString, EDM_GEOGRAPHY_POINT_TYPE, &ag);
+
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, res);
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPE_TYPE, EDM_GEOGRAPHY_POINT_TYPE, ag.type);
+            ASSERT_ARE_EQUAL(bool, ag.value.edmGeographyPoint.altitudeSet, edmGeographyPointExpected->altitudeSet);
+            ASSERT_ARE_EQUAL(double, ag.value.edmGeographyPoint.longitude, edmGeographyPointExpected->longitude);
+            ASSERT_ARE_EQUAL(double, ag.value.edmGeographyPoint.latitude, edmGeographyPointExpected->latitude);
+            ASSERT_ARE_EQUAL(double, ag.value.edmGeographyPoint.altitude, edmGeographyPointExpected->altitude);
+
+            ///cleanup
+            Destroy_AGENT_DATA_TYPE(&ag);
+        }
+
+        // Tests legit EDM duration strings to make sure they're parsed correctly
+        TEST_FUNCTION(CreateAgentDataType_From_GeographyPoint_Succeeds)
+        {
+            for (int i = 0; i < COUNT_OF(validGeographyPointStrings); i++)
+            {
+                CheckGeographyPointStringAgainstExpectedSucceeds(validGeographyPointStrings[i], &edmGeographyPoints[i]);
+            }
+        }
+
+        // Tests invalid EDM duration strings to make sure they generate errors
+        TEST_FUNCTION(CreateAgentDataType_From_GeographyPoint_Fails)
+        {
+            const char *invalidGeographyPointStrings[] = {
+                "",                     // Empty string
+                "17.3",                 // Only longitude is set (followed by \0)
+                "37.3 ",                // Only longitude is set (followed by space)
+                "InvalidLongitude 14",  // Invalid longitude
+                "- 14",                 // Invalid longitude
+                "17.3 InvalidLatitude", // Invalid latitude
+                "19 -",                 // Invalid latitude
+                "19 14C",               // Invalid latitude
+                "-42 22 ",              // Illegal trailing space when altitude not set
+                "3 13 InvalidAltitude", // Invalid altitude
+                "3 13 2.27.5",          // Invalid altitude
+            };
+
+            for (int i = 0; i < COUNT_OF(invalidGeographyPointStrings); i++)
+            {
+                AGENT_DATA_TYPE ag;
+                auto res = CreateAgentDataType_From_String(invalidGeographyPointStrings[i], EDM_GEOGRAPHY_POINT_TYPE, &ag);
+                ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, res);
+                // Don't call Destroy_AGENT_DATA_TYPE();  It will succeed but put out false-positive log messages
+                // because on error case, we haven't set a type yet for 'ag'.                
+            }
+        }
+
+        void CheckGeographyPointAgentDataType_ToStringSucceeds(const EDM_GEOGRAPHY_POINT *edmGeographyPoint, const char *expectedGeographyPointString)
+        {
+            AGENT_DATA_TYPE ag;
+            STRING_HANDLE geographyPointStringHandle = BASEIMPLEMENTATION::STRING_new();
+            
+            ag.type = EDM_GEOGRAPHY_POINT_TYPE;
+            memcpy(&ag.value.edmGeographyPoint, edmGeographyPoint, sizeof(EDM_GEOGRAPHY_POINT));
+
+            ///act
+            auto result = AgentDataTypes_ToString(geographyPointStringHandle, &ag);
+
+            ///assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, result);
+            ASSERT_ARE_EQUAL(char_ptr, expectedGeographyPointString, STRING_c_str(geographyPointStringHandle));
+
+            ///cleanup
+            Destroy_AGENT_DATA_TYPE(&ag);
+            BASEIMPLEMENTATION::STRING_delete(geographyPointStringHandle);
+        }
+
+        TEST_FUNCTION(AgentDataTypes_ToString_GeographyPoint_succeeds)
+        {
+            for (int i = 0; i < COUNT_OF(validGeographyPointStrings); i++)
+            {
+                CheckGeographyPointAgentDataType_ToStringSucceeds(&edmGeographyPoints[i], validGeographyPointStrings[i]);
+            }
+        }
+
+        TEST_FUNCTION(Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT_with_NULL_agentData_fails)
+        {
+            ///arrange
+            EDM_GEOGRAPHY_POINT something = { 0 };
+
+            ///act
+            auto result = Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT(NULL, something);
+
+            ///assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
+        }
+
+        /*Tests_SRS_AGENT_TYPE_SYSTEM_99_013:[ All the Create_... functions shall check their parameters for validity. When an invalid parameter is detected, a code of AGENT_DATA_TYPES_INVALID_ARG shall be returned ]*/
+        TEST_FUNCTION(Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN_with_NULL_agentData_fails)
+        {
+            ///arrange
+            EDM_TIMESPAN timespan = { { 0 } };
+
+            ///act
+            auto result = Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN(NULL, timespan);
+
+            ///assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
+        }
+
+        TEST_FUNCTION(CreateAgentTimespan_From_String_Good_Timespan_Succeeds)
+        {
+            ///arrange
+            AGENT_DATA_TYPE agentData;
+            char expectedOutput[1024];
+
+
+            for (size_t i = 0; i < sizeof(global_testVector) / sizeof(global_testVector[0]); i++)
+            {
+                // Build up timespan string using the dateTimeOffset table (just use same date for begin and
+                // end time).  Since this table has "..." surronding the data, we need to do some 
+                // additional logic to map this to timespan itself)
+                ASSERT_ARE_EQUAL(int, 0, strncpy_s(expectedOutput, sizeof(expectedOutput), global_testVector[i].expectedOutput, strlen(global_testVector[i].expectedOutput)-1));
+                ASSERT_ARE_EQUAL(int, 0, strcat_s(expectedOutput, sizeof(expectedOutput), "/"));
+                ASSERT_ARE_EQUAL(int, 0, strcat_s(expectedOutput, sizeof(expectedOutput), global_testVector[i].expectedOutput + 1));
+
+                ///act
+                auto resFromString = CreateAgentDataType_From_String(expectedOutput, EDM_TIMESPAN_TYPE, &agentData);
+
+                ///assert
+                ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, resFromString);
+                ASSERT_ARE_EQUAL(AGENT_DATA_TYPE_TYPE, EDM_TIMESPAN_TYPE, agentData.type);
+                VerifyDateTimeOffsetExpected(&agentData.value.edmTimespan.beginTime, i);
+                VerifyDateTimeOffsetExpected(&agentData.value.edmTimespan.endTime, i);
+
+                ///cleanup
+                Destroy_AGENT_DATA_TYPE(&agentData);
+            }
+        }
+
+
+        // Tests invalid EDM duration strings to make sure they generate errors
+        TEST_FUNCTION(CreateAgentTimespan_From_Bad_Timespan_Fails)
+        {
+            const char *invalidGeographyPointStrings[] = {
+                "",                     // Empty string
+                "\"",                   // Single quote
+                "\"\"",                 // Double quotes but nothing more
+                "/",                    // Timespan delimiter only
+                "\"/\"",                // Double quotes, delimeter between, but nothing more
+                "\"1978-09-01T00:00Z1983-06-02T15:02Z\"", // Good dates but missing '/' delimiter
+                "\"1978-09-01T00:00/1983-06-02T15:02Z\"", // 1st date missing 1st 'Z' delimeter
+                "\"1978-09-01T00:00Z/1983-06-02T15:02\"", // 2nd date missing closing Z delimeter 
+                "1978-09-01T00:00Z/1983-06-02T15:02Z\"",  // Missing opening quote
+                "\"1978-09-01T00:00Z/1983-06-02T15:02Z",  // Missing closing quote
+                "\"1978-09-01T00:00Z/\"",                 // Good 1st date but completely missing 2nd date
+                "\"/1983-06-02T15:02Z\"",                 // Good 2nd date but completely missing 1st date
+                "\"1978-18-01T00:00Z/1983-06-02T15:02Z\"", // Bad 1st date (illegal month 18)
+                "\"1978-09-01T00:00Z/1983-19-02T15:02Z\"", // Bad 2nd date (illegal month 19)
+                "\"1978-09-01T00:00+23:0/1983-06-02T15:02Z\"",  // Illegal timezone in 1st date (no Z)
+                "\"1978-09-01T00:00Z/1983-06-02T15:02+23:0\"", // Illegal timezone in 2nd date (no Z)
+                "\"1978-09-01T00:00+23:0Z/1983-06-02T15:02Z\"",  // Illegal timezone in 1st date (with Z)
+                "\"1978-09-01T00:00Z/1983-06-02T15:02+23:0Z\"", // Illegal timezone in 2nd date (with Z)
+            };
+
+            for (int i = 0; i < COUNT_OF(invalidGeographyPointStrings); i++)
+            {
+                AGENT_DATA_TYPE ag;
+                auto res = CreateAgentDataType_From_String(invalidGeographyPointStrings[i], EDM_TIMESPAN_TYPE, &ag);
+                ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, res);
+                // Don't call Destroy_AGENT_DATA_TYPE();  It will succeed but put out false-positive log messages
+                // because on error case, we haven't set a type yet for 'ag'.                
+            }
+        }
+
+
+        TEST_FUNCTION(Create_AGENT_DATA_TYPE_from_EDM_Timespan_succeeds)
+        {
+            ///arrange
+            AGENT_DATA_TYPE agentData;
+            
+            for (size_t i = 0; i < sizeof(global_testVector) / sizeof(global_testVector[0]); i++)
+            {
+                ///arrange
+                EDM_TIMESPAN temp;
+                InitializeDateTimeOffset(&temp.beginTime, i);
+                InitializeDateTimeOffset(&temp.endTime, i);
+
+                STRING_empty(global_bufferTemp);
+                auto resultCreate = Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN(&agentData, temp);
+
+                ///act
+                auto resToString = AgentDataTypes_ToString(global_bufferTemp,  &agentData);
+
+                ///assert
+                ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, resultCreate);
+                ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_OK, resToString);
+
+                // The test vector's data is for "raw" dateTimeOffsets.  We need some additonal logic to
+                // account for the '/' between the begin and end time and the "..." layout.
+                const char *resultString = STRING_c_str(global_bufferTemp) ;
+                size_t singleExpectedDateLength = strlen(global_testVector[i].expectedOutput);
+                
+                ASSERT_ARE_EQUAL(int, 0, strncmp(global_testVector[i].expectedOutput, resultString, singleExpectedDateLength - 2));
+                ASSERT_ARE_EQUAL(char, '/', resultString[singleExpectedDateLength-1]);
+                ASSERT_ARE_EQUAL(int, 0, strncmp(global_testVector[i].expectedOutput + 1, resultString + singleExpectedDateLength, singleExpectedDateLength - 1));
+
+                ///cleanup
+                Destroy_AGENT_DATA_TYPE(&agentData);
+            }
+        }
+
+        /*Tests_SRS_AGENT_TYPE_SYSTEM_99_013:[ All the Create_... functions shall check their parameters for validity. When an invalid parameter is detected, a code of AGENT_DATA_TYPES_INVALID_ARG shall be returned ]*/
+        TEST_FUNCTION(Create_AGENT_DATA_TYPE_from_EDM_Timespan_with_NULL_agentData_fails)
+        {
+            ///arrange
+            EDM_TIMESPAN something = { { 0, 0 } };
+
+            ///act
+            auto result = Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN(NULL, something);
+
+            ///assert
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
+        }
+
+        TEST_FUNCTION(Create_AGENT_DATA_TYPE_from_EDM_Timespan_with_invalid_timespan_fails)
+        {
+            ///arrange
+            EDM_TIMESPAN something = { { 0, 0 } };
+            AGENT_DATA_TYPE agentData;
+
+            ///act
+            something.beginTime.dateTime.tm_mon = 15;
+            auto result = Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN(&agentData, something);
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
+
+            something.beginTime.dateTime.tm_mon = 0;
+            something.endTime.dateTime.tm_mon = 15;
+            result = Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN(&agentData, something);
+            ASSERT_ARE_EQUAL(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_INVALID_ARG, result);
+        }
 
 END_TEST_SUITE(AgentTypeSystem_ut)

@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 
 compileAsC99()
-set(theseTestsName schemaserializer_ut)
+set(theseTestsName schemaserializer_2_ut)
 
 set(${theseTestsName}_test_files
 ${theseTestsName}.c
@@ -13,13 +13,21 @@ ${theseTestsName}.c
 
 set(${theseTestsName}_c_files
 ../../src/schemaserializer.c
+../../src/codefirst.c
 ${SHARED_UTIL_SRC_FOLDER}/gballoc.c
+${SHARED_UTIL_SRC_FOLDER}/crt_abstractions.c
+${SHARED_UTIL_SRC_FOLDER}/vector.c
 ${LOCK_C_FILE}
 real_parson.c
+real_schema.c
 )
+
+include_directories(${SERIALIZER_SRC_FOLDER})
+
 
 set(${theseTestsName}_h_files
 real_parson.h
+real_schema.h
 )
 
 if(MSVC)

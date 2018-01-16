@@ -129,7 +129,6 @@ static void g_onDesiredProperty(void* destination)
     (void)(destination);
 }
 
-
 BEGIN_TEST_SUITE(Schema_ut)
 
     TEST_SUITE_INITIALIZE(TestClassInitialize)
@@ -191,7 +190,7 @@ BEGIN_TEST_SUITE(Schema_ut)
 
         umock_c_reset_all_calls();
     }
-
+    ;
     TEST_FUNCTION_CLEANUP(TestMethodCleanup)
     {
         TEST_MUTEX_RELEASE(g_testByTest);
@@ -498,6 +497,9 @@ BEGIN_TEST_SUITE(Schema_ut)
             .IgnoreArgument_elementSize();
 
         STRICT_EXPECTED_CALL(VECTOR_create(IGNORED_NUM_ARG)) /*these are methods*/
+            .IgnoreArgument_elementSize();
+
+        STRICT_EXPECTED_CALL(VECTOR_create(IGNORED_NUM_ARG)) /*these are methods with return types*/
             .IgnoreArgument_elementSize();
     }
 
@@ -6503,4 +6505,1395 @@ BEGIN_TEST_SUITE(Schema_ut)
         ///clean
         Schema_Destroy(schemaHandle);
     }
+
+    /*Tests_SRS_SCHEMA_02_129: [ If modelTypeHandle is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        SCHEMA_RESULT result = Schema_AddModelInformation(NULL, "a", "b", "c", "d");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_130: [ If schemaVersion is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_with_NULL_schemaVersion_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_AddModelInformation(modelTypeHandle, NULL, "b", "c", "d");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_131: [ If id is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_with_NULL_id_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_AddModelInformation(modelTypeHandle, "a", NULL, "c", "d");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_132: [ If version is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_with_NULL_version_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_AddModelInformation(modelTypeHandle, "a", "b", NULL, "d");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_133: [ If description is NULL then Schema_AddModelInformation shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_with_NULL_description_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", NULL);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_191: [ If information has already been attached to the model, then Schema_AddModelInformation shall fail and return SCHEMA_ERROR. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_twice_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        (void)Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_ERROR, result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    static void Schema_AddModelInformation_inert_path(void)
+    {
+        STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG))
+            .IgnoreArgument_size();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_NUM_ARG, "a"))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_NUM_ARG, "b"))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_NUM_ARG, "c"))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_NUM_ARG, "d"))
+            .IgnoreArgument_destination();
+    }
+
+    /*Tests_SRS_SCHEMA_02_134: [ Schema_AddModelInformation shall save modelTypeHandle, schemaVersion, id and description. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_happy_path)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        Schema_AddModelInformation_inert_path();
+
+        ///act
+        SCHEMA_RESULT result = Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+
+    /*Tests_SRS_SCHEMA_02_135: [ If saving modelTypeHandle, schemaVersion, id and description fails then Schema_AddModelInformation shall fail and return SCHEMA_ERROR. ]*/
+    TEST_FUNCTION(Schema_AddModelInformation_unhappy_paths)
+    {
+        ///arrange
+        umock_c_negative_tests_init();
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        Schema_AddModelInformation_inert_path();
+        umock_c_negative_tests_snapshot();
+
+        size_t i;
+        for (i = 0;i < umock_c_negative_tests_call_count(); i++)
+        {
+
+            umock_c_negative_tests_reset();
+            umock_c_negative_tests_fail_call(i);
+
+            ///act
+            SCHEMA_RESULT result = Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+
+            ///assert
+            ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_ERROR, result);
+        }
+
+        
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+        umock_c_negative_tests_deinit();
+    }
+
+    /*Tests_SRS_SCHEMA_02_137: [ If modelTypeHandle is NULL then Schema_GetModelSchemaVersion shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelSchemaVersion_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetModelSchemaVersion(NULL);
+        
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_138: [ If the model does not have the information, then Schema_GetModelSchemaVersion shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelSchemaVersion_with_non_information_modelTypeHandle_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelSchemaVersion(modelTypeHandle);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_139: [ Otherwise, Schema_GetModelSchemaVersion shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelSchemaVersion_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        (void)Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelSchemaVersion(modelTypeHandle);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "a", result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+
+
+
+
+    /*Tests_SRS_SCHEMA_02_140: [ If modelTypeHandle is NULL then Schema_GetModelId shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelId_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetModelId(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_141: [ If the model does not have the information, then Schema_GetModelId shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelId_with_non_information_modelTypeHandle_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelId(modelTypeHandle);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_142: [ Otherwise, Schema_GetModelId shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelId_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        (void)Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelId(modelTypeHandle);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "b", result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_143: [ If modelTypeHandle is NULL then Schema_GetModelVersion shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelVersion_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetModelVersion(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_144: [ If the model does not have the information, then Schema_GetModelVersion shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelVersion_with_non_information_modelTypeHandle_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelVersion(modelTypeHandle);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_145: [ Otherwise, Schema_GetModelVersion shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelVersion_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        (void)Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelVersion(modelTypeHandle);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "c", result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_146: [ If modelTypeHandle is NULL then Schema_GetModelDescription shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelDescription_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetModelDescription(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_147: [ If the model does not have the information, then Schema_GetModelDescription shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelDescription_with_non_information_modelTypeHandle_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelDescription(modelTypeHandle);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_148: [ Otherwise, Schema_GetModelDescription shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelDescription_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelTypeHandle = Schema_CreateModelType(schemaHandle, "ModelName1");
+        (void)Schema_AddModelInformation(modelTypeHandle, "a", "b", "c", "d");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelDescription(modelTypeHandle);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "d", result);
+
+        ///cleanup
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_149: [ If reportedPropertyHandle is NULL then Schema_GetReportedPropertyType shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetReportedPropertyType_with_NULL_reportedPropertyHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetReportedPropertyType(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_150: [ Otherwise, Schema_GetReportedPropertyType shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetReportedPropertyType_with_non_NULL_reportedPropertyHandle_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        const char* reportedPropertyName = "reportedPropertyName";
+        const char* reportedPropertyType = "reportedPropertyType";
+        (void)Schema_AddModelReportedProperty(modelType, reportedPropertyName, reportedPropertyType);
+        SCHEMA_REPORTED_PROPERTY_HANDLE reportedProperty= Schema_GetModelReportedPropertyByIndex(modelType, 0);
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetReportedPropertyType(reportedProperty);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "reportedPropertyType", result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_151: [ If reportedPropertyHandle is NULL then Schema_GetReportedPropertyName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetReportedPropertyName_with_NULL_reportedPropertyHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetReportedPropertyName(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_152: [ Otherwise Schema_GetReportedPropertyName shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetReportedPropertyName_with_non_NULL_reportedPropertyHandle_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        const char* reportedPropertyName = "reportedPropertyName";
+        const char* reportedPropertyType = "reportedPropertyType";
+        (void)Schema_AddModelReportedProperty(modelType, reportedPropertyName, reportedPropertyType);
+        SCHEMA_REPORTED_PROPERTY_HANDLE reportedProperty = Schema_GetModelReportedPropertyByIndex(modelType, 0);
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetReportedPropertyName(reportedProperty);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "reportedPropertyName", result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_153: [ If desiredPropertyHandle is NULL then Schema_GetDesiredPropertyType shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetDesiredPropertyType_with_NULL_reportedPropertyHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetDesiredPropertyType(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_154: [ Otherwise Schema_GetDesiredPropertyType shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetDesiredPropertyType_with_non_NULL_reportedPropertyHandle_succeeds)
+    {
+        ///arrange
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        const char* name = "a";
+        const char* type = "b";
+        (void)Schema_AddModelDesiredProperty(modelType, name, type, g_pfDesiredPropertyFromAGENT_DATA_TYPE, g_pfDesiredPropertyInitialize, g_pfDesiredPropertyDeinitialize, 0, NULL);
+        SCHEMA_DESIRED_PROPERTY_HANDLE desiredPropertyHandle = Schema_GetModelDesiredPropertyByIndex(modelType, 0);
+
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetDesiredPropertyType(desiredPropertyHandle);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "b", result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_192: [ If desiredPropertyHandle is NULL then Schema_GetDesiredPropertyName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetDesiredPropertyName_with_NULL_reportedPropertyHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetDesiredPropertyName(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_193: [ Otherwise Schema_GetDesiredPropertyName shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetDesiredPropertyName_with_non_NULL_reportedPropertyHandle_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        const char* name = "a";
+        const char* type = "b";
+        (void)Schema_AddModelDesiredProperty(modelType, name, type, g_pfDesiredPropertyFromAGENT_DATA_TYPE, g_pfDesiredPropertyInitialize, g_pfDesiredPropertyDeinitialize, 0, NULL);
+        SCHEMA_DESIRED_PROPERTY_HANDLE desiredPropertyHandle = Schema_GetModelDesiredPropertyByIndex(modelType, 0);
+
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetDesiredPropertyName(desiredPropertyHandle);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "a", result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_155: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeArgumentCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentCount_with_NULL_methodWithReturnTypeHandle_fails)
+    {
+        ///arrange
+        size_t n;
+        
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeArgumentCount(NULL, &n);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+
+    }
+
+    /*Tests_SRS_SCHEMA_02_156: [ If argumentCount is NULL then Schema_GetModelMethodWithReturnTypeArgumentCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentCount_with_NULL_argumentCount_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle = Schema_CreateModelMethodWithReturnType(modelType, "someReturnType", "someName");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeArgumentCount(methodWithReturnTypeHandle, NULL);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_157: [ Otherwise, Schema_GetModelMethodWithReturnTypeArgumentCount shall succeed, return SCHEMA_OK and shall write in *argumentCount the number of arguments the method with return type has. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentCount_with_0_arguments_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle = Schema_CreateModelMethodWithReturnType(modelType, "someReturnType", "someName");
+        size_t n = 344523;
+        umock_c_reset_all_calls();
+        
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeArgumentCount(methodWithReturnTypeHandle, &n);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, result);
+        ASSERT_ARE_EQUAL(size_t, 0, n);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_157: [ Otherwise, Schema_GetModelMethodWithReturnTypeArgumentCount shall succeed, return SCHEMA_OK and shall write in *argumentCount the number of arguments the method with return type has. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentCount_with_1_arguments_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle = Schema_CreateModelMethodWithReturnType(modelType, "someReturnType", "someName");
+        (void)Schema_AddModelMethodWithReturnTypeArgument(methodWithReturnTypeHandle, "argumentName", "argumentType");
+        size_t n = 344523;
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeArgumentCount(methodWithReturnTypeHandle, &n);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, result);
+        ASSERT_ARE_EQUAL(size_t, 1, n);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_158: [ If modelTypehandle is NULL then Schema_GetModelMethodWithReturnTypeCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeCount_with_NULL_modelTypehandle_fails)
+    {
+        ///arrange
+        size_t n;
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeCount(NULL, &n);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+    }
+
+    /*Tests_SRS_SCHEMA_02_159: [ If methodWithReturnCount is NULL then Schema_GetModelMethodWithReturnTypeCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeCount_with_NULL_methodWithReturnTypeCount_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeCount(modelType, NULL);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_160: [ Otherwise, Schema_GetModelMethodWithReturnTypeCount shall succeed, return SCHEMA_OK and write in *methodWithReturnCount the number of methods with return type the model has. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeCount_with_0L_methodWithReturnTypeCount_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        size_t n;
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeCount(modelType, &n);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, result);
+        ASSERT_ARE_EQUAL(size_t, 0, n);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_160: [ Otherwise, Schema_GetModelMethodWithReturnTypeCount shall succeed, return SCHEMA_OK and write in *methodWithReturnCount the number of methods with return type the model has. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeCount_with_1_methodWithReturnTypeCount_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle = Schema_CreateModelMethodWithReturnType(modelType, "someReturnType", "someName");
+        (void)methodWithReturnTypeHandle;
+        size_t n;
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodWithReturnTypeCount(modelType, &n);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, result);
+        ASSERT_ARE_EQUAL(size_t, 1, n);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_164: [ If methodWithReturnTypeHandle is NULL then Schema_GetMethodWithReturnTypeName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetMethodWithReturnTypeName_with_NULL_methodWithReturnTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetMethodWithReturnTypeName(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+    }
+
+    /*Tests_SRS_SCHEMA_02_165: [ Otherwise Schema_GetMethodWithReturnTypeName shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetMethodWithReturnTypeName_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle = Schema_CreateModelMethodWithReturnType(modelType, "someReturnType", "someName");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetMethodWithReturnTypeName(methodWithReturnTypeHandle);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "someName", result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_166: [ If modelTypeHandle is NULL then Schema_GetModelSchema shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelSchema_with_NUKLL_modelTypeHandle_fails) 
+    {
+        ///arramge
+
+        ///act
+        SCHEMA_HANDLE schemaHandle = Schema_GetModelSchema(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_194: [ If the schema for the model cannot be located, then Schema_GetModelSchema shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelSchema_with_wrong_modelTypeHandle_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_HANDLE result = Schema_GetModelSchema((SCHEMA_MODEL_TYPE_HANDLE)((char*)modelType + 1));
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_167: [ Otherwise, Schema_GetModelSchema shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelSchema_suucceeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_HANDLE result = Schema_GetModelSchema(modelType);
+
+        ///assert
+        ASSERT_ARE_EQUAL(void_ptr, schemaHandle, result);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_168: [ If modelTypeHandle is NULL then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_CreateModelMethodWithReturnType_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+        
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(NULL, "ret", "name");
+
+        ///assert
+        ASSERT_IS_NULL(h);
+    }
+
+    /*Tests_SRS_SCHEMA_02_169: [ If returnType is NULL then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_CreateModelMethodWithReturnType_with_NULL_returnType_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, NULL, "name");
+
+        ///assert
+        ASSERT_IS_NULL(h);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_170: [ If methodWithReturnTypeName is NULL then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_CreateModelMethodWithReturnType_with_NULL_methodWithReturnTypeName_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", NULL);
+
+        ///assert
+        ASSERT_IS_NULL(h);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    static void Schema_CreateModelMethodWithReturnType_inert_path(void)
+    {
+        STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG))
+            .IgnoreArgument_size();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, "reet"))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, "name"))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(VECTOR_create(IGNORED_NUM_ARG))
+            .IgnoreArgument_elementSize();
+        STRICT_EXPECTED_CALL(VECTOR_push_back(IGNORED_PTR_ARG, IGNORED_PTR_ARG, 1))
+            .IgnoreArgument_handle()
+            .IgnoreArgument_elements();
+    }
+
+    /*Tests_SRS_SCHEMA_02_171: [ Schema_CreateModelMethodWithReturnType shall allocate resources for a newly created method with return type, copying returnType and methodWithReturnTypeName. ]*/
+    /*Tests_SRS_SCHEMA_02_173: [ Otherwise, Schema_CreateModelMethodWithReturnType shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_CreateModelMethodWithReturnType_happy_path)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        Schema_CreateModelMethodWithReturnType_inert_path();
+
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+
+        ///assert
+        ASSERT_IS_NOT_NULL(h);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+
+    }
+
+    /*Tests_SRS_SCHEMA_02_172: [ If any operation fails, then Schema_CreateModelMethodWithReturnType shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_CreateModelMethodWithReturnType_unhappy_paths)
+    {
+        ///arrange
+        umock_c_negative_tests_init();
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        Schema_CreateModelMethodWithReturnType_inert_path();
+
+        umock_c_negative_tests_snapshot();
+
+        size_t i;
+        for (i = 0;i < umock_c_negative_tests_call_count();i++)
+        {
+            umock_c_negative_tests_reset();
+            umock_c_negative_tests_fail_call(i);
+
+            ///act
+            SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+
+            ///assert
+            ASSERT_IS_NULL(h);
+        }
+        
+        ///clean
+        Schema_Destroy(schemaHandle);
+        umock_c_negative_tests_deinit();
+    }
+
+    /*Tests_SRS_SCHEMA_02_174: [ If methodWithReturnTypeHandle is NULL then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelMethodWithReturnTypeArgument_with_methodWithReturnTypeHandle_NULL_fails)
+    {
+        ///arrange
+
+        ///act
+        SCHEMA_RESULT r = Schema_AddModelMethodWithReturnTypeArgument(NULL, "ret", "name");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, r);
+    }
+
+    /*Tests_SRS_SCHEMA_02_175: [ If argumentName is NULL then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelMethodWithReturnTypeArgument_with_argumentName_NULL_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT r = Schema_AddModelMethodWithReturnTypeArgument(h, NULL, "name");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, r);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_176: [ If argumentType is NULL then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelMethodWithReturnTypeArgument_with_argumentType_NULL_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT r = Schema_AddModelMethodWithReturnTypeArgument(h, "a", NULL);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, r);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_195: [ If argumentName already exists, then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_AddModelMethodWithReturnTypeArgument_twice_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        (void)Schema_AddModelMethodWithReturnTypeArgument(h, "a", "b");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT r = Schema_AddModelMethodWithReturnTypeArgument(h, "a", "b");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, r);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    static void Schema_AddModelMethodWithReturnTypeArgument_inert_path(void)
+    {
+        STRICT_EXPECTED_CALL(VECTOR_find_if(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+            .IgnoreArgument_handle()
+            .IgnoreArgument_pred()
+            .IgnoreArgument_value();
+        STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG))
+            .IgnoreArgument_size();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, "a"))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, "b"))
+            .IgnoreArgument_destination();
+        STRICT_EXPECTED_CALL(VECTOR_push_back(IGNORED_PTR_ARG, IGNORED_PTR_ARG, 1))
+            .IgnoreArgument_handle()
+            .IgnoreArgument_elements();
+    }
+
+    /*Tests_SRS_SCHEMA_02_177: [ Schema_AddModelMethodWithReturnTypeArgument allocate resources for a copy of argumentName and argumentType. ]*/
+    /*Tests_SRS_SCHEMA_02_179: [ Otherwise, Schema_AddModelMethodWithReturnTypeArgument shall succeed and return SCHEMA_OK. ]*/
+    TEST_FUNCTION(Schema_AddModelMethodWithReturnTypeArgument_happy_path)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        umock_c_reset_all_calls();
+
+        Schema_AddModelMethodWithReturnTypeArgument_inert_path();
+
+        ///act
+        SCHEMA_RESULT r = Schema_AddModelMethodWithReturnTypeArgument(h, "a", "b");
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, r);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_178: [ If allocating resources fails, then Schema_AddModelMethodWithReturnTypeArgument shall fail and return SCHEMA_ERROR. ]*/
+    TEST_FUNCTION(Schema_AddModelMethodWithReturnTypeArgument_unhappy_paths)
+    {
+        ///arrange
+        umock_c_negative_tests_init();
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE h = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        umock_c_reset_all_calls();
+
+        Schema_AddModelMethodWithReturnTypeArgument_inert_path();
+        
+        umock_c_negative_tests_snapshot();
+
+        size_t i;
+        for (i = 0;i < umock_c_negative_tests_call_count(); i++)
+        {
+            if (i == 0) /*VECTOR_find_if*/
+            {
+                continue;
+            }
+            umock_c_negative_tests_reset();
+            umock_c_negative_tests_fail_call(i);
+
+            ///act
+            SCHEMA_RESULT r = Schema_AddModelMethodWithReturnTypeArgument(h, "a", "b");
+
+            ///assert
+            ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_ERROR, r);
+        }
+        ///clean
+        Schema_Destroy(schemaHandle);
+        umock_c_negative_tests_deinit();
+    }
+
+    /*Tests_SRS_SCHEMA_02_180: [ If modelTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeByName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeByName_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_GetModelMethodWithReturnTypeByName(NULL, "name");
+
+        ///assert
+        ASSERT_IS_NULL(m);
+    }
+
+    /*Tests_SRS_SCHEMA_02_181: [ If methodWithReturnTypeName is NULL then Schema_GetModelMethodWithReturnTypeByName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeByName_with_NULL_methodWithReturnTypeName_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_GetModelMethodWithReturnTypeByName(modelType, NULL);
+
+        ///assert
+        ASSERT_IS_NULL(m);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_182: [ If a method with return type by name methodWithReturnTypeName exists, Schema_GetModelMethodWithReturnTypeByName shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeByName_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        (void)Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_GetModelMethodWithReturnTypeByName(modelType, "name");
+
+        ///assert
+        ASSERT_IS_NOT_NULL(m);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_183: [ Otherwise, Schema_GetModelMethodWithReturnTypeByName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeByName_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        (void)Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_GetModelMethodWithReturnTypeByName(modelType, "THIS_IS_NOT_THERE");
+
+        ///assert
+        ASSERT_IS_NULL(m);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_184: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeArgumentByIndex shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentByIndex_with_NULL_methodWithReturnTypeHandle_FAils)
+    {
+        ///arrange
+
+        ///act
+        SCHEMA_METHOD_ARGUMENT_HANDLE r = Schema_GetModelMethodWithReturnTypeArgumentByIndex(NULL, 0);
+
+        ///assert
+        ASSERT_IS_NULL(r);
+    }
+
+    /*Tests_SRS_SCHEMA_02_185: [ If argumentIndex is a valid index, then Schema_GetModelMethodWithReturnTypeArgumentByIndex shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentByIndex_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        (void)Schema_AddModelMethodWithReturnTypeArgument(m, "a", "b");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_ARGUMENT_HANDLE arg = Schema_GetModelMethodWithReturnTypeArgumentByIndex(m, 0);
+
+        ///assert
+        ASSERT_IS_NOT_NULL(arg);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_186: [ Otherwise, Schema_GetModelMethodWithReturnTypeArgumentByIndex shall fail and return a NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentByIndex_fails_for_a_methodWithReturnType_with_no_arguments)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_ARGUMENT_HANDLE arg = Schema_GetModelMethodWithReturnTypeArgumentByIndex(m, 0);
+
+        ///assert
+        ASSERT_IS_NULL(arg);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_186: [ Otherwise, Schema_GetModelMethodWithReturnTypeArgumentByIndex shall fail and return a NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeArgumentByIndex_fails_for_out_of_bounds_index)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        (void)Schema_AddModelMethodWithReturnTypeArgument(m, "a", "b");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_ARGUMENT_HANDLE arg = Schema_GetModelMethodWithReturnTypeArgumentByIndex(m, 1);
+
+        ///assert
+        ASSERT_IS_NULL(arg);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_187: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeName_With_NULL_methodWithReturnTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* rr = Schema_GetModelMethodWithReturnTypeName(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(rr);
+    }
+
+    /*Tests_SRS_SCHEMA_02_188: [ Otherwise, Schema_GetModelMethodWithReturnTypeName shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeName_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        (void)Schema_AddModelMethodWithReturnTypeArgument(m, "a", "b");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* arg = Schema_GetModelMethodWithReturnTypeName(m);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "name", arg);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_189: [ If methodWithReturnTypeHandle is NULL then Schema_GetModelMethodWithReturnTypeReturnType shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeReturnType_With_NULL_methodWithReturnTypeHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* rr = Schema_GetModelMethodWithReturnTypeReturnType(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(rr);
+    }
+
+    /*Tests_SRS_SCHEMA_02_190: [ Otherwise, Schema_GetModelMethodWithReturnTypeReturnType shall succeed and and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodWithReturnTypeReturnType_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE m = Schema_CreateModelMethodWithReturnType(modelType, "reet", "name");
+        (void)Schema_AddModelMethodWithReturnTypeArgument(m, "a", "b");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* arg = Schema_GetModelMethodWithReturnTypeReturnType(m);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "reet", arg);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_196: [ If modelTypeHandle is NULL then Schema_GetModelMethodCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodCount_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+        size_t t;
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodCount(NULL, &t);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+
+        /// cleanup
+    }
+
+    /*Tests_SRS_SCHEMA_02_197: [ If methodCount is NULL then Schema_GetModelMethodCount shall fail and return SCHEMA_INVALID_ARG. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodCount_with_NULL_methodCount_Fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodCount(modelType, NULL);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_INVALID_ARG, result);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_198: [ Otherwise, Schema_GetModelMethodCount shall succeed, return SCHEMA_OK and write in methodCount the method count. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodCount_with_0_methodCount_succeeds)
+    {
+        ///arrange
+        size_t nMethods;
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodCount(modelType, &nMethods);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, result);
+        ASSERT_ARE_EQUAL(size_t, 0, nMethods);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_198: [ Otherwise, Schema_GetModelMethodCount shall succeed, return SCHEMA_OK and write in methodCount the method count. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodCount_with_1_methodCount_succeeds)
+    {
+        ///arrange
+        size_t nMethods;
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        (void)Schema_CreateModelMethod(modelType, "method");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_RESULT result = Schema_GetModelMethodCount(modelType, &nMethods);
+
+        ///assert
+        ASSERT_ARE_EQUAL(SCHEMA_RESULT, SCHEMA_OK, result);
+        ASSERT_ARE_EQUAL(size_t, 1, nMethods);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_200: [ If modelTypeHandle is NULL then Schema_GetModelMethodByIndex shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodByIndex_with_NULL_modelTypeHandle_fails)
+    {
+        ///arrange
+        
+        ///act
+        SCHEMA_METHOD_HANDLE result = Schema_GetModelMethodByIndex(NULL, 0);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+       
+        ///clean
+    }
+
+    /*Tests_SRS_SCHEMA_02_202: [ Otherwise, Schema_GetModelMethodByIndex shall succeed and return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodByIndex_succeeds)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        (void)Schema_CreateModelMethod(modelType, "method");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_HANDLE result = Schema_GetModelMethodByIndex(modelType, 0);
+
+        ///assert
+        ASSERT_IS_NOT_NULL(result);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_201: [ If methodIndex is not a valid index, then Schema_GetModelMethodByIndex shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodByIndex_with_non_existing_index_fails)
+    {
+        ///arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        (void)Schema_CreateModelMethod(modelType, "method");
+        umock_c_reset_all_calls();
+
+        ///act
+        SCHEMA_METHOD_HANDLE result = Schema_GetModelMethodByIndex(modelType, 1);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
+    /*Tests_SRS_SCHEMA_02_203: [ If methodHandle is NULL then Schema_GetModelMethodName shall fail and return NULL. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodName_with_NULL_methodHandle_fails)
+    {
+        ///arrange
+
+        ///act
+        const char* result = Schema_GetModelMethodName(NULL);
+
+        ///assert
+        ASSERT_IS_NULL(result);
+    }
+
+    /*Tests_SRS_SCHEMA_02_204: [ Otherwise, Schema_GetModelMethodNameshall return a non-NULL value. ]*/
+    TEST_FUNCTION(Schema_GetModelMethodName_with_non_NULL_methodHandle_succeeds)
+    {
+        //arrange
+        SCHEMA_HANDLE schemaHandle = Schema_Create(SCHEMA_NAMESPACE, TEST_SCHEMA_METADATA);
+        SCHEMA_MODEL_TYPE_HANDLE modelType = Schema_CreateModelType(schemaHandle, "Model");
+        SCHEMA_METHOD_HANDLE r = Schema_CreateModelMethod(modelType, "method");
+        umock_c_reset_all_calls();
+
+        ///act
+        const char* result = Schema_GetModelMethodName(r);
+
+        ///assert
+        ASSERT_ARE_EQUAL(char_ptr, "method", result);
+
+        ///clean
+        Schema_Destroy(schemaHandle);
+    }
+
 END_TEST_SUITE(Schema_ut)

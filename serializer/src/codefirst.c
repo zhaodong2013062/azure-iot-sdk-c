@@ -224,150 +224,239 @@ static CODEFIRST_RESULT buildModel(SCHEMA_HANDLE schemaHandle, const REFLECTED_D
         goto out;
     }
 
+    bool modelHasInformation = false;
     for (something = reflectedData->reflectedData; something != NULL; something = something->next)
     {
-        /* looking for all elements that belong to a model: properties and actions */
-        if ((something->type == REFLECTION_PROPERTY_TYPE) &&
-            (strcmp(something->what.property.modelName, modelReflectedData->what.model.name) == 0))
+        switch (something->type)
         {
-            SCHEMA_MODEL_TYPE_HANDLE childModelHande = Schema_GetModelByName(schemaHandle, something->what.property.type);
-
-            /* if this is a model type use the appropriate APIs for it */
-            if (childModelHande != NULL)
+            case REFLECTION_PROPERTY_TYPE:
             {
-                if (Schema_AddModelModel(modelTypeHandle, something->what.property.name, childModelHande, something->what.property.offset, NULL) != SCHEMA_OK)
+                if (strcmp(something->what.property.modelName, modelReflectedData->what.model.name) == 0)
                 {
-                    /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add model failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
+                    SCHEMA_MODEL_TYPE_HANDLE childModelHande = Schema_GetModelByName(schemaHandle, something->what.property.type);
+
+                    /* if this is a model type use the appropriate APIs for it */
+                    if (childModelHande != NULL)
+                    {
+                        if (Schema_AddModelModel(modelTypeHandle, something->what.property.name, childModelHande, something->what.property.offset, NULL) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add model failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                    else
+                    {
+                        if (Schema_AddModelProperty(modelTypeHandle, something->what.property.name, something->what.property.type) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add property failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case REFLECTION_REPORTED_PROPERTY_TYPE:
+            {
+                if (strcmp(something->what.reportedProperty.modelName, modelReflectedData->what.model.name) == 0)
+                {
+                    SCHEMA_MODEL_TYPE_HANDLE childModelHande = Schema_GetModelByName(schemaHandle, something->what.reportedProperty.type);
+
+                    /* if this is a model type use the appropriate APIs for it */
+                    if (childModelHande != NULL)
+                    {
+                        if (Schema_AddModelModel(modelTypeHandle, something->what.reportedProperty.name, childModelHande, something->what.reportedProperty.offset, NULL) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add model failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                    else
+                    {
+                        if (Schema_AddModelReportedProperty(modelTypeHandle, something->what.reportedProperty.name, something->what.reportedProperty.type) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add reported property failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case REFLECTION_DESIRED_PROPERTY_TYPE:
+            {
+                if (strcmp(something->what.desiredProperty.modelName, modelReflectedData->what.model.name) == 0)
+                {
+                    SCHEMA_MODEL_TYPE_HANDLE childModelHande = Schema_GetModelByName(schemaHandle, something->what.desiredProperty.type);
+
+                    /* if this is a model type use the appropriate APIs for it */
+                    if (childModelHande != NULL)
+                    {
+                        if (Schema_AddModelModel(modelTypeHandle, something->what.desiredProperty.name, childModelHande, something->what.desiredProperty.offset, something->what.desiredProperty.onDesiredProperty) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add model failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                    else
+                    {
+                        if (Schema_AddModelDesiredProperty(modelTypeHandle,
+                            something->what.desiredProperty.name,
+                            something->what.desiredProperty.type,
+                            something->what.desiredProperty.FromAGENT_DATA_TYPE,
+                            something->what.desiredProperty.desiredPropertInitialize,
+                            something->what.desiredProperty.desiredPropertDeinitialize,
+                            something->what.desiredProperty.offset,
+                            something->what.desiredProperty.onDesiredProperty) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add desired property failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case REFLECTION_ACTION_TYPE:
+            {
+                if (strcmp(something->what.action.modelName, modelReflectedData->what.model.name) == 0)
+                {
+                    SCHEMA_ACTION_HANDLE actionHandle;
+                    size_t i;
+
+                    if ((actionHandle = Schema_CreateModelAction(modelTypeHandle, something->what.action.name)) == NULL)
+                    {
+                        /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                        result = CODEFIRST_SCHEMA_ERROR;
+                        LogError("add model action failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                        goto out;
+                    }
+
+                    for (i = 0; i < something->what.action.nArguments; i++)
+                    {
+                        if (Schema_AddModelActionArgument(actionHandle, something->what.action.arguments[i].name, something->what.action.arguments[i].type) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add model action argument failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case REFLECTION_METHOD_TYPE:
+            {
+                if (strcmp(something->what.method.modelName, modelReflectedData->what.model.name) == 0)
+                {
+                    SCHEMA_METHOD_HANDLE methodHandle;
+                    size_t i;
+
+                    if ((methodHandle = Schema_CreateModelMethod(modelTypeHandle, something->what.method.name)) == NULL)
+                    {
+                        /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
+                        result = CODEFIRST_SCHEMA_ERROR;
+                        LogError("add model method failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                        goto out;
+                    }
+
+                    for (i = 0; i < something->what.method.nArguments; i++)
+                    {
+                        if (Schema_AddModelMethodArgument(methodHandle, something->what.method.arguments[i].name, something->what.method.arguments[i].type) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add model method argument failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case REFLECTION_METHOD_WITH_RETURN_TYPE_TYPE:
+            {
+                if (strcmp(something->what.methodWithReturnType.modelName, modelReflectedData->what.model.name) == 0)
+                {
+                    SCHEMA_METHOD_WITH_RETURN_TYPE_HANDLE methodWithReturnTypeHandle;
+                    size_t i;
+
+                    if ((methodWithReturnTypeHandle = Schema_CreateModelMethodWithReturnType(modelTypeHandle, something->what.methodWithReturnType.returnType, something->what.methodWithReturnType.name)) == NULL)
+                    {
+                        /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
+                        result = CODEFIRST_SCHEMA_ERROR;
+                        LogError("add model method with return type failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                        goto out;
+                    }
+
+                    for (i = 0; i < something->what.methodWithReturnType.nArguments; i++)
+                    {
+                        if (Schema_AddModelMethodWithReturnTypeArgument(methodWithReturnTypeHandle, something->what.methodWithReturnType.arguments[i].name, something->what.methodWithReturnType.arguments[i].type) != SCHEMA_OK)
+                        {
+                            /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
+                            result = CODEFIRST_SCHEMA_ERROR;
+                            LogError("add model method with return type argument failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
+                            goto out;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case REFLECTION_INFORMATION_TYPE:
+            {
+                if (strcmp(something->what.information.modelName, modelReflectedData->what.model.name) == 0)
+                {
+                    modelHasInformation = true;
+                    if (Schema_AddModelInformation(modelTypeHandle, something->what.information.schemaVersion, something->what.information.id, something->what.information.version, something->what.information.description) != SCHEMA_OK)
+                    {
+                        /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
+                        result = CODEFIRST_SCHEMA_ERROR;
+                        LogError("failure in Schema_AddModelInformation");
+                        goto out;
+                    }
                 }
             }
-            else
+
+            case REFLECTION_STRUCT_TYPE:
+            case REFLECTION_FIELD_TYPE:
+            case REFLECTION_MODEL_TYPE:
+            case REFLECTION_NOTHING:
             {
-                if (Schema_AddModelProperty(modelTypeHandle, something->what.property.name, something->what.property.type) != SCHEMA_OK)
-                {
-                    /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add property failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
-                }
+                /*none of the above cases are interesting for building a model*/
+                break;
+            }
+
+            default:
+            {
+                LogError("INTERNAL ERROR: unexpected enum value");
+                break;
             }
         }
+    }
 
-        if ((something->type == REFLECTION_REPORTED_PROPERTY_TYPE) &&
-            (strcmp(something->what.reportedProperty.modelName, modelReflectedData->what.model.name) == 0))
+    /*Codes_SRS_SERIALIZER_H_02_035: [ If WITH_INFORMATION is missing, then the model shall behave as if a WITH_INFORMATION("", "00000000-0000-0000-0000-000000000000", "", "") would have been supplied. ]*/
+    if (!modelHasInformation)
+    {
+        if (Schema_AddModelInformation(modelTypeHandle, "", "00000000-0000-0000-0000-000000000000", "", "") != SCHEMA_OK)
         {
-            SCHEMA_MODEL_TYPE_HANDLE childModelHande = Schema_GetModelByName(schemaHandle, something->what.reportedProperty.type);
-
-            /* if this is a model type use the appropriate APIs for it */
-            if (childModelHande != NULL)
-            {
-                if (Schema_AddModelModel(modelTypeHandle, something->what.reportedProperty.name, childModelHande, something->what.reportedProperty.offset, NULL) != SCHEMA_OK)
-                {
-                    /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add model failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
-                }
-            }
-            else
-            {
-                if (Schema_AddModelReportedProperty(modelTypeHandle, something->what.reportedProperty.name, something->what.reportedProperty.type) != SCHEMA_OK)
-                {
-                    /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add reported property failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
-                }
-            }
-        }
-
-        if ((something->type == REFLECTION_DESIRED_PROPERTY_TYPE) &&
-            (strcmp(something->what.desiredProperty.modelName, modelReflectedData->what.model.name) == 0))
-        {
-            SCHEMA_MODEL_TYPE_HANDLE childModelHande = Schema_GetModelByName(schemaHandle, something->what.desiredProperty.type);
-
-            /* if this is a model type use the appropriate APIs for it */
-            if (childModelHande != NULL)
-            {
-                if (Schema_AddModelModel(modelTypeHandle, something->what.desiredProperty.name, childModelHande, something->what.desiredProperty.offset, something->what.desiredProperty.onDesiredProperty) != SCHEMA_OK)
-                {
-                    /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add model failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
-                }
-            }
-            else
-            {
-                if (Schema_AddModelDesiredProperty(modelTypeHandle, 
-                    something->what.desiredProperty.name, 
-                    something->what.desiredProperty.type, 
-                    something->what.desiredProperty.FromAGENT_DATA_TYPE, 
-                    something->what.desiredProperty.desiredPropertInitialize, 
-                    something->what.desiredProperty.desiredPropertDeinitialize, 
-                    something->what.desiredProperty.offset, 
-                    something->what.desiredProperty.onDesiredProperty) != SCHEMA_OK)
-                {
-                    /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add desired property failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
-                }
-            }
-        }
-
-        if ((something->type == REFLECTION_ACTION_TYPE) &&
-            (strcmp(something->what.action.modelName, modelReflectedData->what.model.name) == 0))
-        {
-            SCHEMA_ACTION_HANDLE actionHandle;
-            size_t i;
-
-            if ((actionHandle = Schema_CreateModelAction(modelTypeHandle, something->what.action.name)) == NULL)
-            {
-                /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                result = CODEFIRST_SCHEMA_ERROR;
-                LogError("add model action failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                goto out;
-            }
-
-            for (i = 0; i < something->what.action.nArguments; i++)
-            {
-                if (Schema_AddModelActionArgument(actionHandle, something->what.action.arguments[i].name, something->what.action.arguments[i].type) != SCHEMA_OK)
-                {
-                    /*Codes_SRS_CODEFIRST_99_076:[If any Schema APIs fail, CODEFIRST_SCHEMA_ERROR shall be returned.]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add model action argument failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
-                }
-            }
-        }
-
-        if ((something->type == REFLECTION_METHOD_TYPE) &&
-            (strcmp(something->what.method.modelName, modelReflectedData->what.model.name) == 0))
-        {
-            SCHEMA_METHOD_HANDLE methodHandle;
-            size_t i;
-
-            if ((methodHandle = Schema_CreateModelMethod(modelTypeHandle, something->what.method.name)) == NULL)
-            {
-                /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
-                result = CODEFIRST_SCHEMA_ERROR;
-                LogError("add model method failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                goto out;
-            }
-
-            for (i = 0; i < something->what.method.nArguments; i++)
-            {
-                if (Schema_AddModelMethodArgument(methodHandle, something->what.method.arguments[i].name, something->what.method.arguments[i].type) != SCHEMA_OK)
-                {
-                    /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
-                    result = CODEFIRST_SCHEMA_ERROR;
-                    LogError("add model method argument failed %s", ENUM_TO_STRING(CODEFIRST_RESULT, result));
-                    goto out;
-                }
-            }
+            /*Codes_SRS_CODEFIRST_99_076: [ If any Schema APIs fail, CodeFirst_RegisterSchema shall return NULL. ]*/
+            result = CODEFIRST_SCHEMA_ERROR;
+            LogError("failure in Schema_AddModelInformation");
+            goto out;
         }
     }
 
@@ -650,9 +739,15 @@ METHODRETURN_HANDLE CodeFirst_InvokeMethod(DEVICE_HANDLE deviceHandle, void* cal
             result = NULL;
             for (something = deviceHeader->ReflectedData->reflectedData; something != NULL; something = something->next)
             {
-                if ((something->type == REFLECTION_METHOD_TYPE) &&
+                if ((
+                    (something->type == REFLECTION_METHOD_TYPE) &&
                     (strcmp(methodName, something->what.method.name) == 0) &&
-                    (strcmp(childModel->what.model.name, something->what.method.modelName) == 0))
+                    (strcmp(childModel->what.model.name, something->what.method.modelName) == 0)) ||
+
+                    ((something->type == REFLECTION_METHOD_WITH_RETURN_TYPE_TYPE) &&
+                    (strcmp(methodName, something->what.methodWithReturnType.name) == 0) &&
+                    (strcmp(childModel->what.model.name, something->what.methodWithReturnType.modelName) == 0))
+                    )
                 {
                     break; /*found...*/
                 }
@@ -665,10 +760,24 @@ METHODRETURN_HANDLE CodeFirst_InvokeMethod(DEVICE_HANDLE deviceHandle, void* cal
             }
             else
             {
-                result = something->what.method.wrapper(deviceHeader->data + offset, parameterCount, parameterValues);
-                if (result == NULL)
+                if (something->type == REFLECTION_METHOD_TYPE)
                 {
-                    LogError("method \"%s\" execution error (returned NULL)", methodName);
+                    result = something->what.method.wrapper(deviceHeader->data + offset, parameterCount, parameterValues);
+                    if (result == NULL)
+                    {
+                        LogError("method \"%s\" execution error (returned NULL)", methodName);
+                    }
+                }
+                else
+                {
+                    if (something->type == REFLECTION_METHOD_WITH_RETURN_TYPE_TYPE)
+                    {
+                        result = something->what.methodWithReturnType.wrapper(deviceHeader->data + offset, parameterCount, parameterValues);
+                        if (result == NULL)
+                        {
+                            LogError("method with return type \"%s\" execution error (returned NULL)", methodName);
+                        }
+                    }
                 }
             }
         }
@@ -783,9 +892,17 @@ AGENT_DATA_TYPE_TYPE CodeFirst_GetPrimitiveType(const char* typeName)
     {
         return EDM_STRING_NO_QUOTES_TYPE;
     }
+    else if (strcmp(typeName, "ascii_char_ptr_secret") == 0)
+    {
+        return EDM_STRING_SECRET_TYPE;
+    }
     else if (strcmp(typeName, "EDM_DATE_TIME_OFFSET") == 0)
     {
         return EDM_DATE_TIME_OFFSET_TYPE;
+    }
+    else if (strcmp(typeName, "EDM_TIMESPAN") == 0)
+    {
+        return EDM_TIMESPAN_TYPE;
     }
     else if (strcmp(typeName, "EDM_GUID") == 0)
     {
@@ -794,6 +911,14 @@ AGENT_DATA_TYPE_TYPE CodeFirst_GetPrimitiveType(const char* typeName)
     else if (strcmp(typeName, "EDM_BINARY") == 0)
     {
         return EDM_BINARY_TYPE;
+    }
+    else if (strcmp(typeName, "EDM_DURATION") == 0)
+    {
+        return EDM_DURATION_TYPE;
+    }
+    else if (strcmp(typeName, "EDM_GEOGRAPHY_POINT") == 0)
+    {
+        return EDM_GEOGRAPHY_POINT_TYPE;
     }
     else
     {

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <ctime>
 #include <cstddef>
+#include <cstdbool>
 #else
 #if ((defined _WIN32_WCE) && _WIN32_WCE==0x0600)
 #include "stdint_ce6.h"
@@ -15,7 +16,10 @@
 #include <stdint.h>
 #endif
 #include <stddef.h>
+#include <stdbool.h>
 #endif
+
+
 
 #include "azure_c_shared_utility/agenttime.h"
 #include "azure_c_shared_utility/macro_utils.h"
@@ -143,6 +147,14 @@ typedef struct EDM_DATE_TIME_OFFSET_TAG
     uint8_t timeZoneMinute;
 }EDM_DATE_TIME_OFFSET;
 
+
+/*EDM_TIMESPAN_TYPE - quote dateTime "/" dateTime quote */
+typedef struct EDM_TIMESPAN_TYPE_TAG
+{
+    EDM_DATE_TIME_OFFSET beginTime;
+    EDM_DATE_TIME_OFFSET endTime;
+}EDM_TIMESPAN;
+
 /*Edm.Guid*/
 /*16-byte (128-bit) unique identifier*/
 /*The edm:Guid expression evaluates to a primitive 32-character string value. A guid expression MUST be
@@ -173,6 +185,14 @@ typedef struct EDM_DOUBLE_TAG
 } EDM_DOUBLE;
 
 
+#define EDM_DURATION_SIGN_VALUES \
+    EDM_DURATION_SIGN_POSITIVE, \
+    EDM_DURATION_SIGN_NEGATIVE
+ 
+
+DEFINE_ENUM(EDM_DURATION_SIGN, EDM_DURATION_SIGN_VALUES);
+  
+
 /*Edm.Duration*/
 /*Signed duration in days, hours, minutes, and (sub)seconds*/
 /*The edm:Duration expression evaluates to a primitive duration value. A duration expression MUST be
@@ -181,8 +201,11 @@ assigned a value of type xs:dayTimeDuration, see [XML-Schema-2], section 3.4.27.
 /*day is "unsignedNoDecimalPtNumeral" and that can have as many digits... ?*/
 typedef struct EDM_DURATION_TAG
 {
-    size_t nDigits;
-    char* digits;
+    EDM_DURATION_SIGN edmDurationSign;
+    uint32_t days;
+    uint32_t hours;
+    uint32_t minutes;
+    double  seconds;
 }
 EDM_DURATION;
 
@@ -333,10 +356,14 @@ typedef struct EDM_FULL_POINT_LITERAL_TAG
     EDM_POINT_LITERAL pointLiteral;
 } EDM_FULL_POINT_LITERAL;
 
-/*geographyPoint   = geographyPrefix SQUOTE fullPointLiteral SQUOTE*/
+/*geographyPoint   = doubleValue SP doubleValue [SP doubleValue] ; longitude, then latitude, then optional altitude*/
+/* NOTE: This does breaks from the published EDM spec */
 typedef struct EDM_GEOGRAPHY_POINT_TAG
 {
-    EDM_FULL_POINT_LITERAL fullPointLiteral;
+    bool   altitudeSet;
+    double longitude;
+    double latitude;
+    double altitude;
 }EDM_GEOGRAPHY_POINT;
 
 /*multiPolygonLiteral     = "MultiPolygon(" [ polygonData *( COMMA polygonData ) ] CLOSE*/
@@ -594,7 +621,9 @@ DEFINE_ENUM(AGENT_DATA_TYPES_RESULT, AGENT_DATA_TYPES_RESULT_VALUES);
     EDM_COMPLEX_TYPE_TYPE,                                                         \
     EDM_NULL_TYPE,                                                                 \
     EDM_ENTITY_TYPE_TYPE,                                                          \
-    EDM_STRING_NO_QUOTES_TYPE                                                      \
+    EDM_STRING_NO_QUOTES_TYPE,                                                     \
+    EDM_STRING_SECRET_TYPE,                                                        \
+    EDM_TIMESPAN_TYPE                                                              \
 
 
 DEFINE_ENUM(AGENT_DATA_TYPE_TYPE, AGENT_DATA_TYPE_TYPE_VALUES);
@@ -609,6 +638,7 @@ struct AGENT_DATA_TYPE_TAG
         EDM_BYTE edmByte;
         EDM_DATE edmDate;
         EDM_DATE_TIME_OFFSET edmDateTimeOffset;
+        EDM_TIMESPAN edmTimespan;
         EDM_DECIMAL edmDecimal;
         EDM_DOUBLE edmDouble;
         EDM_DURATION edmDuration;
@@ -621,6 +651,11 @@ struct AGENT_DATA_TYPE_TAG
         /*EDM_STREAM, not supported, because what is stream?*/
         EDM_STRING edmString;
         EDM_STRING edmStringNoQuotes;
+        /* secret strings a convention that servers use to not display this data in UX.
+           There is ABSOLUTELY NO additional security or obscurity for this data over wire 
+           above and beyond what underlying protocol provides.
+        */
+        EDM_STRING edmStringSecret;
         EDM_TIME_OF_DAY edmTimeOfDay;
         /*EDM_GEOGRAPHY_, not supported because what is "abstract base type"*/
         EDM_GEOGRAPHY_POINT edmGeographyPoint;
@@ -678,11 +713,19 @@ MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_SINT8, 
 /*Codes_SRS_AGENT_TYPE_SYSTEM_99_091:[Creates an AGENT_DATA_TYPE containing an Edm.DateTimeOffset from an EDM_DATE_TIME_OFFSET.]*/
 MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_DATE_TIME_OFFSET, AGENT_DATA_TYPE*, agentData, EDM_DATE_TIME_OFFSET, v);
 
+MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_TIMESPAN, AGENT_DATA_TYPE*, agentData, EDM_TIMESPAN, v);
+
 /*creates an AGENT_DATA_TYPE containing a EDM_GUID*/
 MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_GUID, AGENT_DATA_TYPE*, agentData, EDM_GUID, v);
 
 /*creates an AGENT_DATA_TYPE containing a EDM_BINARY*/
 MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_BINARY, AGENT_DATA_TYPE*, agentData, EDM_BINARY, v);
+
+/*creates an AGENT_DATA_TYPE containing a EDM_DURATION*/
+MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_DURATION, AGENT_DATA_TYPE*, agentData, EDM_DURATION, v);
+
+/*creates an AGENT_DATA_TYPE containing a EDM_DURATION*/
+MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_EDM_GEOGRAPHY_POINT, AGENT_DATA_TYPE*, agentData, EDM_GEOGRAPHY_POINT, v);
 
 /*create an AGENT_DATA_TYPE from SINGLE*/
 MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_FLOAT, AGENT_DATA_TYPE*, agentData, float, v);
@@ -692,6 +735,9 @@ MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_charz, 
 
 /*create an AGENT_DATA_TYPE from ANSI zero terminated string (no quotes)*/
 MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_charz_no_quotes, AGENT_DATA_TYPE*, agentData, const char*, v);
+
+/*create an AGENT_DATA_TYPE from ANSI zero terminated string*/
+MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_AGENT_DATA_TYPE_from_charz_secret, AGENT_DATA_TYPE*, agentData, const char*, v);
 
 /*create an AGENT_DATA_TYPE of type EDM_NULL_TYPE */
 MOCKABLE_FUNCTION(, AGENT_DATA_TYPES_RESULT, Create_NULL_AGENT_DATA_TYPE, AGENT_DATA_TYPE*, agentData);
