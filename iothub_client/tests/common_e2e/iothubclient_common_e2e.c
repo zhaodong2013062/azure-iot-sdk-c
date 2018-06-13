@@ -1339,11 +1339,17 @@ void e2e_c2d_with_svc_fault_ctrl(IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol, cons
     // assert
     ASSERT_IS_TRUE_WITH_MSG(receiveUserContext->wasFound, "Failure retrieving data from C2D"); // was found is written by the callback...
 
+    g_connection_status_info.connFaultHappened = false;
+    g_connection_status_info.connRestored = false;
+
     LogInfo("Send server fault control message...");
     d2cMessage = send_error_injection_message(iot_client_handle, faultOperationType, faultOperationCloseReason, faultOperationDelayInSecs);
 
-    LogInfo("Sleeping after sending fault injection...");
-    ThreadAPI_Sleep(3000);
+    // Wait for connection status change (fault)
+    ASSERT_IS_TRUE_WITH_MSG(client_wait_for_connection_fault(), "Fault injection failed - no fault happened");
+
+    // Wait for connection status change (restored)
+    ASSERT_IS_TRUE_WITH_MSG(client_wait_for_connection_restored(), "Fault injection failed - connection has not been restored");
 
     // Send message
     receiveUserContext->wasFound = false;
