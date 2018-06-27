@@ -42,5 +42,10 @@
         <file src="..\..\..\iothub_client\inc\iothub_message.h" target="build\native\include"/>
         <file src="..\..\..\iothub_client\inc\iothub_client_version.h" target="build\native\include"/>
         <file src="..\..\..\iothub_client\inc\iothub_transport_ll.h" target="build\native\include"/>
+        <file src="..\..\..\iothub_client\inc\iothub_client_edge.h" target="build\native\include"/>
+        <file src="..\..\..\iothub_client\inc\iothub_client_ll_edge.h" target="build\native\include"/>
+        <file src="..\..\..\iothub_client\inc\iothub_module_client.h" target="build\native\include"/>
+        <file src="..\..\..\iothub_client\inc\iothub_module_client_ll.h" target="build\native\include"/>
+        <file src="..\..\..\iothub_client\inc\iothub.h" target="build\native\include"/>
     </files>
 </package>
