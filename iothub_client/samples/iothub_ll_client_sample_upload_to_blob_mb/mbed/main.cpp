@@ -5,5 +5,6 @@
 
 int main(void)
 {
-    iothub_client_sample_upload_to_blob_run();
+	iothub_client_sample_upload_to_blob_multi_block_run();
+	return 0;
 }
