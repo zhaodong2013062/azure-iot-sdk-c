@@ -51,7 +51,7 @@ extern "C"
     * @return	A non-NULL @c IOTHUB_CLIENT_HANDLE value that is used when
     * 			invoking other functions for IoT Hub client and @c NULL on failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_HANDLE, IoTHubClient_CreateFromConnectionString, const char*, connectionString, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol);
+    IOTHUB_CLIENT_HANDLE IoTHubClient_CreateFromConnectionString(const char* connectionString, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol);
 
     /**
     * @brief	Creates a IoT Hub client for communication with an existing IoT
@@ -65,7 +65,7 @@ extern "C"
     * @return	A non-NULL @c IOTHUB_CLIENT_HANDLE value that is used when
     * 			invoking other functions for IoT Hub client and @c NULL on failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_HANDLE, IoTHubClient_Create, const IOTHUB_CLIENT_CONFIG*, config);
+    IOTHUB_CLIENT_HANDLE IoTHubClient_Create(const IOTHUB_CLIENT_CONFIG* config);
 
     /**
     * @brief	Creates a IoT Hub client for communication with an existing IoT
@@ -80,7 +80,7 @@ extern "C"
     * @return	A non-NULL @c IOTHUB_CLIENT_HANDLE value that is used when
     * 			invoking other functions for IoT Hub client and @c NULL on failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_HANDLE, IoTHubClient_CreateWithTransport, TRANSPORT_HANDLE, transportHandle, const IOTHUB_CLIENT_CONFIG*, config);
+    IOTHUB_CLIENT_HANDLE IoTHubClient_CreateWithTransport(TRANSPORT_HANDLE transportHandle, const IOTHUB_CLIENT_CONFIG* config);
 
     /**
     * @brief	Creates a IoT Hub client for communication with an existing IoT
@@ -93,7 +93,7 @@ extern "C"
     * @return	A non-NULL @c IOTHUB_CLIENT_LL_HANDLE value that is used when
     * 			invoking other functions for IoT Hub client and @c NULL on failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_HANDLE, IoTHubClient_CreateFromDeviceAuth, const char*, iothub_uri, const char*, device_id, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol);
+    IOTHUB_CLIENT_HANDLE IoTHubClient_CreateFromDeviceAuth(const char* iothub_uri, const char* device_id, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol);
 
     /**
     * @brief	Disposes of resources allocated by the IoT Hub client. This is a
@@ -101,7 +101,7 @@ extern "C"
     *
     * @param	iotHubClientHandle	The handle created by a call to the create function.
     */
-    MOCKABLE_FUNCTION(, void, IoTHubClient_Destroy, IOTHUB_CLIENT_HANDLE, iotHubClientHandle);
+    void IoTHubClient_Destroy(IOTHUB_CLIENT_HANDLE iotHubClientHandle);
 
     /**
     * @brief	Asynchronous call to send the message specified by @p eventMessageHandle.
@@ -123,7 +123,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SendEventAsync, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_MESSAGE_HANDLE, eventMessageHandle, IOTHUB_CLIENT_EVENT_CONFIRMATION_CALLBACK, eventConfirmationCallback, void*, userContextCallback);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SendEventAsync(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_MESSAGE_HANDLE eventMessageHandle, IOTHUB_CLIENT_EVENT_CONFIRMATION_CALLBACK eventConfirmationCallback, void* userContextCallback);
 
     /**
     * @brief	This function returns the current sending status for IoTHubClient.
@@ -137,7 +137,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_GetSendStatus, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_STATUS*, iotHubClientStatus);
+    IOTHUB_CLIENT_RESULT IoTHubClient_GetSendStatus(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_STATUS* iotHubClientStatus);
 
     /**
     * @brief	Sets up the message callback to be invoked when IoT Hub issues a
@@ -154,7 +154,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SetMessageCallback, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_MESSAGE_CALLBACK_ASYNC, messageCallback, void*, userContextCallback);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SetMessageCallback(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_MESSAGE_CALLBACK_ASYNC messageCallback, void* userContextCallback);
 
     /**
     * @brief	Sets up the connection status callback to be invoked representing the status of
@@ -171,7 +171,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SetConnectionStatusCallback, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_CONNECTION_STATUS_CALLBACK, connectionStatusCallback, void*, userContextCallback);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SetConnectionStatusCallback(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_CONNECTION_STATUS_CALLBACK connectionStatusCallback, void* userContextCallback);
 
     /**
     * @brief	Sets up the connection status callback to be invoked representing the status of
@@ -188,7 +188,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SetRetryPolicy, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_RETRY_POLICY, retryPolicy, size_t, retryTimeoutLimitInSeconds);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SetRetryPolicy(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_RETRY_POLICY retryPolicy, size_t retryTimeoutLimitInSeconds);
 
     /**
     * @brief	Sets up the connection status callback to be invoked representing the status of
@@ -204,7 +204,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_GetRetryPolicy, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_RETRY_POLICY*, retryPolicy, size_t*, retryTimeoutLimitInSeconds);
+    IOTHUB_CLIENT_RESULT IoTHubClient_GetRetryPolicy(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_RETRY_POLICY* retryPolicy, size_t* retryTimeoutLimitInSeconds);
 
     /**
     * @brief	This function returns in the out parameter @p lastMessageReceiveTime
@@ -217,7 +217,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_GetLastMessageReceiveTime, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, time_t*, lastMessageReceiveTime);
+    IOTHUB_CLIENT_RESULT IoTHubClient_GetLastMessageReceiveTime(IOTHUB_CLIENT_HANDLE iotHubClientHandle, time_t* lastMessageReceiveTime);
 
     /**
     * @brief	This API sets a runtime option identified by parameter @p optionName
@@ -269,7 +269,7 @@ extern "C"
 
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SetOption, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, const char*, optionName, const void*, value);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SetOption(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const char* optionName, const void* value);
 
     /**
     * @brief	This API specifies a call back to be used when the device receives a state update.
@@ -289,7 +289,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SetDeviceTwinCallback, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_DEVICE_TWIN_CALLBACK, deviceTwinCallback, void*, userContextCallback);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SetDeviceTwinCallback(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_DEVICE_TWIN_CALLBACK deviceTwinCallback, void* userContextCallback);
 
     /**
     * @brief	This API sends a report of the device's properties and their current values.
@@ -306,7 +306,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SendReportedState, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, const unsigned char*, reportedState, size_t, size, IOTHUB_CLIENT_REPORTED_STATE_CALLBACK, reportedStateCallback, void*, userContextCallback);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SendReportedState(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const unsigned char* reportedState, size_t size, IOTHUB_CLIENT_REPORTED_STATE_CALLBACK reportedStateCallback, void* userContextCallback);
 
     /**
     * @brief	This API sets callback for cloud to device method call.
@@ -318,7 +318,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SetDeviceMethodCallback, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_DEVICE_METHOD_CALLBACK_ASYNC, deviceMethodCallback, void*, userContextCallback);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SetDeviceMethodCallback(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_DEVICE_METHOD_CALLBACK_ASYNC deviceMethodCallback, void* userContextCallback);
 
     /**
     * @brief	This API sets callback for async cloud to device method call.
@@ -330,7 +330,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_SetDeviceMethodCallback_Ex, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_INBOUND_DEVICE_METHOD_CALLBACK, inboundDeviceMethodCallback, void*, userContextCallback);
+    IOTHUB_CLIENT_RESULT IoTHubClient_SetDeviceMethodCallback_Ex(IOTHUB_CLIENT_HANDLE iotHubClientHandle, IOTHUB_CLIENT_INBOUND_DEVICE_METHOD_CALLBACK inboundDeviceMethodCallback, void* userContextCallback);
 
     /**
     * @brief	This API responses to a asnyc method callback identified the methodId.
@@ -343,7 +343,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_DeviceMethodResponse, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, METHOD_HANDLE, methodId, const unsigned char*, response, size_t, response_size, int, statusCode);
+    IOTHUB_CLIENT_RESULT IoTHubClient_DeviceMethodResponse(IOTHUB_CLIENT_HANDLE iotHubClientHandle, METHOD_HANDLE methodId, const unsigned char* response, size_t response_size, int statusCode);
 
 #ifndef DONT_USE_UPLOADTOBLOB
     /**
@@ -358,7 +358,7 @@ extern "C"
     *
     * @return	IOTHUB_CLIENT_OK upon success or an error code upon failure.
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_UploadToBlobAsync, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, const char*, destinationFileName, const unsigned char*, source, size_t, size, IOTHUB_CLIENT_FILE_UPLOAD_CALLBACK, iotHubClientFileUploadCallback, void*, context);
+    IOTHUB_CLIENT_RESULT IoTHubClient_UploadToBlobAsync(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const char* destinationFileName, const unsigned char* source, size_t size, IOTHUB_CLIENT_FILE_UPLOAD_CALLBACK iotHubClientFileUploadCallback, void* context);
 
     /**  
     ** DEPRECATED: Use IoTHubClient_UploadMultipleBlocksToBlobAsyncEx instead **
@@ -371,7 +371,7 @@ extern "C"
     * @returns                        An IOTHUB_CLIENT_RESULT value indicating the success or failure of the API call.
     ** DEPRECATED: Use IoTHubClient_UploadMultipleBlocksToBlobAsyncEx instead **
     */
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_UploadMultipleBlocksToBlobAsync, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, const char*, destinationFileName, IOTHUB_CLIENT_FILE_UPLOAD_GET_DATA_CALLBACK, getDataCallback, void*, context);
+    IOTHUB_CLIENT_RESULT IoTHubClient_UploadMultipleBlocksToBlobAsync(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const char* destinationFileName, IOTHUB_CLIENT_FILE_UPLOAD_GET_DATA_CALLBACK getDataCallback, void* context);
 
     /**
     * @brief                          Uploads a file to a Blob storage in chunks, fed through the callback function provided by the user.
@@ -381,7 +381,7 @@ extern "C"
     * @param getDataCallbackEx        A callback to be invoked to acquire the file chunks to be uploaded, as well as to indicate the status of the upload of the previous block.
     * @param context                  Any data provided by the user to serve as context on getDataCallback.
     * @returns                        An IOTHUB_CLIENT_RESULT value indicating the success or failure of the API call.*/
-    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClient_UploadMultipleBlocksToBlobAsyncEx, IOTHUB_CLIENT_HANDLE, iotHubClientHandle, const char*, destinationFileName, IOTHUB_CLIENT_FILE_UPLOAD_GET_DATA_CALLBACK_EX, getDataCallbackEx, void*, context);
+    IOTHUB_CLIENT_RESULT IoTHubClient_UploadMultipleBlocksToBlobAsyncEx(IOTHUB_CLIENT_HANDLE iotHubClientHandle, const char* destinationFileName, IOTHUB_CLIENT_FILE_UPLOAD_GET_DATA_CALLBACK_EX getDataCallbackEx, void* context);
 
 #endif /* DONT_USE_UPLOADTOBLOB */
 

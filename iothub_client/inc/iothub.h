@@ -16,13 +16,13 @@ extern "C"
     *
     * @return   int zero upon success, any other value upon failure.
     */
-    MOCKABLE_FUNCTION(, int, IoTHub_Init);
+    int IoTHub_Init();
 
     /**
     * @brief    IoTHubClient_Deinit Frees resources initialized in the IoTHubClient_Init function call.
     *
     */
-    MOCKABLE_FUNCTION(, void, IoTHub_Deinit);
+    void IoTHub_Deinit();
 
 #ifdef __cplusplus
 }
