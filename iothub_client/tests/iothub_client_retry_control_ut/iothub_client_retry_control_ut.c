@@ -38,7 +38,7 @@ void real_free(void* ptr)
 #include "azure_c_shared_utility/gballoc.h"
 #include "azure_c_shared_utility/agenttime.h"
 #include "azure_c_shared_utility/optionhandler.h"
-#include "iothub_client_core_ll.h"
+#include "iothub_client_core_ll_mock.h"
 #undef ENABLE_MOCKS
 
 #include "internal/iothub_client_retry_control.h"

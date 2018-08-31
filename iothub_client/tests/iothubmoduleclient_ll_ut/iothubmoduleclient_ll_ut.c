@@ -31,8 +31,8 @@ static void real_free(void* ptr)
 
 #define ENABLE_MOCKS
 #include "azure_c_shared_utility/gballoc.h"
-#include "iothub_client_core_ll.h"
-#include "iothub_client_private.h"
+#include "iothub_client_core_ll_mock.h"
+#include "internal/iothub_client_private.h"
 #include "internal/iothub_client_edge.h"
 #undef ENABLE_MOCKS
 

@@ -36,7 +36,7 @@ static void my_gballoc_free(void* ptr)
 #include "azure_c_shared_utility/strings.h"
 #include "azure_c_shared_utility/lock.h"
 #include "azure_c_shared_utility/map.h"
-#include "iothub_message.h"
+#include "iothub_message_mock.h"
 
 #undef ENABLE_MOCKS
 

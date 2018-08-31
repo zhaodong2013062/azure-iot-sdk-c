@@ -20,14 +20,13 @@
 #include "umocktypes_stdint.h"
 
 #define ENABLE_MOCKS
-#include "iothub_client_core_ll.h"
+#include "iothub_client_core_ll_mock.h"
 #undef ENABLE_MOCKS
 
 #include "iothub_client_ll.h"
 
 #define ENABLE_MOCKS
 #include "internal/iothub_client_private.h"
-#include "iothub_device_client_ll.h"
 #undef ENABLE_MOCKS
 
 static const IOTHUB_CLIENT_LL_HANDLE TEST_IOTHUB_CLIENT_LL_HANDLE = (IOTHUB_CLIENT_LL_HANDLE)0x0001;

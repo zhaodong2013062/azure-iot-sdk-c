@@ -52,7 +52,7 @@ void real_free(void* ptr)
 #include "azure_uamqp_c/message_sender.h"
 #include "azure_uamqp_c/message_receiver.h"
 #include "internal/iothub_client_private.h"
-#include "iothub_client_version.h"
+#include "iothub_client_version_mock.h"
 #include "internal/uamqp_messaging.h"
 
 #undef ENABLE_MOCKS

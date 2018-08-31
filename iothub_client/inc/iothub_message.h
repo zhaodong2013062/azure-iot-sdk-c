@@ -63,7 +63,7 @@ static const char DIAG_CREATION_TIME_UTC_PROPERTY_NAME[] = "diag_creation_time_u
 * @return  A valid @c IOTHUB_MESSAGE_HANDLE if the message was successfully
 *          created or @c NULL in case an error occurs.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_CreateFromByteArray, const unsigned char*, byteArray, size_t, size);
+IOTHUB_MESSAGE_HANDLE IoTHubMessage_CreateFromByteArray(const unsigned char* byteArray, size_t size);
 
 /**
 * @brief   Creates a new IoT hub message from a null terminated string.  The
@@ -75,7 +75,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_CreateFromByteArray, co
 * @return  A valid @c IOTHUB_MESSAGE_HANDLE if the message was successfully
 *          created or @c NULL in case an error occurs.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_CreateFromString, const char*, source);
+IOTHUB_MESSAGE_HANDLE IoTHubMessage_CreateFromString(const char* source);
 
 /**
 * @brief   Creates a new IoT hub message with the content identical to that
@@ -86,7 +86,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_CreateFromString, const
 * @return  A valid @c IOTHUB_MESSAGE_HANDLE if the message was successfully
 *          cloned or @c NULL in case an error occurs.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_Clone, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+IOTHUB_MESSAGE_HANDLE IoTHubMessage_Clone(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Fetches a pointer and size for the data associated with the IoT
@@ -103,7 +103,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_Clone, IOTHUB_MESSAGE_H
 * @return  Returns IOTHUB_MESSAGE_OK if the byte array was fetched successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_GetByteArray, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const unsigned char**, buffer, size_t*, size);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_GetByteArray(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const unsigned char** buffer, size_t* size);
 
 /**
 * @brief   Returns the null terminated string stored in the message.
@@ -115,7 +115,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_GetByteArray, IOTHUB_ME
 * @return  @c NULL if an error occurs or a pointer to the stored null
 *          terminated string otherwise.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetString, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetString(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Returns the content type of the message given by parameter
@@ -127,7 +127,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetString, IOTHUB_MESSAGE_HANDLE,
 *
 * @return  An @c IOTHUBMESSAGE_CONTENT_TYPE value.
 */
-MOCKABLE_FUNCTION(, IOTHUBMESSAGE_CONTENT_TYPE, IoTHubMessage_GetContentType, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+IOTHUBMESSAGE_CONTENT_TYPE IoTHubMessage_GetContentType(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets the content-type of the message payload, as per supported values on RFC 2046.
@@ -138,7 +138,7 @@ MOCKABLE_FUNCTION(, IOTHUBMESSAGE_CONTENT_TYPE, IoTHubMessage_GetContentType, IO
 *
 * @return  An @c IOTHUB_MESSAGE_RESULT value.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetContentTypeSystemProperty, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, contentType);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetContentTypeSystemProperty(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* contentType);
 
 /**
 * @brief   Returns the content-type of the message payload, if defined.
@@ -147,7 +147,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetContentTypeSystemPro
 *
 * @return  A string with the content-type value if defined (or NULL otherwise).
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetContentTypeSystemProperty, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetContentTypeSystemProperty(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets the content-encoding of the message payload, as per supported values on RFC 2616.
@@ -158,7 +158,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetContentTypeSystemProperty, IOT
 *
 * @return  An @c IOTHUB_MESSAGE_RESULT value.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetContentEncodingSystemProperty, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, contentEncoding);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetContentEncodingSystemProperty(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* contentEncoding);
 
 /**
 * @brief   Returns the content-encoding of the message payload, if defined.
@@ -167,7 +167,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetContentEncodingSyste
 *
 * @return  A string with the content-encoding value if defined (or NULL otherwise).
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetContentEncodingSystemProperty, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetContentEncodingSystemProperty(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 ** DEPRECATED: Use IoTHubMessage_SetProperty and IoTHubMessage_GetProperty instead. **
@@ -178,7 +178,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetContentEncodingSystemProperty,
 *
 * @return  A @c MAP_HANDLE pointing to the properties map for this message.
 */
-MOCKABLE_FUNCTION(, MAP_HANDLE, IoTHubMessage_Properties, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+MAP_HANDLE IoTHubMessage_Properties(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets a property on a Iothub Message.
@@ -191,7 +191,7 @@ MOCKABLE_FUNCTION(, MAP_HANDLE, IoTHubMessage_Properties, IOTHUB_MESSAGE_HANDLE,
 *
 * @return  An @c IOTHUB_MESSAGE_RESULT value indicating the result of setting the property.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetProperty, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, key, const char*, value);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetProperty(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* key, const char* value);
 
 /**
 * @brief   Gets a IotHub Message's properties item.
@@ -202,7 +202,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetProperty, IOTHUB_MES
 *
 * @return  A string with the property's value, or NULL if it does not exist in the properties list.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetProperty, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, key);
+const char* IoTHubMessage_GetProperty(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* key);
 
 /**
 * @brief   Gets the MessageId from the IOTHUB_MESSAGE_HANDLE.
@@ -211,7 +211,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetProperty, IOTHUB_MESSAGE_HANDL
 *
 * @return  A const char* pointing to the Message Id.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetMessageId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetMessageId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets the MessageId for the IOTHUB_MESSAGE_HANDLE.
@@ -222,7 +222,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetMessageId, IOTHUB_MESSAGE_HAND
 * @return  Returns IOTHUB_MESSAGE_OK if the messageId was set successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetMessageId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, messageId);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetMessageId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* messageId);
 
 /**
 * @brief   Gets the CorrelationId from the IOTHUB_MESSAGE_HANDLE.
@@ -231,7 +231,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetMessageId, IOTHUB_ME
 *
 * @return  A const char* pointing to the Correlation Id.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetCorrelationId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetCorrelationId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets the CorrelationId for the IOTHUB_MESSAGE_HANDLE.
@@ -242,7 +242,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetCorrelationId, IOTHUB_MESSAGE_
 * @return  Returns IOTHUB_MESSAGE_OK if the messageId was set successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetCorrelationId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, correlationId);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetCorrelationId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* correlationId);
 
 /**
 * @brief   Gets the DiagnosticData from the IOTHUB_MESSAGE_HANDLE. CAUTION: SDK user should not call it directly, it is for internal use only.
@@ -251,7 +251,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetCorrelationId, IOTHU
 *
 * @return  A const IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA* pointing to the diagnostic property data.
 */
-MOCKABLE_FUNCTION(, const IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA*, IoTHubMessage_GetDiagnosticPropertyData, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA* IoTHubMessage_GetDiagnosticPropertyData(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets the DiagnosticData for the IOTHUB_MESSAGE_HANDLE. CAUTION: SDK user should not call it directly, it is for internal use only.
@@ -262,7 +262,7 @@ MOCKABLE_FUNCTION(, const IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA*, IoTHubMessag
 * @return  Returns IOTHUB_MESSAGE_OK if the DiagnosticData was set successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetDiagnosticPropertyData, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA*, diagnosticData);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetDiagnosticPropertyData(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA* diagnosticData);
 
 /**
 * @brief   Gets the output name from the IOTHUB_MESSAGE_HANDLE.
@@ -271,7 +271,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetDiagnosticPropertyDa
 *
 * @return  A const char* pointing to the Output Id.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetOutputName, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetOutputName(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 
 /**
@@ -283,7 +283,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetOutputName, IOTHUB_MESSAGE_HAN
 * @return  Returns IOTHUB_MESSAGE_OK if the DiagnosticData was set successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetOutputName, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, outputName);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetOutputName(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* outputName);
 
 
 /**
@@ -293,7 +293,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetOutputName, IOTHUB_M
 *
 * @return  A const char* pointing to the Input Id.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetInputName, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetInputName(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets input for named queues. CAUTION: SDK user should not call it directly, it is for internal use only.
@@ -304,7 +304,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetInputName, IOTHUB_MESSAGE_HAND
 * @return  Returns IOTHUB_MESSAGE_OK if the DiagnosticData was set successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetInputName, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, inputName);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetInputName(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* inputName);
 
 /**
 * @brief   Gets the module name from the IOTHUB_MESSAGE_HANDLE.
@@ -313,7 +313,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetInputName, IOTHUB_ME
 *
 * @return  A const char* pointing to the connection module Id.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetConnectionModuleId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetConnectionModuleId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets connection module ID. CAUTION: SDK user should not call it directly, it is for internal use only.
@@ -324,7 +324,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetConnectionModuleId, IOTHUB_MES
 * @return  Returns IOTHUB_MESSAGE_OK if the DiagnosticData was set successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetConnectionModuleId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, connectionModuleId);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetConnectionModuleId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* connectionModuleId);
 
 
 /**
@@ -334,7 +334,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetConnectionModuleId, 
 *
 * @return  A const char* pointing to the connection device Id.
 */
-MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetConnectionDeviceId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+const char* IoTHubMessage_GetConnectionDeviceId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 /**
 * @brief   Sets connection device Id. CAUTION: SDK user should not call it directly, it is for internal use only.
@@ -345,7 +345,7 @@ MOCKABLE_FUNCTION(, const char*, IoTHubMessage_GetConnectionDeviceId, IOTHUB_MES
 * @return  Returns IOTHUB_MESSAGE_OK if the DiagnosticData was set successfully
 *          or an error code otherwise.
 */
-MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetConnectionDeviceId, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle, const char*, connectionDeviceId);
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetConnectionDeviceId(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle, const char* connectionDeviceId);
 
 
 /**
@@ -353,7 +353,7 @@ MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_RESULT, IoTHubMessage_SetConnectionDeviceId, 
 *
 * @param   iotHubMessageHandle Handle to the message.
 */
-MOCKABLE_FUNCTION(, void, IoTHubMessage_Destroy, IOTHUB_MESSAGE_HANDLE, iotHubMessageHandle);
+void IoTHubMessage_Destroy(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle);
 
 #ifdef __cplusplus
 }

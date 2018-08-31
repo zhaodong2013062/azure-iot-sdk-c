@@ -62,7 +62,7 @@ static void TEST_free(void* ptr)
 #include "azure_c_shared_utility/gballoc.h"
 #include "azure_c_shared_utility/uuid.h"
 
-#include "iothub_message.h"
+#include "iothub_message_mock.h"
 #include "azure_uamqp_c/amqp_definitions_application_properties.h"
 #include "azure_uamqp_c/amqp_definitions_data.h"
 #include "azure_uamqp_c/message.h"

@@ -9,6 +9,10 @@ endif()
 
 usePermissiveRulesForSdkSamplesAndTests()
 
+if (${run_unittests})
+    include_directories(./inc/mockable)
+endif()
+
 # addSupportedTransportsToTest determines transport dependencies based on which transports are enabled via cmake and
 # sets appropriate TEST_xyz #ifdef's so tests themselves are compiled against appropriate targets.
 function(addSupportedTransportsToTest whatExecutableIsBuilding)

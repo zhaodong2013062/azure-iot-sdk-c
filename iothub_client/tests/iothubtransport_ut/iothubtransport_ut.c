@@ -42,7 +42,7 @@ static void my_gballoc_free(void* ptr)
 #include "azure_c_shared_utility/crt_abstractions.h"
 #include "iothub_client_core_common.h"
 
-#include "iothub_client_core.h"
+#include "iothub_client_core_mock.h"
 #include "internal/iothub_transport_ll_private.h"
 #undef ENABLE_MOCKS
 

@@ -64,6 +64,7 @@ void* my_gballoc_realloc(void* ptr, size_t size)
 #include "azure_c_shared_utility/string_tokenizer.h"
 #include "azure_c_shared_utility/buffer_.h"
 #include "azure_c_shared_utility/urlencode.h"
+#include "iothub_message_mock.h"
 #undef ENABLE_MOCKS
 
 #include "internal/iothubtransport_mqtt_common.h"

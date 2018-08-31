@@ -62,10 +62,11 @@ void* my_gballoc_realloc(void* ptr, size_t size)
 #include "azure_c_shared_utility/lock.h"
 #include "azure_c_shared_utility/vector.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
-#include "iothub_client_core_ll.h"
-#include "iothub_module_client_ll.h"
+#include "iothub_message_mock.h"
+#include "iothub_client_core_ll_mock.h"
+#include "iothub_module_client_ll_mock.h"
+#include "iothub_transport_ll_mock.h"
 #include "internal/iothubtransport.h"
-
 #undef ENABLE_MOCKS
 
 #undef IOTHUB_CLIENT_CORE_H

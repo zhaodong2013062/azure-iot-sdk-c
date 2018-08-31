@@ -29,9 +29,9 @@ typedef struct TRANSPORT_PROVIDER_TAG TRANSPORT_PROVIDER;
 
 typedef const TRANSPORT_PROVIDER*(*IOTHUB_CLIENT_TRANSPORT_PROVIDER)(void);
 
-MOCKABLE_FUNCTION(, TRANSPORT_HANDLE, IoTHubTransport_Create, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol, const char*, iotHubName, const char*, iotHubSuffix);
-MOCKABLE_FUNCTION(, void, IoTHubTransport_Destroy, TRANSPORT_HANDLE, transportHandle);
-MOCKABLE_FUNCTION(, TRANSPORT_LL_HANDLE, IoTHubTransport_GetLLTransport, TRANSPORT_HANDLE, transportHandle);
+TRANSPORT_HANDLE IoTHubTransport_Create(IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol, const char* iotHubName, const char* iotHubSuffix);
+void IoTHubTransport_Destroy(TRANSPORT_HANDLE transportHandle);
+TRANSPORT_LL_HANDLE IoTHubTransport_GetLLTransport(TRANSPORT_HANDLE transportHandle);
 
 #ifdef __cplusplus
 }

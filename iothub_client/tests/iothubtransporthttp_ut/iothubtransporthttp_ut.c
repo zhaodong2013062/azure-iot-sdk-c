@@ -47,7 +47,8 @@ static void my_gballoc_free(void* ptr)
 #include "azure_c_shared_utility/agenttime.h"
 
 #include "iothub_client_options.h"
-#include "iothub_client_version.h"
+#include "iothub_message_mock.h"
+#include "iothub_client_version_mock.h"
 #include "internal/iothub_client_private.h"
 #undef ENABLE_MOCKS
 

@@ -24,7 +24,7 @@ extern "C"
      * @return  Pointer to a null terminated string containing the
      *          current IoT Hub Client SDK version.
      */
-    MOCKABLE_FUNCTION(, const char*, IoTHubClient_GetVersionString);
+    const char* IoTHubClient_GetVersionString();
 
 #ifdef __cplusplus
 }

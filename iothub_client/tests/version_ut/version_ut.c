@@ -3,6 +3,7 @@
 
 #include "testrunnerswitcher.h"
 #include "iothub_client_version.h"
+#include "iothub_client_version_mock.h"
 
 BEGIN_TEST_SUITE(version_ut)
 
