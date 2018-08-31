@@ -37,7 +37,7 @@
 #include "azure_uamqp_c/link.h"
 
 #include "parson.h"
-#include "iothub_message.h"
+#include "iothub_message_mock.h"
 
 MOCKABLE_FUNCTION(, JSON_Array*, json_array_get_array, const JSON_Array*, array, size_t, index);
 MOCKABLE_FUNCTION(, JSON_Value*, json_parse_string, const char *, string);

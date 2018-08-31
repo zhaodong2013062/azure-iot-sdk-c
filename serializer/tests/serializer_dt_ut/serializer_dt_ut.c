@@ -49,8 +49,8 @@ static void my_gballoc_free(void* s)
 #include "commanddecoder.h"
 
 #define ENABLE_MOCKS
-#include "iothub_client.h"
-#include "iothub_client_ll.h"
+#include "iothub_client_mock.h"
+#include "iothub_client_ll_mock.h"
 #include "azure_c_shared_utility/vector.h"
 #include "parson.h"
 #ifdef __cplusplus

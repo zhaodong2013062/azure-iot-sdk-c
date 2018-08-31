@@ -5,6 +5,10 @@ cmake_minimum_required(VERSION 2.8.11)
 
 usePermissiveRulesForSdkSamplesAndTests()
 
+if (${run_unittests})
+    include_directories(../../iothub_client/tests/inc/mockable)
+endif()
+
 #this is CMakeLists for service tests folder
 
 add_subdirectory(iothub_deviceconfiguration_ut)

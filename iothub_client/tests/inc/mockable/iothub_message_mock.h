@@ -11,6 +11,10 @@
 
 #include "iothub_message.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_CreateFromByteArray, const unsigned char*, byteArray, size_t, size);
 MOCKABLE_FUNCTION(, IOTHUB_MESSAGE_HANDLE, IoTHubMessage_CreateFromString, const char*, source);

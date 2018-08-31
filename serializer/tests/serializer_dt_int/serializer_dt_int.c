@@ -18,8 +18,8 @@
 #include "commanddecoder.h"
 
 #define ENABLE_MOCKS
-#include "iothub_client.h"
-#include "iothub_client_ll.h"
+#include "iothub_client_mock.h"
+#include "iothub_client_ll_mock.h"
 #undef ENABLE_MOCKS
 
 #include "serializer_devicetwin.h"
