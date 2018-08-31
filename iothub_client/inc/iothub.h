@@ -16,13 +16,13 @@ extern "C"
     *
     * @return   int zero upon success, any other value upon failure.
     */
-    int IoTHub_Init();
+    int IoTHub_Init(void);
 
     /**
     * @brief    IoTHubClient_Deinit Frees resources initialized in the IoTHubClient_Init function call.
     *
     */
-    void IoTHub_Deinit();
+    void IoTHub_Deinit(void);
 
 #ifdef __cplusplus
 }
