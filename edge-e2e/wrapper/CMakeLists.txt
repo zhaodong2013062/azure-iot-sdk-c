@@ -11,6 +11,8 @@ add_subdirectory( "${PROJECT_SOURCE_DIR}/deps/restbed/" )
 
 include_directories("${C_SDK_ROOT}/deps/parson") #this brings in parson from the source
 include_directories(.)
+include_directories(./generated)
+include_directories(./glue)
 include_directories(${SHARED_UTIL_INC_FOLDER})
 include_directories(${IOTHUB_SERVICE_CLIENT_INC_FOLDER})
 include_directories(${IOTHUB_CLIENT_INC_FOLDER})
@@ -29,39 +31,39 @@ set(iothub_client_libs
 )
 
 set(generated_cpp_files
-  ModuleApi.cpp
-  WrapperApi.cpp
-  RegistryApi.cpp
-  ServiceApi.cpp
-  DeviceApi.cpp
+  generated/ModuleApi.cpp
+  generated/WrapperApi.cpp
+  generated/RegistryApi.cpp
+  generated/ServiceApi.cpp
+  generated/DeviceApi.cpp
 )
 
 set(generated_h_files
-  ModuleApi.h
-  WrapperApi.h
-  RegistryApi.h
-  ServiceApi.h
-  DeviceApi.h
+  generated/ModuleApi.h
+  generated/WrapperApi.h
+  generated/RegistryApi.h
+  generated/ServiceApi.h
+  generated/DeviceApi.h
 )
 
 set(glue_cpp_files
-  GlueUtils.cpp
-  InternalGlue.cpp
-  DeviceGlue.cpp
-  ModuleGlue.cpp
-  WrapperGlue.cpp
-  RegistryGlue.cpp
-  ServiceGlue.cpp
+  glue/GlueUtils.cpp
+  glue/InternalGlue.cpp
+  glue/DeviceGlue.cpp
+  glue/ModuleGlue.cpp
+  glue/WrapperGlue.cpp
+  glue/RegistryGlue.cpp
+  glue/ServiceGlue.cpp
 )
 
 set(glue_h_files
-  GlueUtils.h
-  InternalGlue.h
-  DeviceGlue.h
-  ModuleGlue.h
-  WrapperGlue.h
-  RegistryGlue.h
-  ServiceGlue.h
+  glue/GlueUtils.h
+  glue/InternalGlue.h
+  glue/DeviceGlue.h
+  glue/ModuleGlue.h
+  glue/WrapperGlue.h
+  glue/RegistryGlue.h
+  glue/ServiceGlue.h
 )
 
 add_executable(edge_e2e_rest_server

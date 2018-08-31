@@ -19,3 +19,6 @@
 [submodule "provisioning_client/deps/utpm"]
 	path = provisioning_client/deps/utpm
 	url = https://github.com/Azure/azure-utpm-c.git
+[submodule "edge-e2e\\wrapper\\deps\\restbed"]
+	path = edge-e2e\\wrapper\\deps\\restbed
+	url = https://github.com/Corvusoft/restbed.git
