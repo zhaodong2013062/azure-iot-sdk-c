@@ -20,12 +20,13 @@
 static int clientCount = 0;
 static string client_prefix = "moduleClient_";
 
-ModuleGlue::ModuleGlue() {
-  platform_init();
+ModuleGlue::ModuleGlue()
+{
+    platform_init();
 }
 
-ModuleGlue::~ModuleGlue() {
-
+ModuleGlue::~ModuleGlue()
+{
 }
 
 string ModuleGlue::getNextClientId()

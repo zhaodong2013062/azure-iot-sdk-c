@@ -21,7 +21,7 @@ mkdir %~dp0\cmake
 pushd %~dp0\cmake
 if errorlevel 1 goto :failure
 
-cmake -D use_edge_modules=ON  -D skip_samples=ON -D C_SDK_ROOT=%sdk-root% ..\wrapper
+cmake -D BUILD_TESTING=OFF -D use_edge_modules=ON  -D skip_samples=ON -D C_SDK_ROOT=%sdk-root% ..\wrapper
 if errorlevel 1 goto :failure
 
 msbuild project.sln /t:edge_e2e_rest_server /p:Configuration=Debug

@@ -10,44 +10,45 @@ extern ModuleGlue module_glue;
 extern RegistryGlue registry_glue;
 extern ServiceGlue service_glue;
 
-WrapperGlue::WrapperGlue() {
+WrapperGlue::WrapperGlue()
+{
 }
 
-WrapperGlue::~WrapperGlue() {
-
+WrapperGlue::~WrapperGlue()
+{
 }
 
 void WrapperGlue::CleanupResources()
 {
-	try
-	{
-		module_glue.CleanupResources();
-	}
-	catch (runtime_error)
-	{
-		cout << "Ignoring exception on module cleanup" << endl;
-	}
-	try
-	{
-		service_glue.CleanupResources();
-	}
-	catch (runtime_error)
-	{
-		cout << "Ignoring exception on service cleanup" << endl;
-	}
-	try
-	{
-		registry_glue.CleanupResources();
-	}
-	catch (runtime_error)
-	{
-		cout << "Ignoring exception on registry cleanup" << endl;
-	}
+    try
+    {
+        module_glue.CleanupResources();
+    }
+    catch (runtime_error)
+    {
+        cout << "Ignoring exception on module cleanup" << endl;
+    }
+    try
+    {
+        service_glue.CleanupResources();
+    }
+    catch (runtime_error)
+    {
+        cout << "Ignoring exception on service cleanup" << endl;
+    }
+    try
+    {
+        registry_glue.CleanupResources();
+    }
+    catch (runtime_error)
+    {
+        cout << "Ignoring exception on registry cleanup" << endl;
+    }
 }
 
 
 void WrapperGlue::PrintMessage(string message)
 {
-	cout << message << endl;
+    cout << message << endl;
 }
 

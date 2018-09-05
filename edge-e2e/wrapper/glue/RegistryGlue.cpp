@@ -9,11 +9,12 @@ using namespace std;
 static int clientCount = 0;
 static string client_prefix = "registryClient_";
 
-RegistryGlue::RegistryGlue() {
+RegistryGlue::RegistryGlue()
+{
 }
 
-RegistryGlue::~RegistryGlue() {
-
+RegistryGlue::~RegistryGlue()
+{
 }
 
 string RegistryGlue::Connect(string connectionString)
@@ -124,7 +125,7 @@ void RegistryGlue::CleanupResources()
     map<string, void*> mapCopy = this->clientMap;
     for (auto iter = mapCopy.begin(); iter != mapCopy.end(); ++iter)
     {
-        cout << "missed clanup of " << iter->first << endl;
+        cout << "missed cleanup of " << iter->first << endl;
         this->Disconnect(iter->first);
     }
     // Now, go through the twin map just in case something was really messed up.

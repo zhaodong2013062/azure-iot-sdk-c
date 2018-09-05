@@ -8,10 +8,9 @@
 
 class WrapperGlue {
 public:
-	WrapperGlue();
+    WrapperGlue();
     ~WrapperGlue();
 
-	void CleanupResources();
-	void PrintMessage(std::string message);
-
+    void CleanupResources();
+    void PrintMessage(std::string message);
 };

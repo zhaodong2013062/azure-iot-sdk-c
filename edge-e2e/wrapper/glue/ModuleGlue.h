@@ -11,8 +11,8 @@ using namespace std;
 
 class ModuleGlue : public InternalGlue {
 public:
-	ModuleGlue();
-	~ModuleGlue();
+    ModuleGlue();
+    ~ModuleGlue();
 
 private:
     virtual string getNextClientId();

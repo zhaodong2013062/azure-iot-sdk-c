@@ -10,17 +10,17 @@ using namespace std;
 
 class ServiceGlue {
 public:
-	ServiceGlue();
+    ServiceGlue();
     ~ServiceGlue();
 
-	string Connect(string connectionString);
-	void Disconnect(string connectionId);
-	string InvokeDeviceMethod(string connectionId, string deviceId, string methodInvokeParameters);
-	string InvokeModuleMethod(string connectionId, string deviceId, string moduleId, string methodInvokeParameters);
-	
-	void CleanupResources();
+    string Connect(string connectionString);
+    void Disconnect(string connectionId);
+    string InvokeDeviceMethod(string connectionId, string deviceId, string methodInvokeParameters);
+    string InvokeModuleMethod(string connectionId, string deviceId, string moduleId, string methodInvokeParameters);
 
-private: 
+    void CleanupResources();
+
+private:
     string _invokeMethodCommon(string connectionId, string deviceId, string moduleId, string methodInvokeParameters);
     std::map<string, void*> clientMap;
 };

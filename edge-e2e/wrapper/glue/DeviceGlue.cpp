@@ -17,10 +17,12 @@
 #include "GlueUtils.h"
 #include "DeviceGlue.h"
 
-DeviceGlue::DeviceGlue() {
+DeviceGlue::DeviceGlue()
+{
 }
 
-DeviceGlue::~DeviceGlue() {
+DeviceGlue::~DeviceGlue()
+{
 }
 
 string DeviceGlue::getNextClientId()

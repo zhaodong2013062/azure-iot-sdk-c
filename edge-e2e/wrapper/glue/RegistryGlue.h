@@ -10,15 +10,15 @@ using namespace std;
 
 class RegistryGlue {
 public:
-	RegistryGlue();
+    RegistryGlue();
     ~RegistryGlue();
 
-	string Connect(string connectionString);
-	void Disconnect(string connectionId);
-	string GetModuleTwin(string connectionId, string deviceId, string moduleId);
-	void PatchModuleTwin(string connectionId, string deviceId, string moduleId, string patch);
+    string Connect(string connectionString);
+    void Disconnect(string connectionId);
+    string GetModuleTwin(string connectionId, string deviceId, string moduleId);
+    void PatchModuleTwin(string connectionId, string deviceId, string moduleId, string patch);
 
-	void CleanupResources();
+    void CleanupResources();
 
 private:
     std::map<string, void*> clientMap;
