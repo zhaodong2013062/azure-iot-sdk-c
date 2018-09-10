@@ -11,7 +11,7 @@
 #include "azure_c_shared_utility/strings.h"
 #include "azure_c_shared_utility/buffer_.h"
 #include "azure_c_shared_utility/uniqueid.h"
-#include "azure_c_shared_utility/sastoken.h" 
+#include "azure_c_shared_utility/sastoken.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
 #include "azure_c_shared_utility/base64.h"
 #include "azure_c_shared_utility/urlencode.h"
@@ -23,27 +23,27 @@
 #include "azure_prov_client/prov_device_ll_client.h"
 #include "azure_prov_client/prov_client_const.h"
 
-static const char* OPTION_LOG_TRACE = "logtrace";
+static const char* const OPTION_LOG_TRACE = "logtrace";
 
-static const char* JSON_NODE_STATUS = "status";
-static const char* JSON_NODE_REG_STATUS = "registrationState";
-static const char* JSON_NODE_AUTH_KEY = "authenticationKey";
-static const char* JSON_NODE_DEVICE_ID = "deviceId";
-static const char* JSON_NODE_KEY_NAME = "keyName";
-static const char* JSON_NODE_OPERATION_ID = "operationId";
-static const char* JSON_NODE_ASSIGNED_HUB = "assignedHub";
-static const char* JSON_NODE_TPM_NODE = "tpm";
-static const char* JSON_NODE_TRACKING_ID = "trackingId";
+static const char* const JSON_NODE_STATUS = "status";
+static const char* const JSON_NODE_REG_STATUS = "registrationState";
+static const char* const JSON_NODE_AUTH_KEY = "authenticationKey";
+static const char* const JSON_NODE_DEVICE_ID = "deviceId";
+static const char* const JSON_NODE_KEY_NAME = "keyName";
+static const char* const JSON_NODE_OPERATION_ID = "operationId";
+static const char* const JSON_NODE_ASSIGNED_HUB = "assignedHub";
+static const char* const JSON_NODE_TPM_NODE = "tpm";
+static const char* const JSON_NODE_DATE_TIME = "lastUpdatedDateTimeUtc";
+static const char* const JSON_NODE_ERROR_MSG = "errorMessage";
+static const char* const PROV_FAILED_STATUS = "failed";
+static const char* const PROV_BLACKLISTED_STATUS = "blacklisted";
 
-static const char* PROV_FAILED_STATUS = "failed";
-static const char* PROV_BLACKLISTED_STATUS = "blacklisted";
-
-static const char* SAS_TOKEN_SCOPE_FMT = "%s/registrations/%s";
+static const char* const SAS_TOKEN_SCOPE_FMT = "%s/registrations/%s";
 
 #define SAS_TOKEN_DEFAULT_LIFETIME  3600
 #define EPOCH_TIME_T_VALUE          (time_t)0
 #define MAX_AUTH_ATTEMPTS           3
-#define PROV_GET_THROTTLE_TIME      2
+#define PROV_GET_THROTTLE_TIME      3
 #define PROV_DEFAULT_TIMEOUT        60
 
 typedef enum CLIENT_STATE_TAG
@@ -162,6 +162,24 @@ static char* prov_transport_challenge_callback(const unsigned char* nonce, size_
     return result;
 }
 
+static void on_transport_error(PROV_DEVICE_TRANSPORT_ERROR transport_error, void* user_ctx)
+{
+    if (user_ctx != NULL)
+    {
+        PROV_INSTANCE_INFO* prov_info = (PROV_INSTANCE_INFO*)user_ctx;
+        switch (transport_error)
+        {
+            case PROV_DEVICE_ERROR_KEY_FAIL:
+                prov_info->error_reason = PROV_DEVICE_RESULT_KEY_ERROR;
+                break;
+
+            case PROV_DEVICE_ERROR_MEMORY:
+                prov_info->error_reason = PROV_DEVICE_RESULT_MEMORY;
+                break;
+        }
+    }
+}
+
 static PROV_DEVICE_TRANSPORT_STATUS retrieve_status_type(const char* prov_status)
 {
     PROV_DEVICE_TRANSPORT_STATUS result;
@@ -253,7 +271,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
         JSON_Value* json_status = json_object_get_value(json_object, JSON_NODE_STATUS);
 
         // status can be NULL
-        result->prov_status = retrieve_status_type(json_value_get_string(json_status) );
+        result->prov_status = retrieve_status_type(json_value_get_string(json_status));
         switch (result->prov_status)
         {
             case PROV_DEVICE_TRANSPORT_STATUS_UNASSIGNED:
@@ -262,6 +280,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                 if ((auth_key = json_object_get_value(json_object, JSON_NODE_AUTH_KEY)) == NULL)
                 {
                     LogError("failure retrieving json auth key value");
+                    prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
                     free(result);
                     result = NULL;
                 }
@@ -271,6 +290,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                     if ((result->authorization_key = Base64_Decoder(nonce_field)) == NULL)
                     {
                         LogError("failure creating buffer nonce field");
+                        prov_info->error_reason = PROV_DEVICE_RESULT_MEMORY;
                         free(result);
                         result = NULL;
                     }
@@ -280,6 +300,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                         if (result->key_name == NULL)
                         {
                             LogError("failure retrieving keyname field");
+                            prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
                             BUFFER_delete(result->authorization_key);
                             free(result);
                             result = NULL;
@@ -293,6 +314,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                 if ((result->operation_id = retrieve_json_item(json_object, JSON_NODE_OPERATION_ID)) == NULL)
                 {
                     LogError("Failure: operation_id node is mising");
+                    prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
                     free(result);
                     result = NULL;
                 }
@@ -304,6 +326,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                 if ((json_reg_status_node = json_object_get_object(json_object, JSON_NODE_REG_STATUS)) == NULL)
                 {
                     LogError("failure retrieving json registration status node");
+                    prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
                     free(result);
                     result = NULL;
                 }
@@ -318,12 +341,14 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                         {
                             LogError("failure retrieving tpm node json_tpm_node: %p, auth key: %p", json_tpm_node, result->authorization_key);
                             free(result);
+                            prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
                             result = NULL;
                         }
                         else if ((auth_key = json_object_get_value(json_tpm_node, JSON_NODE_AUTH_KEY)) == NULL)
                         {
                             LogError("failure retrieving json auth key value");
                             free(result);
+                            prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
                             result = NULL;
                         }
                         else
@@ -332,6 +357,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                             if ((result->authorization_key = Base64_Decoder(nonce_field)) == NULL)
                             {
                                 LogError("failure creating buffer nonce field");
+                                prov_info->error_reason = PROV_DEVICE_RESULT_MEMORY;
                                 free(result);
                                 result = NULL;
                             }
@@ -346,6 +372,7 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
                             )
                         {
                             LogError("failure retrieving json value assigned_hub: %p, device_id: %p", result->iothub_uri, result->device_id);
+                            prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
                             free(result->iothub_uri);
                             free(result->authorization_key);
                             free(result);
@@ -358,34 +385,38 @@ static PROV_JSON_INFO* prov_transport_process_json_reply(const char* json_docume
 
             case PROV_DEVICE_TRANSPORT_STATUS_BLACKLISTED:
                 LogError("The device is unauthorized with service");
+                prov_info->error_reason = PROV_DEVICE_RESULT_ERROR;
                 free(result);
                 result = NULL;
                 break;
 
             case PROV_DEVICE_TRANSPORT_STATUS_ERROR:
             {
-                /*JSON_Object* json_reg_status_node;
-                if ((json_reg_status_node = json_object_get_object(json_object, JSON_NODE_REG_STATUS)) == NULL)
+#ifndef NO_LOGGING
+                char* json_operation_id = NULL;
+                JSON_Object* json_reg_state = NULL;
+                if ((json_reg_state = json_object_get_object(json_object, JSON_NODE_REG_STATUS)) != NULL &&
+                    (json_operation_id = retrieve_json_item(json_object, JSON_NODE_OPERATION_ID)) != NULL)
                 {
-                    LogError("failure retrieving json registration status node");
-                    free(result);
-                    result = NULL;
-                }
-                else
-                {
-                    JSON_Object* json_tracking_id_node;
-                    if ((json_tracking_id_node = json_object_get_value(json_reg_status_node, JSON_NODE_TRACKING_ID)) == NULL)
+                    JSON_Value* json_error_date_time = NULL;
+                    JSON_Value* json_error_msg = NULL;
+                    if ((json_error_msg = json_object_get_value(json_reg_state, JSON_NODE_ERROR_MSG)) != NULL &&
+                        (json_error_date_time = json_object_get_value(json_reg_state, JSON_NODE_DATE_TIME)) != NULL)
                     {
-                        LogError("failure retrieving tracking Id node");
-                        free(result);
-                        result = NULL;
+                        LogError("Provisioning Failure: OperationId: %s - Date: %s - Msg: %s", json_operation_id, json_value_get_string(json_error_date_time), json_value_get_string(json_error_msg) );
                     }
                     else
                     {
-
+                        LogError("Unsuccessful json encountered: %s", json_document);
                     }
-                }*/
-                LogError("Unsuccessful json encountered: %s", json_document);
+                    free(json_operation_id);
+                }
+                else
+                {
+                    LogError("Unsuccessful json encountered: %s", json_document);
+                }
+#endif
+                prov_info->error_reason = PROV_DEVICE_RESULT_DEV_AUTH_ERROR;
                 free(result);
                 result = NULL;
                 break;
@@ -418,7 +449,10 @@ static void on_transport_registration_data(PROV_DEVICE_TRANSPORT_RESULT transpor
                 if (iothub_key == NULL)
                 {
                     prov_info->prov_state = CLIENT_STATE_ERROR;
-                    prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
+                    if (prov_info->error_reason == PROV_DEVICE_RESULT_OK)
+                    {
+                        prov_info->error_reason = PROV_DEVICE_RESULT_KEY_ERROR;
+                    }
                     LogError("invalid iothub device key");
                 }
                 else
@@ -451,7 +485,10 @@ static void on_transport_registration_data(PROV_DEVICE_TRANSPORT_RESULT transpor
         else
         {
             prov_info->prov_state = CLIENT_STATE_ERROR;
-            prov_info->error_reason = PROV_DEVICE_RESULT_TRANSPORT;
+            if (prov_info->error_reason == PROV_DEVICE_RESULT_OK)
+            {
+                prov_info->error_reason = PROV_DEVICE_RESULT_TRANSPORT;
+            }
             LogError("Failure retrieving data from the provisioning service");
         }
     }
@@ -492,6 +529,21 @@ static void on_transport_status(PROV_DEVICE_TRANSPORT_STATUS transport_status, v
                     {
                         prov_info->register_status_cb(PROV_DEVICE_REG_STATUS_ASSIGNING, prov_info->status_user_ctx);
                     }
+                }
+                break;
+            case PROV_DEVICE_TRANSPORT_STATUS_TRANSIENT:
+                if (prov_info->prov_state == CLIENT_STATE_REGISTER_SENT)
+                {
+                    prov_info->prov_state = CLIENT_STATE_REGISTER_SEND;
+                }
+                else if (prov_info->prov_state == CLIENT_STATE_STATUS_SENT)
+                {
+                    prov_info->prov_state = CLIENT_STATE_STATUS_SEND;
+                }
+                else
+                {
+                    // Ideally this should not happen
+                    LogError("State Error: Transient Error occured in the %d state", (int)transport_status);
                 }
                 break;
             default:
@@ -535,14 +587,14 @@ PROV_DEVICE_LL_HANDLE Prov_Device_LL_Create(const char* uri, const char* id_scop
     else
     {
         /* Codes_SRS_PROV_CLIENT_07_002: [ Prov_Device_LL_CreateFromUri shall allocate a PROV_DEVICE_LL_HANDLE and initialize all members. ] */
-        result = (PROV_INSTANCE_INFO*)malloc(sizeof(PROV_INSTANCE_INFO) );
+        result = (PROV_INSTANCE_INFO*)malloc(sizeof(PROV_INSTANCE_INFO));
         if (result == NULL)
         {
             LogError("unable to allocate Instance Info");
         }
         else
         {
-            memset(result, 0, sizeof(PROV_INSTANCE_INFO) );
+            memset(result, 0, sizeof(PROV_INSTANCE_INFO));
 
             /* Codes_SRS_PROV_CLIENT_07_028: [ CLIENT_STATE_READY is the initial state after the object is created which will send a uhttp_client_open call to the http endpoint. ] */
             result->prov_state = CLIENT_STATE_READY;
@@ -581,12 +633,18 @@ PROV_DEVICE_LL_HANDLE Prov_Device_LL_Create(const char* uri, const char* id_scop
                     hsm_type = TRANSPORT_HSM_TYPE_X509;
                 }
 
-                if ((result->transport_handle = result->prov_transport_protocol->prov_transport_create(uri, hsm_type, result->scope_id, PROV_API_VERSION)) == NULL)
+                if ((result->transport_handle = result->prov_transport_protocol->prov_transport_create(uri, hsm_type, result->scope_id, PROV_API_VERSION, on_transport_error, result)) == NULL)
                 {
                     /* Codes_SRS_PROV_CLIENT_07_003: [ If any error is encountered, Prov_Device_LL_CreateFromUri shall return NULL. ] */
                     LogError("failed calling into transport create");
                     destroy_instance(result);
                     result = NULL;
+                }
+                else
+                {
+                    // Ensure that we are passed the throttling time and send on the first send
+                    (void)tickcounter_get_current_ms(result->tick_counter, &result->status_throttle);
+                    result->status_throttle += (PROV_GET_THROTTLE_TIME * 1000);
                 }
             }
         }
@@ -767,7 +825,10 @@ void Prov_Device_LL_DoWork(PROV_DEVICE_LL_HANDLE handle)
                     if (prov_info->prov_transport_protocol->prov_transport_register(prov_info->transport_handle, prov_transport_challenge_callback, prov_info, prov_transport_process_json_reply, prov_info) != 0)
                     {
                         LogError("Failure registering device");
-                        prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
+                        if (prov_info->error_reason == PROV_DEVICE_RESULT_OK)
+                        {
+                            prov_info->error_reason = PROV_DEVICE_RESULT_TRANSPORT;
+                        }
                         prov_info->prov_state = CLIENT_STATE_ERROR;
                     }
                     else
@@ -780,21 +841,33 @@ void Prov_Device_LL_DoWork(PROV_DEVICE_LL_HANDLE handle)
                 case CLIENT_STATE_STATUS_SEND:
                 {
                     tickcounter_ms_t current_time = 0;
-                    (void)tickcounter_get_current_ms(prov_info->tick_counter, &current_time);
-
-                    if (prov_info->status_throttle == 0 || (current_time - prov_info->status_throttle) / 1000 > PROV_GET_THROTTLE_TIME)
+                    if (tickcounter_get_current_ms(prov_info->tick_counter, &current_time) != 0)
+                    {
+                        LogError("Failure getting the current time");
+                        prov_info->error_reason = PROV_DEVICE_RESULT_ERROR;
+                        prov_info->prov_state = CLIENT_STATE_ERROR;
+                    }
+                    else if ( (current_time - prov_info->status_throttle) / 1000 > PROV_GET_THROTTLE_TIME)
                     {
                         /* Codes_SRS_PROV_CLIENT_07_026: [ Upon receiving the reply of the CLIENT_STATE_URL_REQ_SEND message from  iothub_client shall process the the reply of the CLIENT_STATE_URL_REQ_SEND state ] */
                         if (prov_info->prov_transport_protocol->prov_transport_get_op_status(prov_info->transport_handle) != 0)
                         {
                             LogError("Failure sending operation status");
-                            prov_info->error_reason = PROV_DEVICE_RESULT_PARSING;
+                            if (prov_info->error_reason == PROV_DEVICE_RESULT_OK)
+                            {
+                                prov_info->error_reason = PROV_DEVICE_RESULT_TRANSPORT;
+                            }
                             prov_info->prov_state = CLIENT_STATE_ERROR;
                         }
                         else
                         {
                             prov_info->prov_state = CLIENT_STATE_STATUS_SENT;
-                            (void)tickcounter_get_current_ms(prov_info->tick_counter, &prov_info->timeout_value);
+                            if (tickcounter_get_current_ms(prov_info->tick_counter, &prov_info->timeout_value) != 0)
+                            {
+                                LogError("Failure getting the current time");
+                                prov_info->error_reason = PROV_DEVICE_RESULT_ERROR;
+                                prov_info->prov_state = CLIENT_STATE_ERROR;
+                            }
                         }
                         prov_info->status_throttle = current_time;
                     }
@@ -828,7 +901,7 @@ void Prov_Device_LL_DoWork(PROV_DEVICE_LL_HANDLE handle)
         }
         else
         {
-            // Check the connection 
+            // Check the connection
             tickcounter_ms_t current_time = 0;
             (void)tickcounter_get_current_ms(prov_info->tick_counter, &current_time);
             if ((current_time - prov_info->timeout_value) / 1000 > PROV_DEFAULT_TIMEOUT)
@@ -910,7 +983,7 @@ PROV_DEVICE_RESULT Prov_Device_LL_SetOption(PROV_DEVICE_LL_HANDLE handle, const 
                 {
                     free(handle->registration_id);
                 }
-                
+
                 if (mallocAndStrcpy_s(&handle->registration_id, (const char*)value) != 0)
                 {
                     LogError("Failure allocating setting registration id");

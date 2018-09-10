@@ -39,7 +39,7 @@ static const char* IOTHUB_CONTENT_ENCODING_C2D = "ContentEncoding";
 
 /*DEFAULT_GETMINIMUMPOLLINGTIME is the minimum time in seconds allowed between 2 consecutive GET issues to the service (GET=fetch messages)*/
 /*the default is 25 minutes*/
-#define DEFAULT_GETMINIMUMPOLLINGTIME ((unsigned int)25*60) 
+#define DEFAULT_GETMINIMUMPOLLINGTIME ((unsigned int)25*60)
 
 #define MAXIMUM_MESSAGE_SIZE (255*1024-1)
 #define MAXIMUM_PAYLOAD_OVERHEAD 384
@@ -1599,7 +1599,7 @@ static void DoEvent(HTTPTRANSPORT_HANDLE_DATA* handleData, HTTPTRANSPORT_PERDEVI
                                     }
                                 }
 
-                                // Codes_SRS_TRANSPORTMULTITHTTP_09_001: [ If the IoTHubMessage being sent contains property `content-type` it shall be added to the HTTP headers as "iothub-contenttype":"value". ]  
+                                // Codes_SRS_TRANSPORTMULTITHTTP_09_001: [ If the IoTHubMessage being sent contains property `content-type` it shall be added to the HTTP headers as "iothub-contenttype":"value". ]
                                 userDefinedContentType = IoTHubMessage_GetContentTypeSystemProperty(message->messageHandle);
                                 if (goOn && userDefinedContentType != NULL)
                                 {
@@ -1610,7 +1610,7 @@ static void DoEvent(HTTPTRANSPORT_HANDLE_DATA* handleData, HTTPTRANSPORT_PERDEVI
                                     }
                                 }
 
-                                // Codes_SRS_TRANSPORTMULTITHTTP_09_002: [ If the IoTHubMessage being sent contains property `content-encoding` it shall be added to the HTTP headers as "iothub-contentencoding":"value". ] 
+                                // Codes_SRS_TRANSPORTMULTITHTTP_09_002: [ If the IoTHubMessage being sent contains property `content-encoding` it shall be added to the HTTP headers as "iothub-contentencoding":"value". ]
                                 contentEncoding = IoTHubMessage_GetContentEncodingSystemProperty(message->messageHandle);
                                 if (goOn && contentEncoding != NULL)
                                 {
@@ -2205,7 +2205,7 @@ static void DoMessages(HTTPTRANSPORT_HANDLE_DATA* handleData, HTTPTRANSPORT_PERD
                                                             }
                                                         }
                                                     }
-                                                    // Codes_SRS_TRANSPORTMULTITHTTP_09_003: [ The HTTP header value of `ContentType` shall be set in the `IoTHubMessage_SetContentTypeSystemProperty`. ] 
+                                                    // Codes_SRS_TRANSPORTMULTITHTTP_09_003: [ The HTTP header value of `ContentType` shall be set in the `IoTHubMessage_SetContentTypeSystemProperty`. ]
                                                     else if (strncmp(IOTHUB_CONTENT_TYPE_C2D, completeHeader, strlen(IOTHUB_CONTENT_TYPE_C2D)) == 0)
                                                     {
                                                         char* whereIsColon = strchr(completeHeader, ':');
@@ -2220,7 +2220,7 @@ static void DoMessages(HTTPTRANSPORT_HANDLE_DATA* handleData, HTTPTRANSPORT_PERD
                                                             }
                                                         }
                                                     }
-                                                    // Codes_SRS_TRANSPORTMULTITHTTP_09_004: [ The HTTP header value of `ContentEncoding` shall be set in the `IoTHub_SetContentEncoding`. ] 
+                                                    // Codes_SRS_TRANSPORTMULTITHTTP_09_004: [ The HTTP header value of `ContentEncoding` shall be set in the `IoTHub_SetContentEncoding`. ]
                                                     else if (strncmp(IOTHUB_CONTENT_ENCODING_C2D, completeHeader, strlen(IOTHUB_CONTENT_ENCODING_C2D)) == 0)
                                                     {
                                                         char* whereIsColon = strchr(completeHeader, ':');
@@ -2471,6 +2471,20 @@ static int IoTHubTransportHttp_SetRetryPolicy(TRANSPORT_LL_HANDLE handle, IOTHUB
     return result;
 }
 
+static int IotHubTransportHttp_Subscribe_InputQueue(IOTHUB_DEVICE_HANDLE handle)
+{
+    (void)handle;
+    LogError("HTTP does not support input queues");
+    return __FAILURE__;
+}
+
+static void IotHubTransportHttp_Unsubscribe_InputQueue(IOTHUB_DEVICE_HANDLE handle)
+{
+    (void)handle;
+    LogError("HTTP does not support input queues");
+}
+
+
 /*Codes_SRS_TRANSPORTMULTITHTTP_17_125: [This function shall return a pointer to a structure of type TRANSPORT_PROVIDER having the following values for its fields:] */
 static TRANSPORT_PROVIDER thisTransportProvider =
 {
@@ -2491,7 +2505,9 @@ static TRANSPORT_PROVIDER thisTransportProvider =
     IoTHubTransportHttp_Unsubscribe,                /*pfIoTHubTransport_Unsubscribe IoTHubTransport_Unsubscribe;*/
     IoTHubTransportHttp_DoWork,                     /*pfIoTHubTransport_DoWork IoTHubTransport_DoWork;*/
     IoTHubTransportHttp_SetRetryPolicy,             /*pfIoTHubTransport_DoWork IoTHubTransport_SetRetryPolicy;*/
-    IoTHubTransportHttp_GetSendStatus               /*pfIoTHubTransport_GetSendStatus IoTHubTransport_GetSendStatus;*/
+    IoTHubTransportHttp_GetSendStatus,              /*pfIoTHubTransport_GetSendStatus IoTHubTransport_GetSendStatus;*/
+    IotHubTransportHttp_Subscribe_InputQueue,       /*pfIoTHubTransport_Subscribe_InputQueue IoTHubTransport_Subscribe_InputQueue; */
+    IotHubTransportHttp_Unsubscribe_InputQueue      /*pfIoTHubTransport_Unsubscribe_InputQueue IoTHubTransport_Unsubscribe_InputQueue; */
 };
 
 const TRANSPORT_PROVIDER* HTTP_Protocol(void)

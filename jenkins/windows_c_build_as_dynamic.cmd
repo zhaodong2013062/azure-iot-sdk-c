@@ -4,6 +4,9 @@
 @setlocal EnableExtensions EnableDelayedExpansion
 @echo off
 
+ver
+msbuild -version
+
 set current-path=%~dp0
 rem // remove trailing slash
 set current-path=%current-path:~0,-1%
@@ -32,7 +35,7 @@ rem no error checking
 pushd %cmake-root%\cmake\%CMAKE_DIR%
 
 echo ***Running CMAKE for building dynamic***
-cmake %build-root% -Dbuild_as_dynamic:BOOL=ON
+cmake %build-root% -Dbuild_as_dynamic:BOOL=ON -Duse_edge_modules=ON
 if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 popd
 

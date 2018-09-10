@@ -20,6 +20,8 @@ set(iothub_client_c_files
     ./src/iothub_device_client.c
     ./src/iothub_device_client_ll.c
     ./src/iothub_message.c
+    ./src/iothub_module_client.c
+    ./src/iothub_module_client_ll.c
     ./src/iothubtransport.c
     ./src/version.c
 )
@@ -37,6 +39,8 @@ set(iothub_client_h_files
     ./inc/iothub_client_version.h
     ./inc/iothub_device_client.h
     ./inc/iothub_device_client_ll.h
+    ./inc/iothub_module_client.h
+    ./inc/iothub_module_client_ll.h
     ./inc/iothub_transport_ll.h
     ./inc/iothub_message.h
     ./inc/internal/iothubtransport.h
@@ -62,8 +66,20 @@ if(NOT dont_use_uploadtoblob)
     )
 endif()
 
+if (use_edge_modules)
+    set(iothub_client_c_files
+        ${iothub_client_c_files}
+        ./src/iothub_client_edge.c
+    )
+
+    set (iothub_client_h_files
+        ${iothub_client_h_files}
+        ./inc/internal/iothub_client_edge.h
+    )
+endif()
+
 #this is around for back compat only
-if (${use_prov_client})
+if (${use_prov_client_core})
     set(iothub_client_h_files
         ${iothub_client_h_files}
         ./inc/internal/iothub_client_hsm_ll.h
@@ -222,7 +238,7 @@ endif()
 set(IOTHUB_CLIENT_INC_FOLDER ${CMAKE_CURRENT_LIST_DIR}/inc ${CMAKE_CURRENT_LIST_DIR}/inc/internal CACHE INTERNAL "this is what needs to be included if using iothub_client lib" FORCE)
 
 
-if(NOT ${dont_use_uploadtoblob})
+if(NOT ${dont_use_uploadtoblob} OR ${use_edge_modules})
     include_directories(../deps/parson)
 endif()
 
@@ -266,7 +282,7 @@ if(${use_http})
     )
 
     if(build_as_dynamic)
-        set(iothub_transport_source ${iothub_transport_source} 
+        set(iothub_transport_source ${iothub_transport_source}
             ${iothub_client_http_transport_c_files}
             ${iothub_client_http_transport_h_files})
     endif(build_as_dynamic)
@@ -299,11 +315,11 @@ if(${use_amqp})
     )
 
     if (build_as_dynamic)
-        set(iothub_transport_source ${iothub_transport_source} 
+        set(iothub_transport_source ${iothub_transport_source}
             ${iothub_client_amqp_transport_c_files}
             ${iothub_client_amqp_transport_h_files})
 
-        set(iothub_transport_source ${iothub_transport_source} 
+        set(iothub_transport_source ${iothub_transport_source}
             ${iothub_client_amqp_ws_transport_c_files}
             ${iothub_client_amqp_ws_transport_h_files})
 
@@ -339,11 +355,11 @@ if(${use_mqtt})
     )
 
     if (build_as_dynamic)
-        set(iothub_transport_source ${iothub_transport_source} 
+        set(iothub_transport_source ${iothub_transport_source}
             ${iothub_client_mqtt_transport_c_files}
             ${iothub_client_mqtt_transport_h_files})
 
-        set(iothub_transport_source ${iothub_transport_source} 
+        set(iothub_transport_source ${iothub_transport_source}
             ${iothub_client_mqtt_ws_transport_c_files}
             ${iothub_client_mqtt_ws_transport_h_files})
     endif(build_as_dynamic)
@@ -361,6 +377,22 @@ if (${build_as_dynamic})
     set(iothub_def_file ./src/iothub_client_dll.def)
     if(NOT ${dont_use_uploadtoblob})
         set(iothub_def_file ${iothub_def_file} ./src/upload_to_blob.def)
+    endif()
+
+    if(use_amqp)
+        set(iothub_def_file ${iothub_def_file} ./src/iothub_transport_amqp.def)
+    endif()
+
+    if(use_http)
+        set(iothub_def_file ${iothub_def_file} ./src/iothub_transport_http.def)
+    endif()
+
+    if(use_mqtt)
+        set(iothub_def_file ${iothub_def_file} ./src/iothub_transport_mqtt.def)
+    endif()
+
+    if (${use_edge_modules})
+        set(iothub_def_file ${iothub_def_file} ./src/iothub_edge_modules.def)
     endif()
 
     add_library(iothub_client_dll SHARED
@@ -387,7 +419,7 @@ if (${build_as_dynamic})
         iothub_client_dll
         ${iothub_client_libs}
     )
-    if (${use_prov_client})
+    if (${use_prov_client_core})
         target_link_libraries(iothub_client_dll hsm_security_client prov_auth_client)
     endif()
     target_link_libraries(iothub_client_dll parson)
@@ -409,7 +441,7 @@ setSdkTargetBuildProperties(iothub_client)
 target_link_libraries(iothub_client ${iothub_client_libs})
 target_link_libraries(iothub_client parson)
 
-if (${use_prov_client})
+if (${use_prov_client_core})
     target_link_libraries(iothub_client hsm_security_client prov_auth_client)
 endif()
 

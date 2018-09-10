@@ -90,7 +90,6 @@ int json_deserialize_and_get_struct(void** dest, JSON_Object* root_object, const
     int result;
 
     JSON_Object* struct_object = json_object_get_object(root_object, json_key);
-
     if (necessity == OPTIONAL && struct_object == NULL)
     {
         result = 0;
@@ -135,7 +134,7 @@ static JSON_Value* struct_array_toJson(void* arr[], size_t len, TO_JSON_FUNCTION
     {
         for (size_t i = 0; i < len; i++)
         {
-            JSON_Value* model; 
+            JSON_Value* model;
             if ((model = toJson(arr[i])) == NULL)
             {
                 LogError("Failed to deserialize model at index %d", i);

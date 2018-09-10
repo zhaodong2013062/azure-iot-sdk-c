@@ -18,6 +18,10 @@
 #include "umocktypes_c.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
 
+#if defined _MSC_VER
+#pragma warning(disable: 4054) /* MSC incorrectly fires this */
+#endif
+
 static void* real_malloc(size_t size)
 {
     return malloc(size);
@@ -340,7 +344,7 @@ TEST_FUNCTION(AMQP_Create)
 
     umock_c_reset_all_calls();
     STRICT_EXPECTED_CALL(IoTHubTransport_AMQP_Common_Create(TEST_IOTHUBTRANSPORT_CONFIG_HANDLE, NULL)).IgnoreArgument_get_io_transport();
-    
+
     saved_IoTHubTransport_AMQP_Common_Create_get_io_transport = NULL;
 
     // act
@@ -731,6 +735,35 @@ TEST_FUNCTION(AMQP_SendMessageDisposition)
     ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
 
     // cleanup
+}
+
+// Tests_SRS_IOTHUBTRANSPORTAMQP_31_021: [IoTHubTransportAMQP_Subscribe_InputQueue shall return a failure as input queues are not implemented for AMQP]
+TEST_FUNCTION(AMQP_Subscribe_InputQueue)
+{
+    // arrange
+    TRANSPORT_PROVIDER* provider = (TRANSPORT_PROVIDER*)AMQP_Protocol();
+
+    umock_c_reset_all_calls();
+
+    // act
+    int result = provider->IoTHubTransport_Subscribe_InputQueue(NULL);
+
+    // assert
+    ASSERT_ARE_NOT_EQUAL(int, result, 0);
+
+    // cleanup
+}
+
+// Tests_SRS_IOTHUBTRANSPORTAMQP_31_022: [IotHubTransportAMQP_Unsubscribe_InputQueue shall do nothing as input queues are not implemented for AMQP]
+TEST_FUNCTION(AMQP_Unsubscribe_InputQueue)
+{
+    // arrange
+    TRANSPORT_PROVIDER* provider = (TRANSPORT_PROVIDER*)AMQP_Protocol();
+
+    umock_c_reset_all_calls();
+
+    // act
+    provider->IoTHubTransport_Unsubscribe_InputQueue(NULL);
 }
 
 END_TEST_SUITE(iothubtransportamqp_ut)

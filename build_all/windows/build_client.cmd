@@ -25,22 +25,22 @@ set build-clean=0
 set build-config=
 set build-platform=Win32
 set CMAKE_build_python=OFF
-set CMAKE_build_javawrapper=OFF
 set CMAKE_no_logging=OFF
 set CMAKE_run_unittests=OFF
 set prov_auth=OFF
 set prov_use_tpm_simulator=OFF
+set use_edge_modules=OFF
 
 :args-loop
 if "%1" equ "" goto args-done
 if "%1" equ "--config" goto arg-build-config
 if "%1" equ "--platform" goto arg-build-platform
 if "%1" equ "--buildpython" goto arg-build-python
-if "%1" equ "--build-javawrapper" goto arg-build-javawrapper
 if "%1" equ "--no-logging" goto arg-no-logging
 if "%1" equ "--run-unittests" goto arg-run-unittests
 if "%1" equ "--provisioning" goto arg-provisioning
 if "%1" equ "--use-tpm-simulator" goto arg-tpm-simulator
+if "%1" equ "--use_edge_modules" goto arg-edge-modules
 call :usage && exit /b 1
 
 :arg-build-config
@@ -64,10 +64,6 @@ set CMAKE_build_python=%PyVer%
 shift
 goto args-continue
 
-:arg-build-javawrapper
-set CMAKE_build_javawrapper=ON 
-goto args-continue
-
 :arg-no-logging
 set CMAKE_no_logging=ON 
 goto args-continue
@@ -82,6 +78,10 @@ goto args-continue
 
 :arg-tpm-simulator
 set prov_use_tpm_simulator=ON
+goto args-continue
+
+:arg-edge-modules
+set use_edge_modules=ON
 goto args-continue
 
 :args-continue
@@ -107,11 +107,11 @@ pushd %USERPROFILE%\%cmake-output%
 
 if %build-platform% == Win32 (
 	echo ***Running CMAKE for Win32***
-	cmake %build-root% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dbuild_python:STRING=%CMAKE_build_python% -Dbuild_javawrapper:BOOL=%CMAKE_build_javawrapper% -Dno_logging:BOOL=%CMAKE_no_logging% -Duse_prov_client:BOOL=%prov_auth% -Duse_tpm_simulator:BOOL=%prov_use_tpm_simulator%
+	cmake %build-root% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dbuild_python:STRING=%CMAKE_build_python% -Dno_logging:BOOL=%CMAKE_no_logging% -Duse_prov_client:BOOL=%prov_auth% -Duse_tpm_simulator:BOOL=%prov_use_tpm_simulator% -Duse_edge_modules=%use_edge_modules%
 	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else (
 	echo ***Running CMAKE for Win64***
-	cmake %build-root% -G "Visual Studio 14 Win64" -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dbuild_python:STRING=%CMAKE_build_python% -Dbuild_javawrapper:BOOL=%CMAKE_build_javawrapper% -Dno_logging:BOOL=%CMAKE_no_logging% -Duse_prov_client:BOOL=%prov_auth% -Duse_tpm_simulator:BOOL=%prov_use_tpm_simulator%
+	cmake %build-root% -G "Visual Studio 14 Win64" -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dbuild_python:STRING=%CMAKE_build_python% -Dno_logging:BOOL=%CMAKE_no_logging% -Duse_prov_client:BOOL=%prov_auth% -Duse_tpm_simulator:BOOL=%prov_use_tpm_simulator%  -Duse_edge_modules=%use_edge_modules%
 	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 )
 

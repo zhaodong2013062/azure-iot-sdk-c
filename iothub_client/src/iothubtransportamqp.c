@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#include "iothubtransportamqp.h" 
+#include "iothubtransportamqp.h"
 #include "internal/iothubtransport_amqp_common.h"
 #include "azure_c_shared_utility/tlsio.h"
 #include "azure_c_shared_utility/platform.h"
@@ -156,7 +156,22 @@ static IOTHUB_CLIENT_RESULT IoTHubTransportAMQP_SendMessageDisposition(MESSAGE_C
     return IoTHubTransport_AMQP_Common_SendMessageDisposition(message_data, disposition);
 }
 
-static TRANSPORT_PROVIDER thisTransportProvider = 
+static int IotHubTransportAMQP_Subscribe_InputQueue(IOTHUB_DEVICE_HANDLE handle)
+{
+    // Codes_SRS_IOTHUBTRANSPORTAMQP_31_021: [IoTHubTransportAMQP_Subscribe_InputQueue shall return a failure as input queues are not implemented for AMQP]
+    (void)handle;
+    LogError("AMQP does not support input queues");
+    return __FAILURE__;
+}
+
+static void IotHubTransportAMQP_Unsubscribe_InputQueue(IOTHUB_DEVICE_HANDLE handle)
+{
+    // Codes_SRS_IOTHUBTRANSPORTAMQP_31_022: [IotHubTransportAMQP_Unsubscribe_InputQueue shall do nothing as input queues are not implemented for AMQP]
+    (void)handle;
+    LogError("AMQP does not support input queues");
+}
+
+static TRANSPORT_PROVIDER thisTransportProvider =
 {
     IoTHubTransportAMQP_SendMessageDisposition,     /*pfIotHubTransport_Send_Message_Disposition IoTHubTransport_Send_Message_Disposition;*/
     IoTHubTransportAMQP_Subscribe_DeviceMethod,     /*pfIoTHubTransport_Subscribe_DeviceMethod IoTHubTransport_Subscribe_DeviceMethod;*/
@@ -175,7 +190,9 @@ static TRANSPORT_PROVIDER thisTransportProvider =
     IoTHubTransportAMQP_Unsubscribe,                /*pfIoTHubTransport_Unsubscribe IoTHubTransport_Unsubscribe;*/
     IoTHubTransportAMQP_DoWork,                     /*pfIoTHubTransport_DoWork IoTHubTransport_DoWork;*/
     IoTHubTransportAMQP_SetRetryPolicy,             /*pfIoTHubTransport_DoWork IoTHubTransport_SetRetryPolicy;*/
-    IoTHubTransportAMQP_GetSendStatus               /*pfIoTHubTransport_GetSendStatus IoTHubTransport_GetSendStatus;*/
+    IoTHubTransportAMQP_GetSendStatus,              /*pfIoTHubTransport_GetSendStatus IoTHubTransport_GetSendStatus;*/
+    IotHubTransportAMQP_Subscribe_InputQueue,       /*pfIoTHubTransport_Subscribe_InputQueue IoTHubTransport_Subscribe_InputQueue; */
+    IotHubTransportAMQP_Unsubscribe_InputQueue,     /*pfIoTHubTransport_Unsubscribe_InputQueue IoTHubTransport_Unsubscribe_InputQueue; */
 };
 
 /* Codes_SRS_IOTHUBTRANSPORTAMQP_09_019: [This function shall return a pointer to a structure of type TRANSPORT_PROVIDER having the following values for it's fields:

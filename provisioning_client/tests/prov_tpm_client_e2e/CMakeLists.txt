@@ -19,6 +19,8 @@ set(${theseTestsName}_h_files
     ../common_prov_e2e/common_prov_e2e.h
 )
 
+add_subdirectory(provisioning_hsm)
+
 include_directories(${IOTHUB_TEST_INC_FOLDER})
 include_directories(${DEV_AUTH_MODULES_CLIENT_INC_FOLDER})
 include_directories(${SHARED_UTIL_INC_FOLDER})
@@ -26,7 +28,7 @@ include_directories(${PROVISIONING_SERVICE_CLIENT_INC_FOLDER})
 include_directories(../common_prov_e2e)
 
 file(COPY ../common_prov_e2e/prov_valgrind_suppression.supp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-build_c_test_artifacts(${theseTestsName} ON "tests/azure_prov_e2e_tests" VALGRIND_SUPPRESSIONS_FILE suppressions.supp)
+build_c_test_artifacts(${theseTestsName} ON "tests/azure_prov_e2e_tests" VALGRIND_SUPPRESSIONS_FILE prov_valgrind_suppression.supp)
 
 set(prov_transport)
 if (${use_http})

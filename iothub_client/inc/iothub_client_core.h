@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 /** @file iothub_client_core.h
-*	@brief Extends the IoTHubCLient_LL module with additional features.
+*    @brief Extends the IoTHubClientCore_LL module with additional features.
 *
-*	@details IoTHubClient is a module that extends the IoTHubCLient_LL
-*			 module with 2 features:
-*				- scheduling the work for the IoTHubCLient from a
-*				  thread, so that the user does not need to create their
-*				  own thread
-*				- thread-safe APIs
+*    @details IoTHubClientCore is a module that extends the IoTHubClientCore_LL
+*             module with 2 features:
+*                - scheduling the work for the IoTHubCLient from a
+*                  thread, so that the user does not need to create their
+*                  own thread
+*                - thread-safe APIs
 */
 
 #ifndef IOTHUB_CLIENT_CORE_H
@@ -54,6 +54,14 @@ extern "C"
     MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_UploadToBlobAsync, IOTHUB_CLIENT_CORE_HANDLE, iotHubClientHandle, const char*, destinationFileName, const unsigned char*, source, size_t, size, IOTHUB_CLIENT_FILE_UPLOAD_CALLBACK, iotHubClientFileUploadCallback, void*, context);
     MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_UploadMultipleBlocksToBlobAsync, IOTHUB_CLIENT_CORE_HANDLE, iotHubClientHandle, const char*, destinationFileName, IOTHUB_CLIENT_FILE_UPLOAD_GET_DATA_CALLBACK, getDataCallback, IOTHUB_CLIENT_FILE_UPLOAD_GET_DATA_CALLBACK_EX, getDataCallbackEx, void*, context);
 #endif /* DONT_USE_UPLOADTOBLOB */
+
+    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_SendEventToOutputAsync, IOTHUB_CLIENT_CORE_HANDLE, iotHubClientHandle, IOTHUB_MESSAGE_HANDLE, eventMessageHandle, const char*, outputName, IOTHUB_CLIENT_EVENT_CONFIRMATION_CALLBACK, eventConfirmationCallback, void*, userContextCallback);
+    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_SetInputMessageCallback, IOTHUB_CLIENT_CORE_HANDLE, iotHubClientHandle, const char*, inputName, IOTHUB_CLIENT_MESSAGE_CALLBACK_ASYNC, eventHandlerCallback, void*, userContextCallback);
+
+#ifdef USE_EDGE_MODULES
+    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_CORE_HANDLE, IoTHubClientCore_CreateFromEnvironment, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol);
+    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_GenericMethodInvoke, IOTHUB_CLIENT_CORE_HANDLE, iotHubClientHandle, const char*, deviceId, const char*, moduleId, const char*, methodName, const char*, methodPayload, unsigned int, timeout, IOTHUB_METHOD_INVOKE_CALLBACK, methodInvokeCallback, void*, context);
+#endif /* USE_EDGE_MODULES */
 
 #ifdef __cplusplus
 }

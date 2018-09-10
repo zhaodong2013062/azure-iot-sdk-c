@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+//
+// IMPORTANT: Please read and understand serializer limitations and alternatives as
+//            described ../../readme.md before beginning to use the serializer.
+//
 #include <stdlib.h>
 
 #include <stdio.h>
@@ -243,7 +247,7 @@ void devicemethod_simplesample_run(void)
                     (void)printf("failure to set option \"TrustedCerts\"\r\n");
                 }
 #endif // SET_TRUSTED_CERT_IN_SAMPLES
-                
+
 
                 ContosoAnemometer* myWeather = CREATE_MODEL_INSTANCE(WeatherStation, ContosoAnemometer);
                 if (myWeather == NULL)

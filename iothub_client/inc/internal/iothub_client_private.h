@@ -19,6 +19,10 @@
 #include "internal/iothub_transport_ll_private.h"
 #include "internal/iothubtransport.h"
 
+#ifdef USE_EDGE_MODULES
+#include "internal/iothub_client_edge.h"
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -46,12 +50,20 @@ MOCKABLE_FUNCTION(, void, IoTHubClientCore_LL_ConnectionStatusCallBack, IOTHUB_C
 MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_LL_SetMessageCallback_Ex, IOTHUB_CLIENT_CORE_LL_HANDLE, iotHubClientHandle, IOTHUB_CLIENT_MESSAGE_CALLBACK_ASYNC_EX, messageCallback, void*, userContextCallback);
 MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_LL_SendMessageDisposition, IOTHUB_CLIENT_CORE_LL_HANDLE, iotHubClientHandle, MESSAGE_CALLBACK_INFO*, messageData, IOTHUBMESSAGE_DISPOSITION_RESULT, disposition);
 MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_LL_GetOption, IOTHUB_CLIENT_CORE_LL_HANDLE, iotHubClientHandle, const char*, optionName, void**, value);
+MOCKABLE_FUNCTION(, bool, IoTHubClientCore_LL_MessageCallbackFromInput, IOTHUB_CLIENT_CORE_LL_HANDLE, handle, MESSAGE_CALLBACK_INFO*, message_data);
+MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_LL_SetInputMessageCallbackEx, IOTHUB_CLIENT_CORE_LL_HANDLE, iotHubClientHandle, const char*, inputName, IOTHUB_CLIENT_MESSAGE_CALLBACK_ASYNC_EX, eventHandlerCallbackEx, void *, userContextCallback, size_t, userContextCallbackLength);
+
+#ifdef USE_EDGE_MODULES
+/* (Should be replaced after iothub_client refactor)*/
+MOCKABLE_FUNCTION(, IOTHUB_CLIENT_EDGE_HANDLE, IoTHubClientCore_LL_GetEdgeHandle, IOTHUB_CLIENT_CORE_LL_HANDLE, iotHubClientHandle);
+MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubClientCore_LL_GenericMethodInvoke, IOTHUB_CLIENT_CORE_LL_HANDLE, iotHubClientHandle, const char*, deviceId, const char*, moduleId, const char*, methodName, const char*, methodPayload, unsigned int, timeout, int*, responseStatus, unsigned char**, responsePayload, size_t*, responsePayloadSize);
+#endif
 
 typedef struct IOTHUB_MESSAGE_LIST_TAG
 {
     IOTHUB_MESSAGE_HANDLE messageHandle;
     IOTHUB_CLIENT_EVENT_CONFIRMATION_CALLBACK callback;
-    void* context; 
+    void* context;
     DLIST_ENTRY entry;
     tickcounter_ms_t ms_timesOutAfter; /* a value of "0" means "no timeout", if the IOTHUBCLIENT_LL's handle tickcounter > msTimesOutAfer then the message shall timeout*/
 }IOTHUB_MESSAGE_LIST;

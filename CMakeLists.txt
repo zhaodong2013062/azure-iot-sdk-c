@@ -31,20 +31,20 @@ endif()
 include (CTest)
 
 if (MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /wd4232")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /wd4232")
-endif()
-
-if (WIN32)
-    # windows needs this define
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /wd4232")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /wd4232")
     # Make warning as error
     add_definitions(/WX)
 else()
     # Make warning as error
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
-endif(WIN32)
+endif()
+
+IF(WIN32)
+    # windows needs this define
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 
 set(hsm_type_x509 OFF CACHE BOOL "x509 type of hsm used with the Provisioning client")
 set(hsm_type_sastoken OFF CACHE BOOL "tpm type of hsm used with the Provisioning client")
@@ -67,15 +67,16 @@ option(compileOption_CXX "passes a string to the command line of the C++ compile
 option(build_service_client "controls whether the iothub_service_client is built or not" ON)
 option(build_provisioning_service_client "controls whether the provisioning_service_client is built or not" ON)
 option(build_python "builds the Python native iothub_client module" OFF)
-option(build_javawrapper "builds the native iothub_client library for java C wrapper" OFF)
 option(dont_use_uploadtoblob "set dont_use_uploadtoblob to ON if the functionality of upload to blob is to be excluded, OFF otherwise. It requires HTTP" OFF)
 option(no_logging "disable logging" OFF)
 option(use_installed_dependencies "set use_installed_dependencies to ON to use installed packages instead of building dependencies from submodules" OFF)
 option(build_as_dynamic "build the IoT SDK libaries as dynamic"  OFF)
-option(build_network_e2e "build network E2E tests" OFF)
 option(use_prov_client "Enable provisioning client" OFF)
 option(use_tpm_simulator "tpm simulator type of hsm used with the provisioning client" OFF)
+option(use_edge_modules "Enable support for running modules against Azure IoT Edge" OFF)
 option(use_custom_heap "use externally defined heap functions instead of the malloc family" OFF)
+
+set(use_prov_client_core OFF)
 
 if(${use_custom_heap})
     add_definitions(-DGB_USE_CUSTOM_HEAP)
@@ -104,10 +105,18 @@ else()
     option(use_sample_trusted_cert "Set flag in samples to use SDK's built-in CA as TrustedCerts" OFF)
 endif()
 
-# Set Provisioning Information
+# Enable IoT SDK to act as a module for Edge
+if(${use_edge_modules})
+    set(use_prov_client_core ON)
+    set(use_http ON)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_EDGE_MODULES")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_EDGE_MODULES")
+    set(hsm_type_edge_module ON)
+endif()
+
+# Set Provisioning Information.  This will also setup appropriate HSM
 if (${use_prov_client})
-    getProvSDKVersion()
-    message(STATUS "Provisioning SDK Version = ${PROV_SDK_VERSION}")
+    set(use_prov_client_core ON)
 
     if ("${hsm_custom_lib}" STREQUAL "")
         set(hsm_type_x509 ON)
@@ -115,6 +124,11 @@ if (${use_prov_client})
     else()
         set(hsm_type_custom ON)
     endif()
+endif()
+
+if (${use_prov_client_core})
+    getProvSDKVersion()
+    message(STATUS "Provisioning SDK Version = ${PROV_SDK_VERSION}")
 endif()
 
 # setting nuget_e2e_tests will only generate e2e tests to run with nuget packages.
@@ -287,7 +301,7 @@ if (NOT ${use_http} AND ${use_prov_client})
     message(STATUS "provisioning_service_client build is disabled (HTTP support is required)")
 endif()
 
-if (${use_prov_client})
+if (${use_prov_client_core})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_PROV_MODULE")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_PROV_MODULE")
 
@@ -323,10 +337,6 @@ if (NOT "${build_python}" STREQUAL "OFF")
     if (${build_service_client})
         add_subdirectory(../service python_service_client)
     endif()
-endif()
-
-if ("${build_javawrapper}" STREQUAL "ON")
-     add_subdirectory(../device/iothub_client_javawrapper javawrapper)
 endif()
 
 if (${use_installed_dependencies})
@@ -378,6 +388,3 @@ else()
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 
-if (${build_network_e2e})
-    add_subdirectory(network_e2e/tests)
-endif()

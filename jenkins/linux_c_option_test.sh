@@ -6,6 +6,11 @@
 
 set -e
 
+cat /etc/*release | grep VERSION*
+gcc --version
+openssl version
+curl --version
+
 script_dir=$(cd "$(dirname "$0")" && pwd)
 build_root=$(cd "${script_dir}/.." && pwd)
 build_folder=$build_root"/cmake/iot_option"
@@ -34,7 +39,12 @@ declare -a arr=(
     "-Duse_http=OFF"
     "-Duse_amqp=OFF -Duse_http=OFF -Dno_logging=OFF -Ddont_use_uploadtoblob=ON"
     "-Duse_prov_client=ON -Dbuild_provisioning_service_client=OFF"
-    "-Dbuild_as_dynamic=ON")
+    "-Dbuild_as_dynamic=ON"
+    "-Dbuild_as_dynamic:BOOL=ON -Ddont_use_uploadtoblob:BOOL=ON"
+    "-Dbuild_as_dynamic:BOOL=ON -Ddont_use_uploadtoblob:BOOL=ON -Duse_prov_client:BOOL=ON"
+    "-Dbuild_as_dynamic:BOOL=ON -Ddont_use_uploadtoblob:BOOL=ON -Duse_edge_modules:BOOL=ON"
+    "-Drun_longhaul_tests=ON"
+	)
 
 for item in "${arr[@]}"
 do
@@ -42,7 +52,7 @@ do
     mkdir -p $build_folder
     pushd $build_folder
 
-    echo "$item"
+    echo "executing cmake/make with options <<$item>>"
     cmake $build_root "$item"
 
     make --jobs=$MAKE_CORES

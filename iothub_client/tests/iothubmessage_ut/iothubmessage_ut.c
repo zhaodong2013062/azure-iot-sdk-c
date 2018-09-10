@@ -72,6 +72,14 @@ static const char* TEST_INVALID_MAP_VALUE = "Inval\nd_value";
 static const char* TEST_CONTENT_TYPE = "text/plain";
 static const char* TEST_CONTENT_ENCODING = "utf8";
 
+static const char* TEST_OUTPUT_NAME = "outputname";
+static const char* TEST_OUTPUT_NAME2 = "outputname2";
+static const char* TEST_INPUT_NAME = "inputname";
+static const char* TEST_INPUT_NAME2 = "inputname2";
+static const char* TEST_CONNECTION_DEVICE_ID = "connectiondeviceid";
+static const char* TEST_CONNECTION_DEVICE_ID2 = "connectiondeviceid2";
+static const char* TEST_CONNECTION_MODULE_ID = "connectionmoduleid";
+static const char* TEST_CONNECTION_MODULE_ID2 = "connectionmoduleid2";
 static const char* TEST_PROPERTY_KEY = "property_key";
 static const char* TEST_PROPERTY_VALUE = "property_value";
 
@@ -116,6 +124,138 @@ static int my_mallocAndStrcpy_s(char** destination, const char* source)
     strcpy(*destination, source);
     return 0;
 }
+
+typedef const char*(*PFN_MESSAGE_GET_STRING)(IOTHUB_MESSAGE_HANDLE handle);
+typedef IOTHUB_MESSAGE_RESULT(*PFN_MESSAGE_SET_STRING)(IOTHUB_MESSAGE_HANDLE handle, const char *string);
+
+static void get_string_NULL_handle_fails_impl(PFN_MESSAGE_GET_STRING pfnGetMessageString)
+{
+    //arrange
+
+    //act
+    const char* result = pfnGetMessageString(NULL);
+
+    //assert
+    ASSERT_IS_NULL(result);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+    //cleanup
+}
+
+static void set_string_NULL_handle_fails_impl(PFN_MESSAGE_SET_STRING pfnSetMessageString, const char* test_value)
+{
+    //arrange
+
+    //act
+    IOTHUB_MESSAGE_RESULT result = pfnSetMessageString(NULL, test_value);
+
+    //assert
+    ASSERT_ARE_EQUAL(IOTHUB_MESSAGE_RESULT, IOTHUB_MESSAGE_INVALID_ARG, result);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+    //cleanup
+}
+
+
+static void set_string_NULL_string_fails_impl(PFN_MESSAGE_SET_STRING pfnSetMessageString)
+{
+    //arrange
+    IOTHUB_MESSAGE_HANDLE h = IoTHubMessage_CreateFromByteArray(c, 1);
+    umock_c_reset_all_calls();
+
+    //act
+    IOTHUB_MESSAGE_RESULT result = pfnSetMessageString(h, NULL);
+
+    //assert
+    ASSERT_ARE_EQUAL(IOTHUB_MESSAGE_RESULT, IOTHUB_MESSAGE_INVALID_ARG, result);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+    //cleanup
+    IoTHubMessage_Destroy(h);
+
+}
+
+/* Tests_SRS_IOTHUBMESSAGE_07_015: [IoTHubMessage_SetMessageId finishes successfully it shall return IOTHUB_MESSAGE_OK.] */
+static void set_string_succeeds_impl(PFN_MESSAGE_SET_STRING pfnSetMessageString, const char *test_value)
+{
+    //arrange
+    IOTHUB_MESSAGE_HANDLE h = IoTHubMessage_CreateFromByteArray(c, 1);
+    umock_c_reset_all_calls();
+
+    STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, test_value));
+
+    //act
+    IOTHUB_MESSAGE_RESULT result = pfnSetMessageString(h, test_value);
+
+    //assert
+    ASSERT_ARE_EQUAL(IOTHUB_MESSAGE_RESULT, IOTHUB_MESSAGE_OK, result);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+    //cleanup
+    IoTHubMessage_Destroy(h);
+}
+
+static void set_string_string_already_allocated_succeeds_impl(PFN_MESSAGE_SET_STRING pfnSetMessageString, const char *test_value)
+{
+    //arrange
+    IOTHUB_MESSAGE_HANDLE h = IoTHubMessage_CreateFromByteArray(c, 1);
+    IOTHUB_MESSAGE_RESULT result = pfnSetMessageString(h, test_value);
+    umock_c_reset_all_calls();
+
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, test_value));
+
+    //act
+    result = pfnSetMessageString(h, test_value);
+
+    //assert
+    ASSERT_ARE_EQUAL(IOTHUB_MESSAGE_RESULT, IOTHUB_MESSAGE_OK, result);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+    //cleanup
+    IoTHubMessage_Destroy(h);
+}
+
+
+static void get_string_not_set_fails_impl(PFN_MESSAGE_GET_STRING pfnGetMessageString)
+{
+    // arrange
+    IOTHUB_MESSAGE_HANDLE h = IoTHubMessage_CreateFromString(TEST_STRING_VALUE);
+    umock_c_reset_all_calls();
+
+    //act
+    const char* result = pfnGetMessageString(h);
+
+    ///assert
+    ASSERT_IS_NULL(result);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+    ///cleanup
+    IoTHubMessage_Destroy(h);
+}
+
+
+
+/* Tests_SRS_IOTHUBMESSAGE_07_011: [IoTHubMessage_GetMessageId shall return the messageId as a const char*.] */
+static void get_string_succeeds_impl(PFN_MESSAGE_SET_STRING pfnSetMessageString, PFN_MESSAGE_GET_STRING pfnGetMessageString, const char *test_value)
+{
+    // arrange
+    IOTHUB_MESSAGE_HANDLE h = IoTHubMessage_CreateFromString(TEST_STRING_VALUE);
+    IOTHUB_MESSAGE_RESULT msgResult = pfnSetMessageString(h, test_value);
+    ASSERT_ARE_EQUAL(IOTHUB_MESSAGE_RESULT, IOTHUB_MESSAGE_OK, msgResult);
+    umock_c_reset_all_calls();
+
+    //act
+    const char* result = pfnGetMessageString(h);
+
+    //assert
+    ASSERT_ARE_EQUAL(char_ptr, test_value, result);
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+    //cleanup
+    IoTHubMessage_Destroy(h);
+}
+
 
 static TEST_MUTEX_HANDLE g_testByTest;
 static TEST_MUTEX_HANDLE g_dllByDll;
@@ -478,6 +618,10 @@ TEST_FUNCTION(IoTHubMessage_Destroy_destroys_a_BYTEARRAY_IoTHubMEssage)
     STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(gballoc_free(h));
 
     //act
@@ -498,6 +642,10 @@ TEST_FUNCTION(IoTHubMessage_Destroy_destroys_a_STRING_IoTHubMessage)
 
     STRICT_EXPECTED_CALL(STRING_delete(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(Map_Destroy(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
@@ -1100,7 +1248,7 @@ TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_SUCCEED)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_002: [If the IOTHUB_MESSAGE_HANDLE `contentType` is not NULL it shall be deallocated.] 
+// Tests_SRS_IOTHUBMESSAGE_09_002: [If the IOTHUB_MESSAGE_HANDLE `contentType` is not NULL it shall be deallocated.]
 TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_Not_NULL_SUCCEED)
 {
     //arrange
@@ -1122,7 +1270,7 @@ TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_Not_NULL_SUCCEED)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_001: [If any of the parameters are NULL then IoTHubMessage_SetContentTypeSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_09_001: [If any of the parameters are NULL then IoTHubMessage_SetContentTypeSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_NULL_handle_Fails)
 {
     //arrange
@@ -1138,7 +1286,7 @@ TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_NULL_handle_Fails)
     //cleanup
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_001: [If any of the parameters are NULL then IoTHubMessage_SetContentTypeSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_09_001: [If any of the parameters are NULL then IoTHubMessage_SetContentTypeSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_NULL_contentType_Fails)
 {
     //arrange
@@ -1157,7 +1305,7 @@ TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_NULL_contentType_Fails)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_003: [If the allocation or the copying of `contentType` fails, then IoTHubMessage_SetContentTypeSystemProperty shall return IOTHUB_MESSAGE_ERROR.] 
+// Tests_SRS_IOTHUBMESSAGE_09_003: [If the allocation or the copying of `contentType` fails, then IoTHubMessage_SetContentTypeSystemProperty shall return IOTHUB_MESSAGE_ERROR.]
 TEST_FUNCTION(IoTHubMessage_SetContentTypeSystemProperty_Fails)
 {
     // arrange
@@ -1211,7 +1359,7 @@ TEST_FUNCTION(IoTHubMessage_SetContentEncodingSystemProperty_SUCCEED)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_007: [If the IOTHUB_MESSAGE_HANDLE `contentEncoding` is not NULL it shall be deallocated.] 
+// Tests_SRS_IOTHUBMESSAGE_09_007: [If the IOTHUB_MESSAGE_HANDLE `contentEncoding` is not NULL it shall be deallocated.]
 TEST_FUNCTION(IoTHubMessage_SetContentEncodingSystemProperty_Not_NULL_SUCCEED)
 {
     //arrange
@@ -1233,7 +1381,7 @@ TEST_FUNCTION(IoTHubMessage_SetContentEncodingSystemProperty_Not_NULL_SUCCEED)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_006: [If any of the parameters are NULL then IoTHubMessage_SetContentEncodingSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_09_006: [If any of the parameters are NULL then IoTHubMessage_SetContentEncodingSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_SetContentEncodingSystemProperty_NULL_handle_Fails)
 {
     //arrange
@@ -1249,7 +1397,7 @@ TEST_FUNCTION(IoTHubMessage_SetContentEncodingSystemProperty_NULL_handle_Fails)
     //cleanup
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_006: [If any of the parameters are NULL then IoTHubMessage_SetContentEncodingSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_09_006: [If any of the parameters are NULL then IoTHubMessage_SetContentEncodingSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_SetContentEncodingSystemProperty_NULL_contentType_Fails)
 {
     //arrange
@@ -1302,13 +1450,13 @@ TEST_FUNCTION(IoTHubMessage_SetContentEncodingSystemProperty_Fails)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_006: [IoTHubMessage_GetContentTypeSystemProperty shall return the `contentType` as a const char* ] 
+// Tests_SRS_IOTHUBMESSAGE_09_006: [IoTHubMessage_GetContentTypeSystemProperty shall return the `contentType` as a const char* ]
 TEST_FUNCTION(IoTHubMessage_GetContentTypeSystemProperty_SUCCEED)
 {
     //arrange
     IOTHUB_MESSAGE_HANDLE h = IoTHubMessage_CreateFromString(TEST_STRING_VALUE);
     (void)IoTHubMessage_SetContentTypeSystemProperty(h, TEST_CONTENT_TYPE);
-    
+
     umock_c_reset_all_calls();
 
     //act
@@ -1322,7 +1470,7 @@ TEST_FUNCTION(IoTHubMessage_GetContentTypeSystemProperty_SUCCEED)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_006: [IoTHubMessage_GetContentTypeSystemProperty shall return the `contentType` as a const char* ] 
+// Tests_SRS_IOTHUBMESSAGE_09_006: [IoTHubMessage_GetContentTypeSystemProperty shall return the `contentType` as a const char* ]
 TEST_FUNCTION(IoTHubMessage_GetContentTypeSystemProperty_NULL_contentType_SUCCEED)
 {
     //arrange
@@ -1341,7 +1489,7 @@ TEST_FUNCTION(IoTHubMessage_GetContentTypeSystemProperty_NULL_contentType_SUCCEE
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_005: [If any of the parameters are NULL then BLAH shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_09_005: [If any of the parameters are NULL then BLAH shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_GetContentTypeSystemProperty_Fails)
 {
     //arrange
@@ -1361,7 +1509,7 @@ TEST_FUNCTION(IoTHubMessage_GetContentTypeSystemProperty_Fails)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_011: [IoTHubMessage_GetContentEncodingSystemProperty shall return the `contentEncoding` as a const char* ] 
+// Tests_SRS_IOTHUBMESSAGE_09_011: [IoTHubMessage_GetContentEncodingSystemProperty shall return the `contentEncoding` as a const char* ]
 TEST_FUNCTION(IoTHubMessage_GetContentEncodingSystemProperty_SUCCEED)
 {
     //arrange
@@ -1381,7 +1529,7 @@ TEST_FUNCTION(IoTHubMessage_GetContentEncodingSystemProperty_SUCCEED)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_011: [IoTHubMessage_GetContentEncodingSystemProperty shall return the `contentEncoding` as a const char* ] 
+// Tests_SRS_IOTHUBMESSAGE_09_011: [IoTHubMessage_GetContentEncodingSystemProperty shall return the `contentEncoding` as a const char* ]
 TEST_FUNCTION(IoTHubMessage_GetContentEncodingSystemProperty_NULL_contentType_SUCCEED)
 {
     //arrange
@@ -1400,7 +1548,7 @@ TEST_FUNCTION(IoTHubMessage_GetContentEncodingSystemProperty_NULL_contentType_SU
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_09_010: [If any of the parameters are NULL then IoTHubMessage_GetContentEncodingSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_09_010: [If any of the parameters are NULL then IoTHubMessage_GetContentEncodingSystemProperty shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_GetContentEncodingSystemProperty_Fails)
 {
     //arrange
@@ -1420,7 +1568,7 @@ TEST_FUNCTION(IoTHubMessage_GetContentEncodingSystemProperty_Fails)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_10_001: [If any of the parameters are NULL then IoTHubMessage_GetDiagnosticPropertyData shall return a NULL value.] 
+// Tests_SRS_IOTHUBMESSAGE_10_001: [If any of the parameters are NULL then IoTHubMessage_GetDiagnosticPropertyData shall return a NULL value.]
 TEST_FUNCTION(IoTHubMessage_GetDiagnosticPropertyData_NULL_handle_Fails)
 {
     //arrange
@@ -1474,7 +1622,7 @@ TEST_FUNCTION(IoTHubMessage_GetDiagnosticPropertyData_SUCCEED)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_10_003: [If any of the parameters are NULL then IoTHubMessage_SetDiagnosticPropertyData shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_10_003: [If any of the parameters are NULL then IoTHubMessage_SetDiagnosticPropertyData shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_SetDiagnosticPropertyData_NULL_handle_Fails)
 {
     //arrange
@@ -1492,7 +1640,7 @@ TEST_FUNCTION(IoTHubMessage_SetDiagnosticPropertyData_NULL_handle_Fails)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_10_003: [If any of the parameters are NULL then IoTHubMessage_SetDiagnosticPropertyData shall return a IOTHUB_MESSAGE_INVALID_ARG value.] 
+// Tests_SRS_IOTHUBMESSAGE_10_003: [If any of the parameters are NULL then IoTHubMessage_SetDiagnosticPropertyData shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
 TEST_FUNCTION(IoTHubMessage_SetDiagnosticPropertyData_NULL_DiagnosticData_Fails)
 {
     //arrange
@@ -1510,7 +1658,7 @@ TEST_FUNCTION(IoTHubMessage_SetDiagnosticPropertyData_NULL_DiagnosticData_Fails)
     IoTHubMessage_Destroy(h);
 }
 
-// Tests_SRS_IOTHUBMESSAGE_10_004: [If the IOTHUB_MESSAGE_HANDLE `diagnosticData` is not NULL it shall be deallocated.] 
+// Tests_SRS_IOTHUBMESSAGE_10_004: [If the IOTHUB_MESSAGE_HANDLE `diagnosticData` is not NULL it shall be deallocated.]
 TEST_FUNCTION(IoTHubMessage_SetDiagnosticPropertyData_DiagnosticData_Not_NULL_SUCCEED)
 {
     //arrange
@@ -1753,4 +1901,174 @@ TEST_FUNCTION(IoTHubMessage_GetProperty_Fail)
     IoTHubMessage_Destroy(h);
 }
 
+// Tests_SRS_IOTHUBMESSAGE_31_036: [If any of the parameters are NULL then IoTHubMessage_SetOutputName shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetOutputName_NULL_handle_Fails)
+{
+    set_string_NULL_handle_fails_impl(IoTHubMessage_SetOutputName, TEST_OUTPUT_NAME);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_036: [If any of the parameters are NULL then IoTHubMessage_SetOutputName shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetOutputName_NULL_MessageId_Fails)
+{
+    set_string_NULL_string_fails_impl(IoTHubMessage_SetOutputName);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_039: [IoTHubMessage_SetOutputName finishes successfully it shall return IOTHUB_MESSAGE_OK.]
+TEST_FUNCTION(IoTHubMessage_SetOutputName_SUCCEED)
+{
+    set_string_succeeds_impl(IoTHubMessage_SetOutputName, TEST_OUTPUT_NAME);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_037: [If the IOTHUB_MESSAGE_HANDLE OutputName is not NULL, then the IOTHUB_MESSAGE_HANDLE OutputName will be deallocated.]
+TEST_FUNCTION(IoTHubMessage_SetOutputName_OutputName_Not_NULL_SUCCEED)
+{
+    set_string_string_already_allocated_succeeds_impl(IoTHubMessage_SetOutputName, TEST_OUTPUT_NAME2);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_034: [If the iotHubMessageHandle parameter is NULL then IoTHubMessage_GetOutputName shall return a NULL value.]
+TEST_FUNCTION(IoTHubMessage_GetOutputName_NULL_handle_Fails)
+{
+    get_string_NULL_handle_fails_impl(IoTHubMessage_GetOutputName);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_035: [IoTHubMessage_GetOutputName shall return the OutputName as a const char*.]
+TEST_FUNCTION(IoTHubMessage_GetOutputName_OutputName_Not_Set_Fails)
+{
+    get_string_not_set_fails_impl(IoTHubMessage_GetOutputName);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_035: [IoTHubMessage_GetOutputName shall return the OutputName as a const char*.]
+TEST_FUNCTION(IoTHubMessage_GetOutputName_SUCCEED)
+{
+    get_string_succeeds_impl(IoTHubMessage_SetOutputName, IoTHubMessage_GetOutputName, TEST_OUTPUT_NAME);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_042: [if any of the parameters are NULL then IoTHubMessage_SetInputName shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetInputName_NULL_handle_Fails)
+{
+    set_string_NULL_handle_fails_impl(IoTHubMessage_SetInputName, TEST_INPUT_NAME);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_042: [if any of the parameters are NULL then IoTHubMessage_SetInputName shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetInputName_NULL_MessageId_Fails)
+{
+    set_string_NULL_string_fails_impl(IoTHubMessage_SetInputName);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_045: [IoTHubMessage_SetInputName finishes successfully it shall return IOTHUB_MESSAGE_OK.]
+TEST_FUNCTION(IoTHubMessage_SetInputName_SUCCEED)
+{
+    set_string_succeeds_impl(IoTHubMessage_SetInputName, TEST_INPUT_NAME);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_043: [If the IOTHUB_MESSAGE_HANDLE InputName is not NULL, then the IOTHUB_MESSAGE_HANDLE InputName will be deallocated.]
+TEST_FUNCTION(IoTHubMessage_SetInputName_InputName_Not_NULL_SUCCEED)
+{
+    set_string_string_already_allocated_succeeds_impl(IoTHubMessage_SetInputName, TEST_INPUT_NAME2);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_042: [if any of the parameters are NULL then IoTHubMessage_SetInputName shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_GetInputName_NULL_handle_Fails)
+{
+    get_string_NULL_handle_fails_impl(IoTHubMessage_GetInputName);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_045: [IoTHubMessage_SetInputName finishes successfully it shall return IOTHUB_MESSAGE_OK.]
+TEST_FUNCTION(IoTHubMessage_GetInputName_InputName_Not_Set_Fails)
+{
+    get_string_not_set_fails_impl(IoTHubMessage_GetInputName);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_045: [IoTHubMessage_SetInputName finishes successfully it shall return IOTHUB_MESSAGE_OK.]
+TEST_FUNCTION(IoTHubMessage_GetInputName_SUCCEED)
+{
+    get_string_succeeds_impl(IoTHubMessage_SetInputName, IoTHubMessage_GetInputName, TEST_INPUT_NAME);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_048: [if any of the parameters are NULL then IoTHubMessage_SetConnectionModuleId shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionModuleId_NULL_handle_Fails)
+{
+    set_string_NULL_handle_fails_impl(IoTHubMessage_SetConnectionModuleId, TEST_CONNECTION_MODULE_ID);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_048: [if any of the parameters are NULL then IoTHubMessage_SetConnectionModuleId shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionModuleId_NULL_MessageId_Fails)
+{
+    set_string_NULL_string_fails_impl(IoTHubMessage_SetConnectionModuleId);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_051: [IoTHubMessage_SetConnectionModuleId finishes successfully it shall return IOTHUB_MESSAGE_OK.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionModuleId_SUCCEED)
+{
+    set_string_succeeds_impl(IoTHubMessage_SetConnectionModuleId, TEST_CONNECTION_MODULE_ID);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_049: [If the IOTHUB_MESSAGE_HANDLE ConnectionModuleId is not NULL, then the IOTHUB_MESSAGE_HANDLE ConnectionModuleId will be deallocated.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionModuleId_ConnectionModuleId_Not_NULL_SUCCEED)
+{
+    set_string_string_already_allocated_succeeds_impl(IoTHubMessage_SetConnectionModuleId, TEST_CONNECTION_MODULE_ID2);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_046: [if the iotHubMessageHandle parameter is NULL then IoTHubMessage_GetConnectionModuleId shall return a NULL value.]
+TEST_FUNCTION(IoTHubMessage_GetConnectionModuleId_NULL_handle_Fails)
+{
+    get_string_NULL_handle_fails_impl(IoTHubMessage_GetConnectionModuleId);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_047: [IoTHubMessage_GetConnectionModuleId shall return the ConnectionModuleId as a const char*.]
+TEST_FUNCTION(IoTHubMessage_GetConnectionModuleId_ConnectionModuleId_Not_Set_Fails)
+{
+    get_string_not_set_fails_impl(IoTHubMessage_GetConnectionModuleId);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_047: [IoTHubMessage_GetConnectionModuleId shall return the ConnectionModuleId as a const char*.]
+TEST_FUNCTION(IoTHubMessage_GetConnectionModuleId_SUCCEED)
+{
+    get_string_succeeds_impl(IoTHubMessage_SetConnectionModuleId, IoTHubMessage_GetConnectionModuleId, TEST_CONNECTION_MODULE_ID);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_054: [if any of the parameters are NULL then IoTHubMessage_SetConnectionDeviceId shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionDeviceId_NULL_handle_Fails)
+{
+    set_string_NULL_handle_fails_impl(IoTHubMessage_SetConnectionDeviceId, TEST_CONNECTION_DEVICE_ID);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_054: [if any of the parameters are NULL then IoTHubMessage_SetConnectionDeviceId shall return a IOTHUB_MESSAGE_INVALID_ARG value.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionDeviceId_NULL_MessageId_Fails)
+{
+    set_string_NULL_string_fails_impl(IoTHubMessage_SetConnectionDeviceId);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_057: [IoTHubMessage_SetConnectionDeviceId finishes successfully it shall return IOTHUB_MESSAGE_OK.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionDeviceId_SUCCEED)
+{
+    set_string_succeeds_impl(IoTHubMessage_SetConnectionDeviceId, TEST_CONNECTION_DEVICE_ID);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_055: [If the IOTHUB_MESSAGE_HANDLE ConnectionDeviceId is not NULL, then the IOTHUB_MESSAGE_HANDLE ConnectionDeviceId will be deallocated.]
+TEST_FUNCTION(IoTHubMessage_SetConnectionDeviceId_ConnectionDeviceId_Not_NULL_SUCCEED)
+{
+    set_string_string_already_allocated_succeeds_impl(IoTHubMessage_SetConnectionDeviceId, "output_string2");
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_052: [if the iotHubMessageHandle parameter is NULL then IoTHubMessage_GetConnectionDeviceId shall return a NULL value.]
+TEST_FUNCTION(IoTHubMessage_GetConnectionDeviceId_NULL_handle_Fails)
+{
+    get_string_NULL_handle_fails_impl(IoTHubMessage_GetConnectionDeviceId);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_053: [IoTHubMessage_GetConnectionDeviceId shall return the ConnectionDeviceId as a const char*.]
+TEST_FUNCTION(IoTHubMessage_GetConnectionDeviceId_ConnectionDeviceId_Not_Set_Fails)
+{
+    get_string_not_set_fails_impl(IoTHubMessage_GetConnectionDeviceId);
+}
+
+// Tests_SRS_IOTHUBMESSAGE_31_053: [IoTHubMessage_GetConnectionDeviceId shall return the ConnectionDeviceId as a const char*.]
+TEST_FUNCTION(IoTHubMessage_GetConnectionDeviceId_SUCCEED)
+{
+    get_string_succeeds_impl(IoTHubMessage_SetConnectionDeviceId, IoTHubMessage_GetConnectionDeviceId, TEST_CONNECTION_DEVICE_ID);
+}
+
 END_TEST_SUITE(iothubmessage_ut)
+
+

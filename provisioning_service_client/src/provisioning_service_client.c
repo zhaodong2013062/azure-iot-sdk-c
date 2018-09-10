@@ -70,7 +70,7 @@ typedef struct HANDLE_FUNCTION_VECTOR_TAG
 static const char* const IOTHUBHOSTNAME =                       "HostName";
 static const char* const IOTHUBSHAREDACESSKEYNAME =             "SharedAccessKeyName";
 static const char* const IOTHUBSHAREDACESSKEY =                 "SharedAccessKey";
-static const char* const PROVISIONING_SERVICE_API_VERSION =     "2017-11-15";
+static const char* const PROVISIONING_SERVICE_API_VERSION =     "2018-04-01";
 static const char* const ENROLL_GROUP_PROVISION_PATH_FMT =      "/enrollmentGroups/%s";
 static const char* const INDV_ENROLL_PROVISION_PATH_FMT =       "/enrollments/%s";
 static const char* const REG_STATE_PROVISION_PATH_FMT =         "/registrations/%s";
@@ -150,17 +150,17 @@ static void on_http_connected(void* callback_ctx, HTTP_CALLBACK_REASON connect_r
 
 static void on_http_error(void* callback_ctx, HTTP_CALLBACK_REASON error_result)
 {
-(void)error_result;
-if (callback_ctx != NULL)
-{
-    PROV_SERVICE_CLIENT* prov_client = (PROV_SERVICE_CLIENT*)callback_ctx;
-    prov_client->http_state = HTTP_STATE_ERROR;
-    LogError("Failure encountered in http %d", error_result);
-}
-else
-{
-    LogError("Failure encountered in http %d", error_result);
-}
+    (void)error_result;
+    if (callback_ctx != NULL)
+    {
+        PROV_SERVICE_CLIENT* prov_client = (PROV_SERVICE_CLIENT*)callback_ctx;
+        prov_client->http_state = HTTP_STATE_ERROR;
+        LogError("Failure encountered in http %d", error_result);
+    }
+    else
+    {
+        LogError("Failure encountered in http %d", error_result);
+    }
 }
 
 static void on_http_reply_recv(void* callback_ctx, HTTP_CALLBACK_REASON request_result, const unsigned char* content, size_t content_len, unsigned int status_code, HTTP_HEADERS_HANDLE responseHeadersHandle)
@@ -714,7 +714,7 @@ static int prov_sc_run_bulk_operation(PROVISIONING_SERVICE_CLIENT_HANDLE prov_cl
                 else
                 {
                     result = rest_call(prov_client, HTTP_CLIENT_REQUEST_POST, STRING_c_str(registration_path), request_headers, content);
-                    
+
                     if (result == 0)
                     {
                         if ((*bulk_res_ptr = bulkOperationResult_deserializeFromJson(prov_client->response)) == NULL)

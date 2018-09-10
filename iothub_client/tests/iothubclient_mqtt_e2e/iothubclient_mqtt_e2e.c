@@ -12,7 +12,7 @@ BEGIN_TEST_SUITE(iothubclient_mqtt_e2e)
 TEST_SUITE_INITIALIZE(TestClassInitialize)
 {
     TEST_INITIALIZE_MEMORY_DEBUG(g_dllByDll);
-    e2e_init(TEST_MQTT);
+    e2e_init(TEST_MQTT, false);
 }
 
 TEST_SUITE_CLEANUP(TestClassCleanup)
@@ -61,7 +61,7 @@ TEST_FUNCTION(IoTHub_MQTT_RecvMessage_E2ETest_sas_urlDecode)
 }
 
 #ifndef __APPLE__
-/*TEST_FUNCTION(IoTHub_MQTT_SendEvent_e2e_x509)
+TEST_FUNCTION(IoTHub_MQTT_SendEvent_e2e_x509)
 {
 #ifdef AZIOT_LINUX
     g_e2e_test_options.set_mac_address = false;
@@ -69,13 +69,15 @@ TEST_FUNCTION(IoTHub_MQTT_RecvMessage_E2ETest_sas_urlDecode)
     e2e_send_event_test_x509(MQTT_Protocol);
 }
 
+
 TEST_FUNCTION(IoTHub_MQTT_RecvMessage_E2ETest_x509)
 {
 #ifdef AZIOT_LINUX
     g_e2e_test_options.set_mac_address = true;
 #endif
     e2e_recv_message_test_x509(MQTT_Protocol);
-}*/
+}
 #endif
+
 
 END_TEST_SUITE(iothubclient_mqtt_e2e)

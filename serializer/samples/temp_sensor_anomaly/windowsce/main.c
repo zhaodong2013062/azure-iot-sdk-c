@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+//
+// IMPORTANT: Please read and understand serializer limitations and alternatives as
+//            described ../../readme.md before beginning to use the serializer.
+//
+
 #include <stdlib.h>
 #include "iothubtransporthttp.h"
 #include "schemalib.h"
@@ -99,7 +104,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT IoTHubMessage(IOTHUB_MESSAGE_HANDLE mess
         else
         {
             EXECUTE_COMMAND_RESULT executeCommandResult;
-          
+
             memcpy(temp, buffer, size);
             temp[size] = '\0';
             executeCommandResult = EXECUTE_COMMAND(userContextCallback, temp);
@@ -137,7 +142,7 @@ int main(void)
             else
             {
                 FrdmDevice* frdmDevice;
-                // Because it can poll "after 9 seconds" polls will happen 
+                // Because it can poll "after 9 seconds" polls will happen
                 // effectively at ~10 seconds.
                 // Note that for scalabilty, the default value of minimumPollingTime
                 // is 25 minutes. For more information, see:

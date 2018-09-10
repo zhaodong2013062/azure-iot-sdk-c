@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <signal.h>
 #include <stddef.h>
 #include "azure_c_shared_utility/gballoc.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
+#include "internal/iothubtransport.h"
+#include "iothub_client_core.h"
+#include "internal/iothub_client_private.h"
 #include "azure_c_shared_utility/threadapi.h"
 #include "azure_c_shared_utility/lock.h"
 #include "azure_c_shared_utility/xlogging.h"
@@ -134,7 +137,7 @@ TRANSPORT_HANDLE IoTHubTransport_Create(IOTHUB_CLIENT_TRANSPORT_PROVIDER protoco
             }
         }
     }
-    
+
     return result;
 }
 

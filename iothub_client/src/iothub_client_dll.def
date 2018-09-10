@@ -1,5 +1,8 @@
 LIBRARY iothub_client_dll
 EXPORTS
+    IoTHub_Init
+    IoTHub_Deinit
+
     IoTHubTransport_Create
     IoTHubTransport_Destroy
     IoTHubTransport_GetLock
@@ -9,6 +12,15 @@ EXPORTS
     IoTHubTransport_JoinWorkerThread
 
     IoTHubClient_GetVersionString
+
+    IoTHubClientCore_LL_SendComplete
+    IoTHubClientCore_LL_ReportedStateComplete
+    IoTHubClientCore_LL_MessageCallback
+    IoTHubClientCore_LL_RetrievePropertyComplete
+    IoTHubClientCore_LL_DeviceMethodComplete
+    IoTHubClientCore_LL_ConnectionStatusCallBack
+    IoTHubClientCore_LL_GetOption
+    IoTHubClientCore_LL_MessageCallbackFromInput
 
     IoTHubClient_CreateFromConnectionString
     IoTHubClient_Create
@@ -47,6 +59,22 @@ EXPORTS
     IoTHubDeviceClient_UploadToBlobAsync
     IoTHubDeviceClient_UploadMultipleBlocksToBlobAsync
 
+    IoTHubModuleClient_CreateFromConnectionString
+    IoTHubModuleClient_Destroy
+    IoTHubModuleClient_SendEventAsync
+    IoTHubModuleClient_GetSendStatus
+    IoTHubModuleClient_SetMessageCallback
+    IoTHubModuleClient_SetConnectionStatusCallback
+    IoTHubModuleClient_SetRetryPolicy
+    IoTHubModuleClient_GetRetryPolicy
+    IoTHubModuleClient_GetLastMessageReceiveTime
+    IoTHubModuleClient_SetOption
+    IoTHubModuleClient_SetModuleTwinCallback
+    IoTHubModuleClient_SendReportedState
+    IoTHubModuleClient_SetModuleMethodCallback
+    IoTHubModuleClient_SendEventToOutputAsync
+    IoTHubModuleClient_SetInputMessageCallback
+
     IoTHubClient_LL_CreateFromConnectionString
     IoTHubClient_LL_Destroy
     IoTHubClient_LL_DoWork
@@ -75,6 +103,23 @@ EXPORTS
     IoTHubDeviceClient_LL_UploadToBlob
     IoTHubDeviceClient_LL_UploadMultipleBlocksToBlob
 
+    IoTHubModuleClient_LL_CreateFromConnectionString
+    IoTHubModuleClient_LL_Destroy
+    IoTHubModuleClient_LL_SendEventAsync
+    IoTHubModuleClient_LL_GetSendStatus
+    IoTHubModuleClient_LL_SetMessageCallback
+    IoTHubModuleClient_LL_SetConnectionStatusCallback
+    IoTHubModuleClient_LL_SetRetryPolicy
+    IoTHubModuleClient_LL_GetRetryPolicy
+    IoTHubModuleClient_LL_GetLastMessageReceiveTime
+    IoTHubModuleClient_LL_DoWork
+    IoTHubModuleClient_LL_SetOption
+    IoTHubModuleClient_LL_SetModuleTwinCallback
+    IoTHubModuleClient_LL_SendReportedState
+    IoTHubModuleClient_LL_SetModuleMethodCallback
+    IoTHubModuleClient_LL_SendEventToOutputAsync
+    IoTHubModuleClient_LL_SetInputMessageCallback
+
     IoTHubMessage_CreateFromString
     IoTHubMessage_CreateFromByteArray
     IoTHubMessage_Clone
@@ -87,11 +132,17 @@ EXPORTS
     IoTHubMessage_GetCorrelationId
     IoTHubMessage_GetDiagnosticPropertyData
     IoTHubMessage_GetMessageId
+    IoTHubMessage_GetOutputName
+    IoTHubMessage_GetProperty
     IoTHubMessage_Properties
+    IoTHubMessage_SetConnectionDeviceId
+    IoTHubMessage_SetConnectionModuleId
     IoTHubMessage_SetContentTypeSystemProperty
     IoTHubMessage_SetContentEncodingSystemProperty
     IoTHubMessage_SetCorrelationId
+    IoTHubMessage_SetInputName
     IoTHubMessage_SetMessageId
+    IoTHubMessage_SetProperty
 
     IOTHUB_CLIENT_CONFIRMATION_RESULTStrings
     IOTHUB_CLIENT_FILE_UPLOAD_RESULTStrings

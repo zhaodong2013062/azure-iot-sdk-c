@@ -19,10 +19,10 @@
 #include "azure_uhttp_c/uhttp.h"
 #include "parson.h"
 
-#define HTTP_PORT_NUM                   443
-#define HTTP_STATUS_CODE_OK             200
-#define HTTP_STATUS_CODE_OK_MAX         226
-#define HTTP_STATUS_CODE_UNAUTHORIZED   401
+#define HTTP_PORT_NUM                       443
+#define HTTP_STATUS_CODE_OK                 200
+#define HTTP_STATUS_CODE_OK_MAX             226
+#define HTTP_STATUS_CODE_UNAUTHORIZED       401
 
 static const char* PROV_REGISTRATION_URI_FMT = "/%s/registrations/%s/register?api-version=%s";
 static const char* PROV_OP_STATUS_URI_FMT = "/%s/registrations/%s/operations/%s?api-version=%s";
@@ -52,6 +52,8 @@ typedef enum PROV_TRANSPORT_STATE_TAG
 
     TRANSPORT_CLIENT_STATE_STATUS_SENT,
     TRANSPORT_CLIENT_STATE_STATUS_RECV,
+
+    TRANSPORT_CLIENT_STATE_TRANSIENT,
 
     TRANSPORT_CLIENT_STATE_ERROR
 } PROV_TRANSPORT_STATE;
@@ -99,6 +101,9 @@ typedef struct PROV_TRANSPORT_HTTP_INFO_TAG
     TRANSPORT_HSM_TYPE hsm_type;
 
     HTTP_CLIENT_HANDLE http_client;
+
+    PROV_TRANSPORT_ERROR_CALLBACK error_cb;
+    void* error_ctx;
 } PROV_TRANSPORT_HTTP_INFO;
 
 static void on_http_error(void* callback_ctx, HTTP_CALLBACK_REASON error_result)
@@ -168,6 +173,11 @@ static void on_http_reply_recv(void* callback_ctx, HTTP_CALLBACK_REASON request_
                     http_info->transport_state = TRANSPORT_CLIENT_STATE_STATUS_RECV;
                 }
             }
+        }
+        else if (status_code >= PROV_STATUS_CODE_TRANSIENT_ERROR)
+        {
+            // On transient error reset the transport to send state
+            http_info->transport_state = TRANSPORT_CLIENT_STATE_TRANSIENT;
         }
         else
         {
@@ -591,6 +601,10 @@ static int create_connection(PROV_TRANSPORT_HTTP_INFO* http_info)
         if (uhttp_client_open(http_info->http_client, http_info->hostname, HTTP_PORT_NUM, on_http_connected, http_info) != HTTP_CLIENT_OK)
         {
             LogError("failed to open http client");
+            if (http_info->error_cb != NULL)
+            {
+                http_info->error_cb(PROV_DEVICE_ERROR_KEY_FAIL, http_info->error_ctx);
+            }
             uhttp_client_destroy(http_info->http_client);
             http_info->http_client = NULL;
             result = __FAILURE__;
@@ -603,7 +617,7 @@ static int create_connection(PROV_TRANSPORT_HTTP_INFO* http_info)
     return result;
 }
 
-PROV_DEVICE_TRANSPORT_HANDLE prov_transport_http_create(const char* uri, TRANSPORT_HSM_TYPE type, const char* scope_id, const char* api_version)
+PROV_DEVICE_TRANSPORT_HANDLE prov_transport_http_create(const char* uri, TRANSPORT_HSM_TYPE type, const char* scope_id, const char* api_version, PROV_TRANSPORT_ERROR_CALLBACK error_cb, void* error_ctx)
 {
     PROV_TRANSPORT_HTTP_INFO* result;
     if (uri == NULL || scope_id == NULL || api_version == NULL)
@@ -648,6 +662,8 @@ PROV_DEVICE_TRANSPORT_HANDLE prov_transport_http_create(const char* uri, TRANSPO
             else
             {
                 result->hsm_type = type;
+                result->error_cb = error_cb;
+                result->error_ctx = error_ctx;
             }
         }
     }
@@ -958,6 +974,14 @@ void prov_transport_http_dowork(PROV_DEVICE_TRANSPORT_HANDLE handle)
                 }
                 break;
             }
+
+            case TRANSPORT_CLIENT_STATE_TRANSIENT:
+                if (http_info->status_cb != NULL)
+                {
+                    http_info->status_cb(PROV_DEVICE_TRANSPORT_STATUS_TRANSIENT, http_info->status_ctx);
+                }
+                http_info->transport_state = TRANSPORT_CLIENT_STATE_IDLE;
+                break;
 
             case TRANSPORT_CLIENT_STATE_ERROR:
                 /* Codes_PROV_TRANSPORT_HTTP_CLIENT_07_039: [ If the state is Error, prov_transport_http_dowork shall call the registration_data callback with PROV_DEVICE_TRANSPORT_RESULT_ERROR and NULL payload_data. ] */

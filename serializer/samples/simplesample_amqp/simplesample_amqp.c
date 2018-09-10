@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+//
+// IMPORTANT: Please read and understand serializer limitations and alternatives as
+//            described ../../readme.md before beginning to use the serializer.
+//
+
 #include <stdlib.h>
 
 #include <stdio.h>
@@ -161,7 +166,7 @@ void simplesample_amqp_run(void)
             float minTemperature = 20.0;
             float minHumidity = 60.0;
 
-            // Turn on Log 
+            // Turn on Log
             bool trace = true;
             (void)IoTHubClient_SetOption(iotHubClientHandle, "logtrace", &trace);
 

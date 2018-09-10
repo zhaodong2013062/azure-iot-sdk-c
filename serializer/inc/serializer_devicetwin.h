@@ -41,7 +41,7 @@ static void serializer_ingest(DEVICE_TWIN_UPDATE_STATE update_state, const unsig
         {
             /*all is fine*/
         }
-        
+
         free(copyOfPayload);
     }
 }
@@ -67,7 +67,7 @@ static int deviceMethodCallback(const char* method_name, const unsigned char* pa
 
         /*Codes_SRS_SERIALIZERDEVICETWIN_02_022: [ deviceMethodCallback shall call EXECUTE_METHOD passing the userContextCallback, method_name and the null terminated string build before. ]*/
         METHODRETURN_HANDLE mr = EXECUTE_METHOD(userContextCallback, method_name, payloadZeroTerminated);
-        
+
         if (mr == NULL)
         {
             LogError("failure in EXECUTE_METHOD");
@@ -138,7 +138,7 @@ typedef struct SERIALIZER_DEVICETWIN_PROTOHANDLE_TAG /*it is called "PROTOHANDLE
     IOTHUB_CLIENT_HANDLE_VARIANT iothubClientHandleVariant;
     void* deviceAssigned;
 } SERIALIZER_DEVICETWIN_PROTOHANDLE;
- 
+
 static VECTOR_HANDLE g_allProtoHandles=NULL; /*contains SERIALIZER_DEVICETWIN_PROTOHANDLE*/
 
 static int lazilyAddProtohandle(const SERIALIZER_DEVICETWIN_PROTOHANDLE* protoHandle)
@@ -349,13 +349,13 @@ static void IoTHubDeviceTwin_Destroy_Impl(void* model)
                 LogError("INTERNAL ERROR");
             }
             }/*switch*/
+
+             /*Codes_SRS_SERIALIZERDEVICETWIN_02_017: [ IoTHubDeviceTwin_Destroy_Impl shall call CodeFirst_DestroyDevice. ]*/
+            CodeFirst_DestroyDevice(protoHandle->deviceAssigned);
+
+            /*Codes_SRS_SERIALIZERDEVICETWIN_02_018: [ IoTHubDeviceTwin_Destroy_Impl shall remove the IoTHubClient_Handle and the device handle from the recorded set. ]*/
+            VECTOR_erase(g_allProtoHandles, protoHandle, 1);
         }
-
-        /*Codes_SRS_SERIALIZERDEVICETWIN_02_017: [ IoTHubDeviceTwin_Destroy_Impl shall call CodeFirst_DestroyDevice. ]*/
-        CodeFirst_DestroyDevice(protoHandle->deviceAssigned);
-
-        /*Codes_SRS_SERIALIZERDEVICETWIN_02_018: [ IoTHubDeviceTwin_Destroy_Impl shall remove the IoTHubClient_Handle and the device handle from the recorded set. ]*/
-        VECTOR_erase(g_allProtoHandles, protoHandle, 1);
 
         /*Codes_SRS_SERIALIZERDEVICETWIN_02_019: [ If the recorded set of IoTHubClient handles is zero size, then the set shall be destroyed. ]*/
         if (VECTOR_size(g_allProtoHandles) == 0) /*lazy init means more work @ destroy time*/

@@ -9,8 +9,6 @@
 #include <stddef.h>
 #endif
 
-#define UNREFERENCED_PARAMETER(x) x
-
 void* real_malloc(size_t size)
 {
     return malloc(size);
@@ -25,6 +23,7 @@ void real_free(void* ptr)
 #include "azure_c_shared_utility/macro_utils.h"
 #include "umock_c.h"
 #include "umock_c_negative_tests.h"
+#include "azure_c_shared_utility/const_defines.h"
 
 #define ENABLE_MOCKS
 #include "azure_c_shared_utility/gballoc.h"
@@ -98,8 +97,8 @@ static int my_mallocAndStrcpy_s(char** destination, const char* source)
 
 static TPM_ATTESTATION_HANDLE my_tpmAttestation_create(const char* endorsement_key, const char* storage_root_key)
 {
-    UNREFERENCED_PARAMETER(endorsement_key);
-    UNREFERENCED_PARAMETER(storage_root_key);
+    AZURE_UNREFERENCED_PARAMETER(endorsement_key);
+    AZURE_UNREFERENCED_PARAMETER(storage_root_key);
     return (TPM_ATTESTATION_HANDLE)real_malloc(1);
 }
 
@@ -110,22 +109,22 @@ static void my_tpmAttestation_destroy(TPM_ATTESTATION_HANDLE tpm_att)
 
 static TPM_ATTESTATION_HANDLE my_tpmAttestation_fromJson(JSON_Object* root_object)
 {
-    UNREFERENCED_PARAMETER(root_object);
+    AZURE_UNREFERENCED_PARAMETER(root_object);
     return (TPM_ATTESTATION_HANDLE)real_malloc(1);
 }
 
 static JSON_Value* my_tpmAttestation_toJson(const TPM_ATTESTATION_HANDLE tpm_att)
 {
-    UNREFERENCED_PARAMETER(tpm_att);
+    AZURE_UNREFERENCED_PARAMETER(tpm_att);
     return TEST_JSON_VALUE;
 }
 
 static X509_ATTESTATION_HANDLE my_x509Attestation_create(X509_CERTIFICATE_TYPE cert_type, const char* primary_cert, const char* secondary_cert)
 {
-    UNREFERENCED_PARAMETER(cert_type);
-    UNREFERENCED_PARAMETER(primary_cert);
-    UNREFERENCED_PARAMETER(secondary_cert);
-    
+    AZURE_UNREFERENCED_PARAMETER(cert_type);
+    AZURE_UNREFERENCED_PARAMETER(primary_cert);
+    AZURE_UNREFERENCED_PARAMETER(secondary_cert);
+
     return (X509_ATTESTATION_HANDLE)real_malloc(1);
 }
 
@@ -136,13 +135,13 @@ static void my_x509Attestation_destroy(X509_ATTESTATION_HANDLE x509_att)
 
 static X509_ATTESTATION_HANDLE my_x509Attestation_fromJson(JSON_Object* root_object)
 {
-    UNREFERENCED_PARAMETER(root_object);
+    AZURE_UNREFERENCED_PARAMETER(root_object);
     return (X509_ATTESTATION_HANDLE)real_malloc(1);
 }
 
 static JSON_Value* my_x509Attestation_toJson(const X509_ATTESTATION_HANDLE x509_att)
 {
-    UNREFERENCED_PARAMETER(x509_att);
+    AZURE_UNREFERENCED_PARAMETER(x509_att);
     return TEST_JSON_VALUE;
 }
 

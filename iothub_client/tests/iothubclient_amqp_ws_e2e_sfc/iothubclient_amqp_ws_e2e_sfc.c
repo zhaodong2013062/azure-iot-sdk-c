@@ -12,7 +12,7 @@ BEGIN_TEST_SUITE(iothubclient_amqp_ws_e2e_sfc)
     TEST_SUITE_INITIALIZE(TestClassInitialize)
     {
         TEST_INITIALIZE_MEMORY_DEBUG(g_dllByDll);
-        e2e_init(TEST_AMQP_WEBSOCKETS);
+        e2e_init(TEST_AMQP_WEBSOCKETS, false);
     }
 
     TEST_SUITE_CLEANUP(TestClassCleanup)
@@ -24,7 +24,6 @@ BEGIN_TEST_SUITE(iothubclient_amqp_ws_e2e_sfc)
     //***********************************************************
     // D2C
     //***********************************************************
-    //// FAIL - only on Linux
     TEST_FUNCTION(IoTHub_AMQP_WS_e2e_d2c_svc_fault_ctrl_kill_Tcp)
     {
         e2e_d2c_svc_fault_ctrl_kill_TCP_connection_with_transport_status_check(AMQP_Protocol_over_WebSocketsTls);
@@ -79,7 +78,7 @@ BEGIN_TEST_SUITE(iothubclient_amqp_ws_e2e_sfc)
     {
         e2e_d2c_svc_fault_ctrl_AMQP_shut_down(AMQP_Protocol_over_WebSocketsTls);
     }
-    
+
     //***********************************************************
     // C2D
     //***********************************************************
