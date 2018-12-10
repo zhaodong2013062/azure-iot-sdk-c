@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "iothub.h"
 #include "iothub_device_client.h"
@@ -30,7 +31,6 @@
 //#define SAMPLE_MQTT_OVER_WEBSOCKETS
 //#define SAMPLE_AMQP
 //#define SAMPLE_AMQP_OVER_WEBSOCKETS
-//#define SAMPLE_HTTP
 
 #ifdef SAMPLE_MQTT
     #include "iothubtransportmqtt.h"
@@ -44,9 +44,6 @@
 #ifdef SAMPLE_AMQP_OVER_WEBSOCKETS
     #include "iothubtransportamqp_websockets.h"
 #endif // SAMPLE_AMQP_OVER_WEBSOCKETS
-#ifdef SAMPLE_HTTP
-    #include "iothubtransporthttp.h"
-#endif // SAMPLE_HTTP
 
 /*
     1) Obtain the connection string for your downstream device and to it
@@ -54,13 +51,25 @@
     2) The edge device hostname is the hostname set in the config.yaml of the Edge device
        to which this sample will connect to.
 
-    The resulting string should look like the following
+    If your downstream device uses SharedAccessKey authentication then the
+    resulting connection string should look like the following:
     "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>;GatewayHostName=<edge device hostname>"
+
+    If your downstream device uses X.509 authentication (self signed or X.509 CA) then
+    resulting connection string should look like the following:
+    "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true;GatewayHostName=<edge device hostname>"
 */
 static const char* connectionString = "[Downstream device IoT Edge connection string]";
 
 // Path to the Edge "owner" root CA certificate
 static const char* edge_ca_cert_path = "[Path to Edge CA certificate]";
+
+/*
+  Optional: When the downstream device uses X.509 authentication, the following
+  certificate and key in PRM format must be provided.
+*/
+static const char * x509_device_cert_path = NULL;
+static const char * x509_device_key_path = NULL;
 
 #define MESSAGE_COUNT        20
 static bool g_continueRunning = true;
@@ -140,15 +149,15 @@ static void send_confirm_callback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void
     Read the certificate file and provide a null terminated string
     containing the certificate.
 */
-static char *obtain_edge_ca_certificate(void)
+static char *obtain_file_contents(const char *path)
 {
     char *result = NULL;
     FILE *ca_file;
 
-    ca_file = fopen(edge_ca_cert_path, "r");
+    ca_file = fopen(path, "rb");
     if (ca_file == NULL)
     {
-        printf("Error could not open file for reading %s\r\n", edge_ca_cert_path);
+        printf("Error could not open file for reading %s\r\n", path);
     }
     else
     {
@@ -162,7 +171,7 @@ static char *obtain_edge_ca_certificate(void)
 
         if (file_size == 0) // check wrap around
         {
-            printf("File size invalid for %s\r\n", edge_ca_cert_path);
+            printf("File size invalid for %s\r\n", path);
         }
         else
         {
@@ -174,10 +183,10 @@ static char *obtain_edge_ca_certificate(void)
             else
             {
                 // copy the file into the buffer
-                size_t read_size = fread(result, 1, file_size - 1, ca_file);
-                if (read_size != file_size - 1)
+                size_t read_size = fread(result, 1, file_size - 2, ca_file);
+                if (read_size != file_size - 2)
                 {
-                    printf("Error reading file %s\r\n", edge_ca_cert_path);
+                    printf("Error reading file %s\r\n", path);
                     free(result);
                     result = NULL;
                 }
@@ -187,6 +196,11 @@ static char *obtain_edge_ca_certificate(void)
     }
 
     return result;
+}
+
+static char *obtain_edge_ca_certificate(void)
+{
+    return obtain_file_contents(edge_ca_cert_path);
 }
 
 int main(void)
@@ -243,9 +257,24 @@ int main(void)
 
         // Provide the Azure IoT device client with the Edge root
         // X509 CA certificate that was used to setup the Edge runtime
-        cert_string = obtain_edge_ca_certificate();
-        (void)IoTHubDeviceClient_SetOption(device_handle, OPTION_TRUSTED_CERT, cert_string);
+        if (edge_ca_cert_path != NULL)
+        {
+            cert_string = obtain_edge_ca_certificate();
+            (void)IoTHubDeviceClient_SetOption(device_handle, OPTION_TRUSTED_CERT, cert_string);
+        }
 
+        if ((x509_device_cert_path != NULL) && (x509_device_key_path != NULL))
+        {
+            const char *x509certificate = obtain_file_contents(x509_device_cert_path);
+            const char *x509privatekey = obtain_file_contents(x509_device_key_path);
+            if ((IoTHubDeviceClient_SetOption(device_handle, OPTION_X509_CERT, x509certificate) != IOTHUB_CLIENT_OK) ||
+                (IoTHubDeviceClient_SetOption(device_handle, OPTION_X509_PRIVATE_KEY, x509privatekey) != IOTHUB_CLIENT_OK)
+                )
+            {
+                printf("failure to set options for x509, aborting\r\n");
+                exit(1);
+            }
+        }
 #if defined SAMPLE_MQTT || defined SAMPLE_MQTT_OVER_WEBSOCKETS
         //Setting the auto URL Encoder (recommended for MQTT). Please use this option unless
         //you are URL Encoding inputs yourself.
@@ -273,6 +302,7 @@ int main(void)
 
             // The message is copied to the sdk so the we can destroy it
             IoTHubMessage_Destroy(message_handle);
+            sleep(5);
         }
 
         printf("\r\nPress any key to continue\r\n");
