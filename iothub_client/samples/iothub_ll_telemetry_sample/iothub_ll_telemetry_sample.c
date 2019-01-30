@@ -54,7 +54,7 @@ and removing calls to _DoWork will yield the same results. */
 
 /* Paste in the your iothub connection string  */
 static const char* connectionString = "[device connection string]";
-#define MESSAGE_COUNT        5
+#define MESSAGE_COUNT        50
 static bool g_continueRunning = true;
 static size_t g_message_count_send_confirmations = 0;
 
@@ -70,15 +70,7 @@ static void connection_status_callback(IOTHUB_CLIENT_CONNECTION_STATUS result, I
 {
     (void)reason;
     (void)user_context;
-    // This sample DOES NOT take into consideration network outages.
-    if (result == IOTHUB_CLIENT_CONNECTION_AUTHENTICATED)
-    {
-        (void)printf("The device client is connected to iothub\r\n");
-    }
-    else
-    {
-        (void)printf("The device client has been disconnected\r\n");
-    }
+    (void)printf("CONNECTION STATUS REPORTED (result=%s; reason=%s)\r\n", ENUM_TO_STRING(IOTHUB_CLIENT_CONNECTION_STATUS, result), ENUM_TO_STRING(IOTHUB_CLIENT_CONNECTION_STATUS_REASON, reason));
 }
 
 int main(void)
@@ -142,9 +134,10 @@ int main(void)
         // Setting connection status callback to get indication of connection to iothub
         (void)IoTHubDeviceClient_LL_SetConnectionStatusCallback(device_ll_handle, connection_status_callback, NULL);
 
+        int counter = 0;
         do
         {
-            if (messages_sent < MESSAGE_COUNT)
+            if (counter % 100 == 0 && messages_sent < MESSAGE_COUNT)
             {
                 // Construct the iothub message from a string or a byte array
                 message_handle = IoTHubMessage_CreateFromString(telemetry_msg);
@@ -174,8 +167,8 @@ int main(void)
             }
 
             IoTHubDeviceClient_LL_DoWork(device_ll_handle);
-            ThreadAPI_Sleep(1);
-
+            ThreadAPI_Sleep(10);
+            counter++;
         } while (g_continueRunning);
 
         // Clean up the iothub sdk handle
