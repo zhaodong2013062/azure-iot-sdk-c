@@ -1466,6 +1466,7 @@ IOTHUB_CLIENT_CORE_LL_HANDLE IoTHubClientCore_LL_CreateFromConnectionString(cons
                                     LogError("Failure cloning protocol Gateway Name");
                                     break;
                                 }
+                                LogInfo("Using protocolGateway=<%s>", STRING_c_str(protocolGateway));
                             }
                             /*Codes_SRS_IOTHUBCLIENT_LL_31_126: [IoTHubClient_LL_CreateFromConnectionString shall optionally parse ModuleId, if present.] */
                             else if (strcmp(s_token, MODULE_ID_TOKEN) == 0)
