@@ -386,8 +386,9 @@ typedef struct IOTHUB_CLIENT_CORE_LL_HANDLE_DATA_TAG* IOTHUB_DEVICE_CLIENT_LL_HA
      * @return   IOTHUB_CLIENT_OK upon success or an error code upon failure.
      */
      MOCKABLE_FUNCTION(, IOTHUB_CLIENT_RESULT, IoTHubDeviceClient_LL_UploadMultipleBlocksToBlob, IOTHUB_DEVICE_CLIENT_LL_HANDLE, iotHubClientHandle, const char*, destinationFileName, IOTHUB_CLIENT_FILE_UPLOAD_GET_DATA_CALLBACK_EX, getDataCallbackEx, void*, context);
-
 #endif /*DONT_USE_UPLOADTOBLOB*/
+
+     MOCKABLE_FUNCTION(, IOTHUB_DEVICE_CLIENT_LL_HANDLE, IoTHubDeviceClient_LL_CreateEx, IOTHUB_CLIENT_AUTHENTICATION*, clientAuthentication, IOTHUB_CLIENT_OPTIONS*, clientOptions, int, numOptions, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol);
 
 #ifdef __cplusplus
 }

@@ -131,5 +131,10 @@ IOTHUB_CLIENT_RESULT IoTHubDeviceClient_LL_UploadMultipleBlocksToBlob(IOTHUB_DEV
 {
     return IoTHubClientCore_LL_UploadMultipleBlocksToBlobEx((IOTHUB_CLIENT_CORE_LL_HANDLE)iotHubClientHandle, destinationFileName, getDataCallbackEx, context);
 }
-
 #endif
+
+IOTHUB_DEVICE_CLIENT_LL_HANDLE IoTHubDeviceClient_LL_CreateEx(IOTHUB_CLIENT_AUTHENTICATION* clientAuthentication, IOTHUB_CLIENT_OPTIONS* clientOptions, int numOptions, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol)
+{
+    return IoTHubClientCore_LL_CreateEx(clientAuthentication, clientOptions, numOptions, protocol);
+}
+

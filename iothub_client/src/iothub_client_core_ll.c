@@ -2980,5 +2980,82 @@ IOTHUB_CLIENT_RESULT IoTHubClientCore_LL_GenericMethodInvoke(IOTHUB_CLIENT_CORE_
 }
 #endif
 
-/*end*/
+static IOTHUB_CLIENT_CORE_LL_HANDLE CreateHandleFromAuth(IOTHUB_CLIENT_AUTHENTICATION* clientAuthentication, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol)
+{
+    IOTHUB_CLIENT_CORE_LL_HANDLE result;
+
+    switch (clientAuthentication->authenticationType)
+    {
+        case IOTHUB_CLIENT_AUTH_TYPE_CONNECTION_STRING:
+        {
+            IOTHUB_CLIENT_AUTH_CONNECTION_STRING* authConnectionString = &clientAuthentication->auth.connectionString;
+            if (authConnectionString->version != IOTHUB_CLIENT_AUTH_CONNECTION_STRING_VERSION_1)
+            {
+                result = NULL;
+            }
+            else
+            {
+                result = IoTHubClientCore_LL_CreateFromConnectionString(authConnectionString->connectionString, protocol);
+            }
+        }
+        break;
+
+        default:
+        {
+            result = NULL;
+        }
+        break;
+    }
+
+    return result;
+}
+
+static int SetClientOption(IOTHUB_CLIENT_CORE_LL_HANDLE iotHubClientHandle, IOTHUB_CLIENT_OPTIONS* clientOption)
+{
+    int result;
+
+    switch (clientOption->optionType)
+    {
+        case IOTHUB_CLIENT_OPTIONS_TYPE_LOGGING_ENABLED:
+        {
+            result = IoTHubClientCore_LL_SetOption(iotHubClientHandle, OPTION_LOG_TRACE, &clientOption->option.loggingEnabled);
+        }
+        break;
+
+        default:
+        {
+            result = __FAILURE__;
+            break;
+        }
+    }
+
+    return result;
+}
+
+IOTHUB_CLIENT_CORE_LL_HANDLE IoTHubClientCore_LL_CreateEx(IOTHUB_CLIENT_AUTHENTICATION* clientAuthentication, IOTHUB_CLIENT_OPTIONS* clientOptions, int numOptions, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol)
+{
+    IOTHUB_CLIENT_CORE_LL_HANDLE result;
+
+    if ((clientAuthentication == NULL) || (protocol == NULL))
+    {
+        result = NULL;
+    }
+    else
+    {
+        if ((result = CreateHandleFromAuth(clientAuthentication, protocol)) == NULL)
+        {
+            ;// error
+        }
+        else
+        {
+            for (int i = 0; i < numOptions; i++)
+            {
+                (void)SetClientOption(result, &clientOptions[i]);
+            }
+        }
+    }
+
+    return result;
+}
+
 

@@ -29,6 +29,8 @@ typedef struct IOTHUB_CLIENT_CORE_LL_HANDLE_DATA_TAG* IOTHUB_CLIENT_CORE_LL_HAND
 #include "azure_c_shared_utility/umock_c_prod.h"
 #include "iothub_transport_ll.h"
 #include "iothub_client_core_common.h"
+#include "iothub_client_create.h"
+#include "iothub_client_options_ex.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -67,6 +69,9 @@ extern "C"
 #ifdef USE_EDGE_MODULES
     MOCKABLE_FUNCTION(, IOTHUB_CLIENT_CORE_LL_HANDLE, IoTHubClientCore_LL_CreateFromEnvironment, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol);
 #endif
+
+    MOCKABLE_FUNCTION(, IOTHUB_CLIENT_CORE_LL_HANDLE, IoTHubClientCore_LL_CreateEx, IOTHUB_CLIENT_AUTHENTICATION*, clientAuthentication, IOTHUB_CLIENT_OPTIONS*, clientOptions, int, numOptions, IOTHUB_CLIENT_TRANSPORT_PROVIDER, protocol);
+
 #ifdef __cplusplus
 }
 #endif
