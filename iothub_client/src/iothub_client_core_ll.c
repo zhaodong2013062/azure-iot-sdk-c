@@ -3058,4 +3058,15 @@ IOTHUB_CLIENT_CORE_LL_HANDLE IoTHubClientCore_LL_CreateEx(IOTHUB_CLIENT_AUTHENTI
     return result;
 }
 
+// Ultimately will be published out
+IOTHUB_CLIENT_RESULT IoTHubClientCore_LL_SetOptionEx(IOTHUB_CLIENT_OPTIONS* clientOptions, int numOptions)
+{
+    for (int i = 0; i < numOptions; i++)
+    {
+        (void)SetClientOption(result, &clientOptions[i]);
+    }
+
+    return IOTHUB_CLIENT_OK;
+}
+
 
