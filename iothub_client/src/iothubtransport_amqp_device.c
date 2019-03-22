@@ -1442,6 +1442,20 @@ int device_set_option(AMQP_DEVICE_HANDLE handle, const char* name, void* value)
                 result = RESULT_OK;
             }
         }
+        else if (strcmp(DEVICE_OPTION_BATCHING, name) == 0)
+        {
+            // Codes_SRS_DEVICE_09_086: [If `name` refers to messenger module, it shall be passed along with `value` to telemetry_messenger_set_option]
+            if (telemetry_messenger_set_option(instance->messenger_handle, TELEMETRY_MESSENGER_OPTION_BATCHING, value) != RESULT_OK)
+            {
+                // Codes_SRS_DEVICE_09_087: [If telemetry_messenger_set_option fails, device_set_option shall return a non-zero result]
+                LogError("failed setting option for device '%s' (failed setting messenger option '%s')", instance->config->device_id, name);
+                result = __FAILURE__;
+            }
+            else
+            {
+                result = RESULT_OK;
+            }
+        }
         else if (strcmp(DEVICE_OPTION_SAVED_AUTH_OPTIONS, name) == 0)
         {
             // Codes_SRS_DEVICE_09_088: [If `name` is DEVICE_OPTION_SAVED_AUTH_OPTIONS but CBS authentication is not being used, device_set_option shall return a non-zero result]

@@ -38,6 +38,8 @@
 #define UNIQUE_ID_BUFFER_SIZE                           37
 #define STRING_NULL_TERMINATOR                          '\0'
 
+static const bool DEFAULT_BATCHING_ENABLED = true;
+
 #define AMQP_BATCHING_FORMAT_CODE 0x80013700
 
 typedef struct TELEMETRY_MESSENGER_INSTANCE_TAG
@@ -70,10 +72,10 @@ typedef struct TELEMETRY_MESSENGER_INSTANCE_TAG
     size_t event_send_retry_limit;
     size_t event_send_error_count;
     size_t event_send_timeout_secs;
+    bool batching_enabled;
+
     time_t last_message_sender_state_change_time;
     time_t last_message_receiver_state_change_time;
-
-    bool batchingEnabled;
 } TELEMETRY_MESSENGER_INSTANCE;
 
 // MESSENGER_SEND_EVENT_CALLER_INFORMATION corresponds to a message sent from the API, including
@@ -1357,9 +1359,7 @@ static int send_pending_events(TELEMETRY_MESSENGER_INSTANCE* instance)
 {
     int result;
 
-    instance->batchingEnabled = false;
-
-    if (instance->batchingEnabled == true)
+    if (instance->batching_enabled == true)
     {
         result = send_pending_events_batched(instance);
     }
@@ -1457,6 +1457,7 @@ static void* telemetry_messenger_clone_option(const char* name, const void* valu
     else
     {
         if (strcmp(TELEMETRY_MESSENGER_OPTION_EVENT_SEND_TIMEOUT_SECS, name) == 0 ||
+            strcmp(TELEMETRY_MESSENGER_OPTION_BATCHING, name) == 0 ||
             strcmp(TELEMETRY_MESSENGER_OPTION_SAVED_OPTIONS, name) == 0)
         {
             result = (void*)value;
@@ -2076,7 +2077,7 @@ TELEMETRY_MESSENGER_HANDLE telemetry_messenger_create(const TELEMETRY_MESSENGER_
             instance->event_send_timeout_secs = DEFAULT_EVENT_SEND_TIMEOUT_SECS;
             instance->last_message_sender_state_change_time = INDEFINITE_TIME;
             instance->last_message_receiver_state_change_time = INDEFINITE_TIME;
-            instance->batchingEnabled = true;
+            instance->batching_enabled = DEFAULT_BATCHING_ENABLED;
 
             // Codes_SRS_IOTHUBTRANSPORT_AMQP_MESSENGER_09_008: [telemetry_messenger_create() shall save a copy of `messenger_config->device_id` into `instance->device_id`]
             if ((instance->device_id = STRING_construct(messenger_config->device_id)) == NULL)
@@ -2159,6 +2160,11 @@ int telemetry_messenger_set_option(TELEMETRY_MESSENGER_HANDLE messenger_handle, 
             instance->event_send_timeout_secs = *((size_t*)value);
             result = RESULT_OK;
         }
+        else if (strcmp(TELEMETRY_MESSENGER_OPTION_BATCHING, name) == 0)
+        {
+            instance->batching_enabled = *((bool*)value);
+            result = RESULT_OK;
+        }
         // Codes_SRS_IOTHUBTRANSPORT_AMQP_MESSENGER_09_169: [If name matches TELEMETRY_MESSENGER_OPTION_SAVED_OPTIONS, `value` shall be applied using OptionHandler_FeedOptions]
         else if (strcmp(TELEMETRY_MESSENGER_OPTION_SAVED_OPTIONS, name) == 0)
         {
@@ -2217,6 +2223,11 @@ OPTIONHANDLER_HANDLE telemetry_messenger_retrieve_options(TELEMETRY_MESSENGER_HA
                 LogError("Failed to retrieve options from messenger instance (OptionHandler_Create failed for option '%s')", TELEMETRY_MESSENGER_OPTION_EVENT_SEND_TIMEOUT_SECS);
                 result = NULL;
             }
+            else if (OptionHandler_AddOption(options, TELEMETRY_MESSENGER_OPTION_BATCHING, (void*)&instance->batching_enabled) != OPTIONHANDLER_OK)
+            {
+                LogError("Failed to retrieve options from messenger instance (OptionHandler_Create failed for option '%s')", TELEMETRY_MESSENGER_OPTION_BATCHING);
+                result = NULL;
+            }
             else
             {
                 // Codes_SRS_IOTHUBTRANSPORT_AMQP_MESSENGER_09_179: [If no failures occur, telemetry_messenger_retrieve_options shall return the OPTIONHANDLER_HANDLE instance]
@@ -2225,7 +2236,7 @@ OPTIONHANDLER_HANDLE telemetry_messenger_retrieve_options(TELEMETRY_MESSENGER_HA
 
             if (result == NULL)
             {
-                // Codes_SRS_IOTHUBTRANSPORT_AMQP_MESSENGER_09_178: [If telemetry_messenger_retrieve_options fails, any allocated memory shall be freed]
+               // Codes_SRS_IOTHUBTRANSPORT_AMQP_MESSENGER_09_178: [If telemetry_messenger_retrieve_options fails, any allocated memory shall be freed]
                 OptionHandler_Destroy(options);
             }
         }

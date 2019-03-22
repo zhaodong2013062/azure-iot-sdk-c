@@ -23,6 +23,7 @@ static const char* DEVICE_OPTION_EVENT_SEND_TIMEOUT_SECS = "event_send_timeout_s
 static const char* DEVICE_OPTION_CBS_REQUEST_TIMEOUT_SECS = "cbs_request_timeout_secs";
 static const char* DEVICE_OPTION_SAS_TOKEN_REFRESH_TIME_SECS = "sas_token_refresh_time_secs";
 static const char* DEVICE_OPTION_SAS_TOKEN_LIFETIME_SECS = "sas_token_lifetime_secs";
+static const char* DEVICE_OPTION_BATCHING = "Batching";
 
 #define DEVICE_STATE_VALUES \
     DEVICE_STATE_STOPPED, \

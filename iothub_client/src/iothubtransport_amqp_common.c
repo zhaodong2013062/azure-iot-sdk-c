@@ -52,6 +52,9 @@
 #define DEFAULT_MAX_RETRY_TIME_IN_SECS            0
 #define MAX_SERVICE_KEEP_ALIVE_RATIO              0.9
 
+static const bool DEFAULT_BATCHING_ENABLED = true;
+
+
 // ---------- Data Definitions ---------- //
 
 typedef enum AMQP_TRANSPORT_AUTHENTICATION_MODE_TAG
@@ -117,7 +120,7 @@ typedef struct AMQP_TRANSPORT_INSTANCE_TAG
 
     size_t option_cbs_request_timeout_secs;                             // Device-specific option.
     size_t option_send_event_timeout_secs;                              // Device-specific option.
-
+    bool   option_batching;                                             // Device-specific option.
                                                                         // Auth module used to generating handle authorization
     IOTHUB_AUTHORIZATION_HANDLE authorization_module;                   // with either SAS Token, x509 Certs, and Device SAS Token
 
@@ -1217,6 +1220,14 @@ static int replicate_device_options_to(AMQP_TRANSPORT_DEVICE_INSTANCE* dev_insta
         LogError("Failed to apply option DEVICE_OPTION_EVENT_SEND_TIMEOUT_SECS to device '%s' (device_set_option failed)", STRING_c_str(dev_instance->device_id));
         result = __FAILURE__;
     }
+    else if (device_set_option(
+        dev_instance->device_handle,
+        DEVICE_OPTION_BATCHING,
+        &dev_instance->transport_instance->option_batching) != RESULT_OK)
+    {
+        LogError("Failed to apply option DEVICE_OPTION_BATCHING to device '%s' (device_set_option failed)", STRING_c_str(dev_instance->device_id));
+        result = __FAILURE__;
+    }
     else if (auth_mode == DEVICE_AUTH_MODE_CBS)
     {
         if (device_set_option(
@@ -1253,6 +1264,10 @@ static const char* get_device_option_name_from(const char* iothubclient_option_n
     else if (strcmp(OPTION_EVENT_SEND_TIMEOUT_SECS, iothubclient_option_name) == 0)
     {
         device_option_name = DEVICE_OPTION_EVENT_SEND_TIMEOUT_SECS;
+    }
+    else if (strcmp(OPTION_BATCHING, iothubclient_option_name) == 0)
+    {
+        device_option_name = DEVICE_OPTION_BATCHING;
     }
     else
     {
@@ -1448,6 +1463,7 @@ TRANSPORT_LL_HANDLE IoTHubTransport_AMQP_Common_Create(const IOTHUBTRANSPORT_CON
                 instance->is_trace_on = false;
                 instance->option_cbs_request_timeout_secs = DEFAULT_CBS_REQUEST_TIMEOUT_SECS;
                 instance->option_send_event_timeout_secs = DEFAULT_EVENT_SEND_TIMEOUT_SECS;
+                instance->option_batching = DEFAULT_BATCHING_ENABLED;
                 // Codes_SRS_IOTHUBTRANSPORT_AMQP_COMMON_12_002: [The connection idle timeout parameter default value shall be set to 240000 milliseconds using connection_set_idle_timeout()]
                 instance->svc2cl_keep_alive_timeout_secs = DEFAULT_SERVICE_KEEP_ALIVE_FREQ_SECS;
                 // Codes_SRS_IOTHUBTRANSPORT_AMQP_COMMON_99_001: [The remote idle timeout ratio shall be set to 0.5 using connection_set_remote_idle_timeout_empty_frame_send_ratio()]
@@ -1988,6 +2004,11 @@ IOTHUB_CLIENT_RESULT IoTHubTransport_AMQP_Common_SetOption(TRANSPORT_LL_HANDLE h
         {
             is_device_specific_option = true;
             transport_instance->option_send_event_timeout_secs = *(size_t*)value;
+        }
+        else if (strcmp(OPTION_BATCHING, option) == 0)
+        {
+            is_device_specific_option = true;
+            transport_instance->option_batching = *(bool*)value;
         }
         else
         {
