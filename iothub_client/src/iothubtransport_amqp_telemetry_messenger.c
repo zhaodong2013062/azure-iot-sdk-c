@@ -72,6 +72,8 @@ typedef struct TELEMETRY_MESSENGER_INSTANCE_TAG
     size_t event_send_timeout_secs;
     time_t last_message_sender_state_change_time;
     time_t last_message_receiver_state_change_time;
+
+    bool batchingEnabled;
 } TELEMETRY_MESSENGER_INSTANCE;
 
 // MESSENGER_SEND_EVENT_CALLER_INFORMATION corresponds to a message sent from the API, including
@@ -1176,7 +1178,7 @@ static int get_max_message_size_for_batching(TELEMETRY_MESSENGER_INSTANCE* insta
     return result;
 }
 
-static int send_pending_events(TELEMETRY_MESSENGER_INSTANCE* instance)
+static int send_pending_events_batched(TELEMETRY_MESSENGER_INSTANCE* instance)
 {
     int result = RESULT_OK;
 
@@ -1307,6 +1309,68 @@ static int send_pending_events(TELEMETRY_MESSENGER_INSTANCE* instance)
 
     return result;
 }
+
+static int send_pending_events_non_batched(TELEMETRY_MESSENGER_INSTANCE* instance)
+{
+    int result = RESULT_OK;
+
+    MESSENGER_SEND_EVENT_CALLER_INFORMATION* caller_info;
+
+    while ((caller_info = get_next_caller_message_to_send(instance)) != NULL)
+    {
+        MESSENGER_SEND_EVENT_TASK* task = create_task(instance);
+        MESSAGE_HANDLE message = NULL;
+
+        if (task == NULL)
+        {
+            LogError("create_task() failed");
+            result = __FAILURE__;
+        }
+        else if ((message = message_create_uamqp_message_from_iothub_message(caller_info->message->messageHandle)) == NULL)
+        {
+            LogError("message_create_uamqp_message_from_iothub_message() failed");
+            result = __FAILURE__;
+        }
+        else if (singlylinkedlist_add(task->callback_list, (void*)caller_info) == NULL)
+        {
+            LogError("singlylinkedlist_add() failed");
+            result = __FAILURE__;
+        }
+        else if (messagesender_send_async(instance->message_sender, message, internal_on_event_send_complete_callback, task, 0) == NULL)
+        {
+            LogError("messagesender_send failed");
+            result = __FAILURE__;
+        }
+
+        task->send_time = get_time(NULL);
+
+        if (message != NULL)
+        {
+            message_destroy(message);
+        }
+    }
+
+    return result;
+}
+
+static int send_pending_events(TELEMETRY_MESSENGER_INSTANCE* instance)
+{
+    int result;
+
+    instance->batchingEnabled = false;
+
+    if (instance->batchingEnabled == true)
+    {
+        result = send_pending_events_batched(instance);
+    }
+    else
+    {
+        result = send_pending_events_non_batched(instance);
+    }
+
+    return result;
+}
+
 
 // @brief
 //     Goes through each task in in_progress_list and checks if the events timed out to be sent.
@@ -2012,6 +2076,7 @@ TELEMETRY_MESSENGER_HANDLE telemetry_messenger_create(const TELEMETRY_MESSENGER_
             instance->event_send_timeout_secs = DEFAULT_EVENT_SEND_TIMEOUT_SECS;
             instance->last_message_sender_state_change_time = INDEFINITE_TIME;
             instance->last_message_receiver_state_change_time = INDEFINITE_TIME;
+            instance->batchingEnabled = true;
 
             // Codes_SRS_IOTHUBTRANSPORT_AMQP_MESSENGER_09_008: [telemetry_messenger_create() shall save a copy of `messenger_config->device_id` into `instance->device_id`]
             if ((instance->device_id = STRING_construct(messenger_config->device_id)) == NULL)
