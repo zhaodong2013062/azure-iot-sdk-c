@@ -8,6 +8,8 @@
 #include "azure_c_shared_utility/buffer_.h"
 
 #include "iothub_message.h"
+#include "internal/iothub_message_internal.h"
+
 
 DEFINE_ENUM_STRINGS(IOTHUB_MESSAGE_RESULT, IOTHUB_MESSAGE_RESULT_VALUES);
 DEFINE_ENUM_STRINGS(IOTHUBMESSAGE_CONTENT_TYPE, IOTHUBMESSAGE_CONTENT_TYPE_VALUES);
@@ -23,7 +25,8 @@ typedef struct IOTHUB_MESSAGE_HANDLE_DATA_TAG
         BUFFER_HANDLE byteArray;
         STRING_HANDLE string;
     } value;
-    MAP_HANDLE properties;
+    MAP_HANDLE applicationProperties;
+    MAP_HANDLE internalProperties;
     char* messageId;
     char* correlationId;
     char* userDefinedContentType;
@@ -88,7 +91,8 @@ static void DestroyMessageData(IOTHUB_MESSAGE_HANDLE_DATA* handleData)
         STRING_delete(handleData->value.string);
     }
 
-    Map_Destroy(handleData->properties);
+    Map_Destroy(handleData->applicationProperties);
+    Map_Destroy(handleData->internalProperties);
     free(handleData->messageId);
     handleData->messageId = NULL;
     free(handleData->correlationId);
@@ -196,13 +200,20 @@ IOTHUB_MESSAGE_HANDLE IoTHubMessage_CreateFromByteArray(const unsigned char* byt
                     result = NULL;
                 }
                 /*Codes_SRS_IOTHUBMESSAGE_02_023: [IoTHubMessage_CreateFromByteArray shall call Map_Create to create the message properties.] */
-                else if ((result->properties = Map_Create(ValidateAsciiCharactersFilter)) == NULL)
+                else if ((result->applicationProperties = Map_Create(ValidateAsciiCharactersFilter)) == NULL)
                 {
-                    LogError("Map_Create for properties failed");
+                    LogError("Map_Create for applicationProperties failed");
                     /*Codes_SRS_IOTHUBMESSAGE_02_024: [If there are any errors then IoTHubMessage_CreateFromByteArray shall return NULL.] */
                     DestroyMessageData(result);
                     result = NULL;
                 }
+                else if ((result->internalProperties = Map_Create(ValidateAsciiCharactersFilter)) == NULL)
+                {
+                    LogError("Map_Create for internalProperties failed");
+                    /*Codes_SRS_IOTHUBMESSAGE_02_024: [If there are any errors then IoTHubMessage_CreateFromByteArray shall return NULL.] */
+                    DestroyMessageData(result);
+                    result = NULL;
+                }                
                 /*Codes_SRS_IOTHUBMESSAGE_02_025: [Otherwise, IoTHubMessage_CreateFromByteArray shall return a non-NULL handle.] */
             }
         }
@@ -242,9 +253,16 @@ IOTHUB_MESSAGE_HANDLE IoTHubMessage_CreateFromString(const char* source)
                 result = NULL;
             }
             /*Codes_SRS_IOTHUBMESSAGE_02_028: [IoTHubMessage_CreateFromString shall call Map_Create to create the message properties.] */
-            else if ((result->properties = Map_Create(ValidateAsciiCharactersFilter)) == NULL)
+            else if ((result->applicationProperties = Map_Create(ValidateAsciiCharactersFilter)) == NULL)
             {
-                LogError("Map_Create for properties failed");
+                LogError("Map_Create for applicationProperties failed");
+                /*Codes_SRS_IOTHUBMESSAGE_02_029: [If there are any encountered in the execution of IoTHubMessage_CreateFromString then IoTHubMessage_CreateFromString shall return NULL.] */
+                DestroyMessageData(result);
+                result = NULL;
+            }
+            else if ((result->internalProperties = Map_Create(ValidateAsciiCharactersFilter)) == NULL)
+            {
+                LogError("Map_Create for internalProperties failed");
                 /*Codes_SRS_IOTHUBMESSAGE_02_029: [If there are any encountered in the execution of IoTHubMessage_CreateFromString then IoTHubMessage_CreateFromString shall return NULL.] */
                 DestroyMessageData(result);
                 result = NULL;
@@ -335,6 +353,21 @@ IOTHUB_MESSAGE_HANDLE IoTHubMessage_Clone(IOTHUB_MESSAGE_HANDLE iotHubMessageHan
                 DestroyMessageData(result);
                 result = NULL;
             }
+            /*Codes_SRS_IOTHUBMESSAGE_02_005: [IoTHubMessage_Clone shall clone the properties map by using Map_Clone.] */
+            else if ((result->applicationProperties = Map_Clone(source->applicationProperties)) == NULL)
+            {
+                /*Codes_SRS_IOTHUBMESSAGE_03_004: [IoTHubMessage_Clone shall return NULL if it fails for any reason.]*/
+                LogError("unable to Map_Clone");
+                DestroyMessageData(result);
+                result = NULL;
+            }
+            else if ((result->internalProperties = Map_Clone(source->internalProperties)) == NULL)
+            {
+                /*Codes_SRS_IOTHUBMESSAGE_03_004: [IoTHubMessage_Clone shall return NULL if it fails for any reason.]*/
+                LogError("unable to Map_Clone");
+                DestroyMessageData(result);
+                result = NULL;
+            }
             else if (source->contentType == IOTHUBMESSAGE_BYTEARRAY)
             {
                 /*Codes_SRS_IOTHUBMESSAGE_02_006: [IoTHubMessage_Clone shall clone to content by a call to BUFFER_clone] */
@@ -342,14 +375,6 @@ IOTHUB_MESSAGE_HANDLE IoTHubMessage_Clone(IOTHUB_MESSAGE_HANDLE iotHubMessageHan
                 {
                     /*Codes_SRS_IOTHUBMESSAGE_03_004: [IoTHubMessage_Clone shall return NULL if it fails for any reason.]*/
                     LogError("unable to BUFFER_clone");
-                    DestroyMessageData(result);
-                    result = NULL;
-                }
-                /*Codes_SRS_IOTHUBMESSAGE_02_005: [IoTHubMessage_Clone shall clone the properties map by using Map_Clone.] */
-                else if ((result->properties = Map_Clone(source->properties)) == NULL)
-                {
-                    /*Codes_SRS_IOTHUBMESSAGE_03_004: [IoTHubMessage_Clone shall return NULL if it fails for any reason.]*/
-                    LogError("unable to Map_Clone");
                     DestroyMessageData(result);
                     result = NULL;
                 }
@@ -362,14 +387,6 @@ IOTHUB_MESSAGE_HANDLE IoTHubMessage_Clone(IOTHUB_MESSAGE_HANDLE iotHubMessageHan
                 {
                     /*Codes_SRS_IOTHUBMESSAGE_03_004: [IoTHubMessage_Clone shall return NULL if it fails for any reason.]*/
                     LogError("failed to STRING_clone");
-                    DestroyMessageData(result);
-                    result = NULL;
-                }
-                /*Codes_SRS_IOTHUBMESSAGE_02_005: [IoTHubMessage_Clone shall clone the properties map by using Map_Clone.] */
-                else if ((result->properties = Map_Clone(source->properties)) == NULL)
-                {
-                    /*Codes_SRS_IOTHUBMESSAGE_03_004: [IoTHubMessage_Clone shall return NULL if it fails for any reason.]*/
-                    LogError("unable to Map_Clone");
                     DestroyMessageData(result);
                     result = NULL;
                 }
@@ -468,7 +485,7 @@ MAP_HANDLE IoTHubMessage_Properties(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle)
     {
         /*Codes_SRS_IOTHUBMESSAGE_02_002: [Otherwise, for any non-NULL iotHubMessageHandle it shall return a non-NULL MAP_HANDLE.]*/
         IOTHUB_MESSAGE_HANDLE_DATA* handleData = (IOTHUB_MESSAGE_HANDLE_DATA*)iotHubMessageHandle;
-        result = handleData->properties;
+        result = handleData->applicationProperties;
     }
     return result;
 }
@@ -483,7 +500,7 @@ IOTHUB_MESSAGE_RESULT IoTHubMessage_SetProperty(IOTHUB_MESSAGE_HANDLE msg_handle
     }
     else
     {
-        if (Map_AddOrUpdate(msg_handle->properties, key, value) != MAP_OK)
+        if (Map_AddOrUpdate(msg_handle->applicationProperties, key, value) != MAP_OK)
         {
             LogError("Failure adding property to internal map");
             result = IOTHUB_MESSAGE_ERROR;
@@ -508,9 +525,9 @@ const char* IoTHubMessage_GetProperty(IOTHUB_MESSAGE_HANDLE msg_handle, const ch
     {
         bool key_exists = false;
         // The return value is not neccessary, just check the key_exist variable
-        if ((Map_ContainsKey(msg_handle->properties, key, &key_exists) == MAP_OK) && key_exists)
+        if ((Map_ContainsKey(msg_handle->applicationProperties, key, &key_exists) == MAP_OK) && key_exists)
         {
-            result = Map_GetValueFromKey(msg_handle->properties, key);
+            result = Map_GetValueFromKey(msg_handle->applicationProperties, key);
         }
         else
         {
@@ -1016,6 +1033,69 @@ IOTHUB_MESSAGE_RESULT IoTHubMessage_SetConnectionDeviceId(IOTHUB_MESSAGE_HANDLE 
     return result;
 }
 
+MAP_HANDLE IoTHubMessage_InternalProperties(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle)
+{
+    MAP_HANDLE result;
+    if (iotHubMessageHandle == NULL)
+    {
+        LogError("invalid arg (NULL) passed to IoTHubMessage_Properties");
+        result = NULL;
+    }
+    else
+    {
+        IOTHUB_MESSAGE_HANDLE_DATA* handleData = (IOTHUB_MESSAGE_HANDLE_DATA*)iotHubMessageHandle;
+        result = handleData->internalProperties;
+    }
+    return result;
+}
+
+IOTHUB_MESSAGE_RESULT IoTHubMessage_SetInternalProperty(IOTHUB_MESSAGE_HANDLE msg_handle, const char* key, const char* value)
+{
+    IOTHUB_MESSAGE_RESULT result;
+    if (msg_handle == NULL || key == NULL || value == NULL)
+    {
+        LogError("invalid parameter (NULL) to IoTHubMessage_SetProperty iotHubMessageHandle=%p, key=%p, value=%p", msg_handle, key, value);
+        result = IOTHUB_MESSAGE_INVALID_ARG;
+    }
+    else
+    {
+        if (Map_AddOrUpdate(msg_handle->internalProperties, key, value) != MAP_OK)
+        {
+            LogError("Failure adding property to internal map");
+            result = IOTHUB_MESSAGE_ERROR;
+        }
+        else
+        {
+            result = IOTHUB_MESSAGE_OK;
+        }
+    }
+    return result;
+}
+
+const char* IoTHubMessage_GetInternalProperty(IOTHUB_MESSAGE_HANDLE msg_handle, const char* key)
+{
+    const char* result;
+    if (msg_handle == NULL || key == NULL)
+    {
+        LogError("invalid parameter (NULL) to IoTHubMessage_GetProperty iotHubMessageHandle=%p, key=%p", msg_handle, key);
+        result = NULL;
+    }
+    else
+    {
+        bool key_exists = false;
+        // The return value is not neccessary, just check the key_exist variable
+        if ((Map_ContainsKey(msg_handle->internalProperties, key, &key_exists) == MAP_OK) && key_exists)
+        {
+            result = Map_GetValueFromKey(msg_handle->internalProperties, key);
+        }
+        else
+        {
+            result = NULL;
+        }
+    }
+    return result;
+}
+
 void IoTHubMessage_Destroy(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle)
 {
     /*Codes_SRS_IOTHUBMESSAGE_01_004: [If iotHubMessageHandle is NULL, IoTHubMessage_Destroy shall do nothing.] */
@@ -1025,3 +1105,4 @@ void IoTHubMessage_Destroy(IOTHUB_MESSAGE_HANDLE iotHubMessageHandle)
         DestroyMessageData((IOTHUB_MESSAGE_HANDLE_DATA* )iotHubMessageHandle);
     }
 }
+

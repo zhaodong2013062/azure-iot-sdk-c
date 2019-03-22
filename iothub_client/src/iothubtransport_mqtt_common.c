@@ -25,6 +25,8 @@
 #include "internal/iothub_transport_ll_private.h"
 #include "internal/iothubtransport_mqtt_common.h"
 #include "internal/iothubtransport.h"
+#include "internal/iothub_message_internal.h"
+
 
 #include "azure_umqtt_c/mqtt_client.h"
 
@@ -55,6 +57,12 @@
 #define MAX_DISCONNECT_VALUE                50
 
 #define ON_DEMAND_GET_TWIN_REQUEST_TIMEOUT_SECS    60
+
+typedef enum PROPERTY_TYPE_TAG
+{
+    PROPERTY_TYPE_APPLICATION,
+    PROPERTY_TYPE_INTERNAL
+} PROPERTY_TYPE;
 
 static const char TOPIC_DEVICE_TWIN_PREFIX[] = "$iothub/twin";
 static const char TOPIC_DEVICE_METHOD_PREFIX[] = "$iothub/methods";
@@ -589,14 +597,24 @@ static void sendMsgComplete(IOTHUB_MESSAGE_LIST* iothubMsgList, PMQTTTRANSPORT_H
     transport_data->transport_callbacks.send_complete_cb(&messageCompleted, confirmResult, transport_data->transport_ctx);
 }
 
-static int addUserPropertiesTouMqttMessage(IOTHUB_MESSAGE_HANDLE iothub_message_handle, STRING_HANDLE topic_string, size_t* index_ptr, bool urlencode)
+static int addPropertiesToMqttMessage(PROPERTY_TYPE propertyType, IOTHUB_MESSAGE_HANDLE iothub_message_handle, STRING_HANDLE topic_string, size_t* index_ptr, bool urlencode)
 {
     int result = 0;
     const char* const* propertyKeys;
     const char* const* propertyValues;
     size_t propertyCount;
     size_t index = *index_ptr;
-    MAP_HANDLE properties_map = IoTHubMessage_Properties(iothub_message_handle);
+    MAP_HANDLE properties_map;
+
+    if (propertyType == PROPERTY_TYPE_APPLICATION)
+    {
+        properties_map = IoTHubMessage_Properties(iothub_message_handle);
+    }
+    else
+    {
+        properties_map = IoTHubMessage_InternalProperties(iothub_message_handle);
+    }
+
     if (properties_map != NULL)
     {
         if (Map_GetInternals(properties_map, &propertyKeys, &propertyValues, &propertyCount) != MAP_OK)
@@ -796,9 +814,15 @@ static STRING_HANDLE addPropertiesTouMqttMessage(IOTHUB_MESSAGE_HANDLE iothub_me
     {
         LogError("Failed to create event topic string handle");
     }
-    else if (addUserPropertiesTouMqttMessage(iothub_message_handle, result, &index, urlencode) != 0)
+    else if (addPropertiesToMqttMessage(PROPERTY_TYPE_APPLICATION, iothub_message_handle, result, &index, urlencode) != 0)
     {
-        LogError("Failed adding Properties to uMQTT Message");
+        LogError("Failed adding application properties to uMQTT Message");
+        STRING_delete(result);
+        result = NULL;
+    }
+    else if (addPropertiesToMqttMessage(PROPERTY_TYPE_INTERNAL, iothub_message_handle, result, &index, urlencode) != 0)
+    {
+        LogError("Failed adding internal properties to uMQTT Message");
         STRING_delete(result);
         result = NULL;
     }
