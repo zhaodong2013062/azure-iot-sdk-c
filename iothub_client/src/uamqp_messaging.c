@@ -401,7 +401,7 @@ static int create_application_properties_to_encode(MESSAGE_HANDLE message_batch_
     return result;
 }
 
-static int add_map_item(AMQP_VALUE map, const char* name, const char* value)
+static int add_map_item_string(AMQP_VALUE map, const char* name, const char* value)
 {
     int result;
     AMQP_VALUE amqp_value_name;
@@ -446,6 +446,48 @@ static int add_map_item(AMQP_VALUE map, const char* name, const char* value)
     return result;
 }
 
+static int add_map_item_binary(AMQP_VALUE map, const char* name, const char* value)
+{
+    int result;
+    AMQP_VALUE amqp_value_name;
+
+    if ((amqp_value_name = amqpvalue_create_symbol(name)) == NULL)
+    {
+        LogError("Failed creating AMQP_VALUE for name");
+        result = __FAILURE__;
+    }
+    else
+    {
+        AMQP_VALUE amqp_value_value = NULL;
+
+        if (value == NULL && (amqp_value_value = amqpvalue_create_null()) == NULL)
+        {
+            LogError("Failed creating AMQP_VALUE for NULL value");
+            result = __FAILURE__;
+        }
+        else if (value != NULL && (amqp_value_value = amqpvalue_create_binary(value)) == NULL)
+        {
+            LogError("Failed creating AMQP_VALUE for value");
+            result = __FAILURE__;
+        }
+        else
+        {
+            if (amqpvalue_set_map_value(map, amqp_value_name, amqp_value_value) != 0)
+            {
+                LogError("Failed adding key/value pair to map");
+                result = __FAILURE__;
+            }
+            else
+            {
+                result = RESULT_OK;
+            }
+
+            amqpvalue_destroy(amqp_value_value);
+        }
+
+        amqpvalue_destroy(amqp_value_name);
+    }
+
 static int create_diagnostic_message_annotations(IOTHUB_MESSAGE_HANDLE messageHandle, AMQP_VALUE* message_annotations_map)
 {
     int result = RESULT_OK;
@@ -474,7 +516,7 @@ static int create_diagnostic_message_annotations(IOTHUB_MESSAGE_HANDLE messageHa
         if (result == RESULT_OK)
         {
             char* diagContextBuffer = NULL;
-            if (add_map_item(*message_annotations_map, AMQP_DIAGNOSTIC_ID_KEY, diagnosticData->diagnosticId) != RESULT_OK)
+            if (add_map_item_string(*message_annotations_map, AMQP_DIAGNOSTIC_ID_KEY, diagnosticData->diagnosticId) != RESULT_OK)
             {
                 LogError("Failed adding diagnostic id");
                 result = __FAILURE__;
@@ -505,7 +547,7 @@ static int create_diagnostic_message_annotations(IOTHUB_MESSAGE_HANDLE messageHa
                     *message_annotations_map = NULL;
                 }
             }
-            else if (add_map_item(*message_annotations_map, AMQP_DIAGNOSTIC_CONTEXT_KEY, diagContextBuffer) != RESULT_OK)
+            else if (add_map_item_string(*message_annotations_map, AMQP_DIAGNOSTIC_CONTEXT_KEY, diagContextBuffer) != RESULT_OK)
             {
                 LogError("Failed adding diagnostic context");
                 result = __FAILURE__;
@@ -545,7 +587,7 @@ static int create_distributed_tracing_message_annotations(IOTHUB_MESSAGE_HANDLE 
 
         if (result == RESULT_OK)
         {
-            if (add_map_item(*message_annotations_map, AMQP_DISTRIBUTED_TRACING_KEY, distributed_tracing) != RESULT_OK)
+            if (add_map_item_binary(*message_annotations_map, AMQP_DISTRIBUTED_TRACING_KEY, distributed_tracing) != RESULT_OK)
             {
                 LogError("Failed adding distributed tracing property");
                 result = __FAILURE__;
