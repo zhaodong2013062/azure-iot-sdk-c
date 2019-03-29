@@ -99,8 +99,10 @@ else()
     option(use_openssl "set use_openssl to ON to use OpenSSL." ON)
 endif()
 
+option(use_bearssl "set use_bearssl to ON to use BearSSL" OFF)
+
 # openssl samples on Windows need to have a trusted cert set
-if ((WIN32 AND "${use_openssl}") OR "${use_wolfssl}")
+if ((WIN32 AND "${use_openssl}") OR "${use_wolfssl}" OR "${use_bearssl}")
     option(use_sample_trusted_cert "Set flag in samples to use SDK's built-in CA as TrustedCerts" ON)
 else()
     option(use_sample_trusted_cert "Set flag in samples to use SDK's built-in CA as TrustedCerts" OFF)
