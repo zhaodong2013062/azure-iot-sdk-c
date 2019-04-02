@@ -449,6 +449,9 @@ static int add_map_item_string(AMQP_VALUE map, const char* name, const char* val
 static int add_map_item_binary(AMQP_VALUE map, const char* name, const char* value)
 {
     int result;
+    amqp_binary binary_value;
+    binary_value.bytes = value;
+    binary_value.length =  strlen(value); 
     AMQP_VALUE amqp_value_name;
 
     if ((amqp_value_name = amqpvalue_create_symbol(name)) == NULL)
@@ -465,7 +468,7 @@ static int add_map_item_binary(AMQP_VALUE map, const char* name, const char* val
             LogError("Failed creating AMQP_VALUE for NULL value");
             result = __FAILURE__;
         }
-        else if (value != NULL && (amqp_value_value = amqpvalue_create_binary(value)) == NULL)
+        else if (value != NULL && (amqp_value_value = amqpvalue_create_binary(binary_value)) == NULL)
         {
             LogError("Failed creating AMQP_VALUE for value");
             result = __FAILURE__;
@@ -487,6 +490,9 @@ static int add_map_item_binary(AMQP_VALUE map, const char* name, const char* val
 
         amqpvalue_destroy(amqp_value_name);
     }
+
+    return result;
+}
 
 static int create_diagnostic_message_annotations(IOTHUB_MESSAGE_HANDLE messageHandle, AMQP_VALUE* message_annotations_map)
 {
