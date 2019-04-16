@@ -480,6 +480,9 @@ if(NOT IN_OPENWRT)
     add_subdirectory(tests)
 endif()
 
+# test for now
+add_subdirectory(min_e2e_tests)
+
 if(${use_installed_dependencies})
 
     if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
