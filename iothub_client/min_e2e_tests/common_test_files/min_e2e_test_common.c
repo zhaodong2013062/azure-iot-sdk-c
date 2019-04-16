@@ -45,23 +45,26 @@ static const char* TEST_BACK_COMPAT_MSG_STRING = "back_compat_message_string";
 static const unsigned char TEST_BACK_COMPAT_MSG_BYTE[] = { 0x3, 0xb, 0xc };
 static size_t TEST_MSG_BYTE_SIZE = 3;
 
-static size_t g_iotHubTestId = 0;
-
 #define MAX_OPERATION_TIMEOUT   2*60
 #define DO_WORK_LOOP_COUNTER    20
 
 typedef struct MIN_E2E_MSG_CTX_TAG
 {
-    bool callback_recv;
-    bool connected;
-    bool is_error;
-    bool twin_callback_recv;
+    size_t msg_cnt;
 } MIN_E2E_MSG_CTX;
 
-typedef struct CMD_CHANNEL_CTX_TAG
+typedef struct CONNECTION_STATUS_CTX_TAG
 {
-    bool twin_callback_recv;
-} CMD_CHANNEL_CTX;
+    bool connected;
+    bool is_error;
+} CONNECTION_STATUS_CTX;
+
+typedef struct C2D_MSG_CTX_TAG
+{
+    bool msg_recvd;
+    bool is_error;
+    const char* msg_id;
+} C2D_MSG_CTX;
 
 typedef struct MIN_E2E_TEST_INFO_TAG
 {
@@ -75,6 +78,9 @@ typedef struct MIN_E2E_TEST_INFO_TAG
     const char* x509_cert;
     const char* x509_key;
 } MIN_E2E_TEST_INFO;
+
+static C2D_MSG_CTX g_c2d_ctx = { 0 };
+static size_t g_iotHubTestId = 0;
 
 static void cleanup_config_object(IOTHUB_CLIENT_CONFIG* client_config)
 {
@@ -109,10 +115,10 @@ static void message_recv_callback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void
 {
     LogInfo("message_recv_callback invoked, result=<%s>, user_ctx=<%p>", MU_ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result), user_ctx);
 
-    MIN_E2E_MSG_CTX* back_compat_info = (MIN_E2E_MSG_CTX*)user_ctx;
-    if (back_compat_info != NULL)
+    MIN_E2E_MSG_CTX* min_e2e_ctx = (MIN_E2E_MSG_CTX*)user_ctx;
+    if (min_e2e_ctx != NULL)
     {
-        back_compat_info->callback_recv = true;
+        min_e2e_ctx->msg_cnt++;
     }
 }
 
@@ -120,17 +126,17 @@ static void connection_status_callback(IOTHUB_CLIENT_CONNECTION_STATUS status, I
 {
     (void)reason;
     LogInfo("connection_status_callback invoked, status=<%s>, user_ctx=<%p>", MU_ENUM_TO_STRING(IOTHUB_CLIENT_CONNECTION_STATUS, status), user_ctx);
-    MIN_E2E_MSG_CTX* min_e2e_info = (MIN_E2E_MSG_CTX*)user_ctx;
-    if (min_e2e_info != NULL)
+    CONNECTION_STATUS_CTX* conn_info = (CONNECTION_STATUS_CTX*)user_ctx;
+    if (conn_info != NULL)
     {
         if (status == IOTHUB_CLIENT_CONNECTION_AUTHENTICATED)
         {
-            min_e2e_info->connected = true;
+            conn_info->connected = true;
         }
         else
         {
-            min_e2e_info->connected = false;
-            min_e2e_info->is_error = true;
+            conn_info->connected = false;
+            conn_info->is_error = true;
             LogError("Authentication failed for sdk");
         }
     }
@@ -140,16 +146,60 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT c2d_msg_callback(IOTHUB_MESSAGE_HANDLE e
 {
     LogInfo("c2d_msg_callback invoked, message=<%p>, user_ctx=<%p>", event_msg, user_ctx);
 
-    // Test the properties from the message
-    const char* test_value;
-    test_value = IoTHubMessage_GetMessageId(event_msg);
-    test_value = IoTHubMessage_GetCorrelationId(event_msg);
-    test_value = IoTHubMessage_GetContentTypeSystemProperty(event_msg);
-    test_value = IoTHubMessage_GetContentEncodingSystemProperty(event_msg);
-    test_value = IoTHubMessage_GetOutputName(event_msg);
-    test_value = IoTHubMessage_GetInputName(event_msg);
-    test_value = IoTHubMessage_GetProperty(event_msg, "property_key");
-
+    if (user_ctx == NULL)
+    {
+        LogError("Invalid NULL user context in c2d msg callback");
+    }
+    else
+    {
+        C2D_MSG_CTX* c2d_msg = (C2D_MSG_CTX*)user_ctx;
+        // Test the properties from the message
+        const char* msg_id = IoTHubMessage_GetCorrelationId(event_msg);
+        if (msg_id != NULL)
+        {
+            if (strcmp(c2d_msg->msg_id, msg_id) == 0)
+            {
+                CONTROL_PACKET_CMDS ctrl_cmd;
+                // The message is for this device
+                IOTHUBMESSAGE_CONTENT_TYPE content_type = IoTHubMessage_GetContentType(event_msg);
+                if (content_type == IOTHUBMESSAGE_STRING)
+                {
+                    const char* message = IoTHubMessage_GetString(event_msg);
+                    if (message == NULL)
+                    {
+                        LogError("Invalid message encountered by c2d_msg_callback");
+                        ctrl_cmd = CTRL_COMMAND_END_FAILURE;
+                    }
+                    else
+                    {
+                        ctrl_cmd = atoi(message);
+                    }
+                }
+                else
+                {
+                    const unsigned char* buffer;
+                    size_t size;
+                    if (IoTHubMessage_GetByteArray(event_msg, &buffer, &size) != IOTHUB_MESSAGE_OK)
+                    {
+                        LogError("Failure Getting byte array on c2d_msg_callback");
+                        ctrl_cmd = CTRL_COMMAND_END_FAILURE;
+                    }
+                    else
+                    {
+                        ctrl_cmd = buffer[0];
+                    }
+                }
+                if (ctrl_cmd == CTRL_COMMAND_END_FAILURE)
+                {
+                    c2d_msg->is_error = true;
+                }
+                else
+                {
+                    c2d_msg->msg_recvd = true;
+                }
+            }
+        }
+    }
     return IOTHUBMESSAGE_ACCEPTED;
 }
 
@@ -328,7 +378,7 @@ static int parse_connection_string(const char* connection_string, IOTHUB_CLIENT_
     return result;
 }
 
-static IOTHUB_DEVICE_CLIENT_LL_HANDLE create_device_client(MIN_E2E_TEST_INFO* min_e2e_info, DEVICE_CREATION_TYPE type, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol, MIN_E2E_MSG_CTX* ctx)
+static IOTHUB_DEVICE_CLIENT_LL_HANDLE create_device_client(MIN_E2E_TEST_INFO* min_e2e_info, DEVICE_CREATION_TYPE type, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol, CONNECTION_STATUS_CTX* ctx)
 {
     IOTHUB_DEVICE_CLIENT_LL_HANDLE result;
 
@@ -391,17 +441,27 @@ static IOTHUB_DEVICE_CLIENT_LL_HANDLE create_device_client(MIN_E2E_TEST_INFO* mi
             break;
         }
     }
-    // Always set the log trace option
     if (result != NULL)
     {
+        // Always set the log trace option
+        bool trace_on = true;
         if (!check_iothub_result(IoTHubDeviceClient_LL_SetConnectionStatusCallback(result, connection_status_callback, ctx)))
         {
             LogError("Failure unknown creation type %d", (int)type);
+            IoTHubDeviceClient_LL_Destroy(result);
+        }
+        else if (!check_iothub_result(IoTHubDeviceClient_LL_SetMessageCallback(result, c2d_msg_callback, &g_c2d_ctx)))
+        {
+            LogError("Failure setting message callback");
+            IoTHubDeviceClient_LL_Destroy(result);
+        }
+        else if (!check_iothub_result(IoTHubDeviceClient_LL_SetOption(result, OPTION_LOG_TRACE, &trace_on)))
+        {
+            LogError("Failure setting log trace option");
+            IoTHubDeviceClient_LL_Destroy(result);
         }
         else
         {
-            bool trace_on = true;
-            IoTHubDeviceClient_LL_SetOption(result, OPTION_LOG_TRACE, &trace_on);
 #ifdef SET_TRUSTED_CERT_IN_SAMPLES
             // Setting the Trusted Certificate.  This is only necessary on system with without
             // built in certificate stores.
@@ -527,7 +587,7 @@ static int send_telemetry_message(IOTHUB_DEVICE_CLIENT_LL_HANDLE device_client, 
     {
         event_msg = IoTHubMessage_CreateFromByteArray(TEST_BACK_COMPAT_MSG_BYTE, TEST_MSG_BYTE_SIZE);
     }
-    else if (msg_type == TEST_MESSAGE_CREATE_STRING)
+    else
     {
         event_msg = IoTHubMessage_CreateFromString(TEST_BACK_COMPAT_MSG_STRING);
     }
@@ -540,46 +600,18 @@ static int send_telemetry_message(IOTHUB_DEVICE_CLIENT_LL_HANDLE device_client, 
     else
     {
         const char* test_value;
-
-        IOTHUBMESSAGE_CONTENT_TYPE content_type = IoTHubMessage_GetContentType(event_msg);
-        if (content_type == IOTHUBMESSAGE_BYTEARRAY)
-        {
-            const unsigned char* buffer;
-            size_t size;
-            if (IoTHubMessage_GetByteArray(event_msg, &buffer, &size) != IOTHUB_MESSAGE_OK)
-            {
-                LogError("Failure Getting byte array from iothub message");
-                result = __LINE__;
-            }
-        }
-        else if (content_type == IOTHUBMESSAGE_STRING)
-        {
-            const char* message = IoTHubMessage_GetString(event_msg);
-            if (message == NULL)
-            {
-                LogError("Failure Getting string from iothub message");
-                result = __LINE__;
-            }
-        }
-
         // Enter properties
         (void)IoTHubMessage_SetMessageId(event_msg, "MSG_ID");
-        test_value = IoTHubMessage_GetMessageId(event_msg);
 
         (void)IoTHubMessage_SetCorrelationId(event_msg, "CORE_ID");
-        test_value = IoTHubMessage_GetCorrelationId(event_msg);
 
         (void)IoTHubMessage_SetContentTypeSystemProperty(event_msg, "application%2fjson");
-        test_value = IoTHubMessage_GetContentTypeSystemProperty(event_msg);
 
         (void)IoTHubMessage_SetContentEncodingSystemProperty(event_msg, "utf-8");
-        test_value = IoTHubMessage_GetContentEncodingSystemProperty(event_msg);
 
         (void)IoTHubMessage_SetOutputName(event_msg, "output_name");
-        test_value = IoTHubMessage_GetOutputName(event_msg);
 
         (void)IoTHubMessage_SetInputName(event_msg, "input_name");
-        test_value = IoTHubMessage_GetInputName(event_msg);
 
         // Add custom properties to message
         (void)IoTHubMessage_SetProperty(event_msg, "property_key", "property_value");
@@ -590,25 +622,54 @@ static int send_telemetry_message(IOTHUB_DEVICE_CLIENT_LL_HANDLE device_client, 
             LogError("Failure calling send event async");
             result = __LINE__;
         }
+        IoTHubMessage_Destroy(event_msg);
     }
     return result;
 }
 
-static int send_command_info(MIN_E2E_TEST_INFO* min_e2e_info, MESSAGE_CREATION_MECHANISM msg_type)
+static int send_server_test_info(MIN_E2E_TEST_INFO* min_e2e_info, MIN_E2E_TEST_TYPE test_type)
 {
     int result;
-    CMD_CHANNEL_CTX cmd_channel;
-    
     IOTHUB_MESSAGE_HANDLE event_msg;
-
-    // Construct ID
-    event_msg = IoTHubMessage_CreateFromString(min_e2e_info->msg_id);
-
-    char telemetry_count[16];
-    sprintf(telemetry_count, "%d", min_e2e_info->d2c_msg_count);
-    (void)IoTHubMessage_SetProperty(event_msg, "telemetry_count", telemetry_count);
-
-
+    if ((event_msg = IoTHubMessage_CreateFromString(min_e2e_info->msg_id)) == NULL)
+    {
+        LogError("Failure creating message");
+        result = __LINE__;
+    }
+    else
+    {
+        // Tell the service what to expect
+        switch (test_type)
+        {
+            case TEST_TYPE_C2D_D2C:
+            {
+                char telemetry_count[16];
+                sprintf(telemetry_count, "%d", min_e2e_info->d2c_msg_count);
+                if (!check_iothub_result(IoTHubMessage_SetProperty(event_msg, "telemetry_count", telemetry_count)))
+                {
+                    LogError("Failure Setting telemetry property");
+                    result = __LINE__;
+                }
+                else if (IoTHubDeviceClient_LL_SendEventAsync(min_e2e_info->device_handle, event_msg, message_recv_callback, NULL) != IOTHUB_CLIENT_OK)
+                {
+                    LogError("Failure calling send event async");
+                    result = __LINE__;
+                }
+                else
+                {
+                    result = 0;
+                }
+                break;
+            }
+            default:
+            case TEST_TYPE_METHODS:
+            case TEST_TYPE_TWIN:
+                result = __LINE__;
+                break;
+        }
+        IoTHubMessage_Destroy(event_msg);
+    }
+    return result;
 }
 
 MIN_E2E_TEST_HANDLE min_e2e_create(TEST_PROTOCOL_TYPE protocol_type)
@@ -631,7 +692,7 @@ MIN_E2E_TEST_HANDLE min_e2e_create(TEST_PROTOCOL_TYPE protocol_type)
         {
             result->connection_string = environment_get_variable("IOTHUB_DEVICE_CONN_STRING");
             result->protocol = protocol_type;
-            strcpy(result->msg_id, "123456789");
+            g_c2d_ctx.msg_id = strcpy(result->msg_id, "123456789");
             result->d2c_msg_count = 5;
         }
     }
@@ -651,9 +712,9 @@ int min_e2e_open_ctrl_channel(MIN_E2E_TEST_HANDLE handle, DEVICE_CREATION_TYPE t
 {
     int result;
     (void)test_type;
-    MIN_E2E_MSG_CTX min_e2e_ctx = { 0 };
+    CONNECTION_STATUS_CTX connection_info = { 0 };
 
-    if ((handle->device_handle = create_device_client(handle, type, protocol, &min_e2e_ctx)) == NULL)
+    if ((handle->device_handle = create_device_client(handle, type, protocol, &connection_info)) == NULL)
     {
         LogError("Failure creating tickcounter object");
         result = __LINE__;
@@ -666,15 +727,27 @@ int min_e2e_open_ctrl_channel(MIN_E2E_TEST_HANDLE handle, DEVICE_CREATION_TYPE t
         do
         {
             IoTHubDeviceClient_LL_DoWork(handle->device_handle);
-        } while (!min_e2e_ctx.connected && !min_e2e_ctx.is_error && !is_operation_timed_out(handle->tick_cntr_handle, initial_time, MAX_OPERATION_TIMEOUT));
+        } while (!connection_info.connected && !connection_info.is_error && !is_operation_timed_out(handle->tick_cntr_handle, initial_time, MAX_OPERATION_TIMEOUT));
 
-        if (!min_e2e_ctx.connected || min_e2e_ctx.is_error)
+        if (!connection_info.connected || connection_info.is_error)
+        {
+            LogError("Failure connecting to iothub service");
+            result = __LINE__;
+        }
+        else if (send_server_test_info(handle, test_type) != 0)
         {
             LogError("Failure connecting to iothub service");
             result = __LINE__;
         }
         else
         {
+            g_c2d_ctx.msg_recvd = false;
+            // Wait for the c2d message reply
+            tickcounter_get_current_ms(handle->tick_cntr_handle, &initial_time);
+            do
+            {
+                IoTHubDeviceClient_LL_DoWork(handle->device_handle);
+            } while (!g_c2d_ctx.msg_recvd && !is_operation_timed_out(handle->tick_cntr_handle, initial_time, MAX_OPERATION_TIMEOUT));
             result = 0;
         }
     }
@@ -686,12 +759,36 @@ void min_e2e_close_ctrl_channel(MIN_E2E_TEST_HANDLE handle)
     IoTHubDeviceClient_LL_Destroy(handle->device_handle);
 }
 
-int min_e2e_execute_telemetry_tests(MIN_E2E_TEST_HANDLE handle, size_t message_count, MESSAGE_CREATION_MECHANISM msg_create_type)
+int min_e2e_execute_telemetry_tests(MIN_E2E_TEST_HANDLE handle, MESSAGE_CREATION_MECHANISM msg_create_type)
 {
-    (void)handle;
-    (void)message_count;
-    (void)msg_create_type;
-    return 0;
+    int result = 0;
+    MIN_E2E_MSG_CTX msg_ctx = { 0 };
+    g_c2d_ctx.msg_recvd = false;
+    for (size_t index = 0; index < handle->d2c_msg_count; index++)
+    {
+        if (send_telemetry_message(handle->device_handle, msg_create_type, &msg_ctx) != 0)
+        {
+            LogError("Failure sending %d telemetry message", (int)index);
+            result = __LINE__;
+            break;
+        }
+    }
+
+    if (result == 0)
+    {
+        // Get the validation from the service
+        tickcounter_ms_t initial_time;
+        // Wait to be connected
+        tickcounter_get_current_ms(handle->tick_cntr_handle, &initial_time);
+        do
+        {
+            IoTHubDeviceClient_LL_DoWork(handle->device_handle);
+        } while (msg_ctx.msg_cnt < handle->d2c_msg_count && !g_c2d_ctx.msg_recvd && !is_operation_timed_out(handle->tick_cntr_handle, initial_time, MAX_OPERATION_TIMEOUT));
+        
+        // Check server validation
+
+    }
+    return result;
 }
 
 int min_e2e_execute_method_tests(MIN_E2E_TEST_HANDLE handle)

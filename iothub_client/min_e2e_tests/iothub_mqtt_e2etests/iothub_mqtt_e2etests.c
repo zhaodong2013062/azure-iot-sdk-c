@@ -41,7 +41,7 @@ BEGIN_TEST_SUITE(iothub_mqtt_e2etests)
         int result = min_e2e_open_ctrl_channel(g_min_e2e_handle, DEVICE_CREATION_CONN_STRING, TEST_TYPE_C2D_D2C, MQTT_Protocol);
         ASSERT_ARE_EQUAL(int, 0, result, "Failure opening control channel");
 
-        result = min_e2e_execute_telemetry_tests(g_min_e2e_handle, 1, TEST_MESSAGE_CREATE_STRING);
+        result = min_e2e_execute_telemetry_tests(g_min_e2e_handle, TEST_MESSAGE_CREATE_STRING);
         ASSERT_ARE_EQUAL(int, 0, result, "Failure executing telemetry tests");
 
         min_e2e_close_ctrl_channel(g_min_e2e_handle);

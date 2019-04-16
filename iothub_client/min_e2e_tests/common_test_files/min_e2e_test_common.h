@@ -56,7 +56,7 @@ extern void min_e2e_destroy(MIN_E2E_TEST_HANDLE handle);
 
 extern int min_e2e_open_ctrl_channel(MIN_E2E_TEST_HANDLE handle, DEVICE_CREATION_TYPE type, MIN_E2E_TEST_TYPE test_type, IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol);
 extern void min_e2e_close_ctrl_channel(MIN_E2E_TEST_HANDLE handle);
-extern int min_e2e_execute_telemetry_tests(MIN_E2E_TEST_HANDLE handle, size_t message_count, MESSAGE_CREATION_MECHANISM msg_create_type);
+extern int min_e2e_execute_telemetry_tests(MIN_E2E_TEST_HANDLE handle, MESSAGE_CREATION_MECHANISM msg_create_type);
 extern int min_e2e_execute_method_tests(MIN_E2E_TEST_HANDLE handle);
 extern int min_e2e_execute_twin_tests(MIN_E2E_TEST_HANDLE handle);
 
