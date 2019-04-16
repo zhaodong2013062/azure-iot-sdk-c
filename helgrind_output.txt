@@ -1,0 +1,378 @@
+==25090== Helgrind, a thread error detector
+==25090== Copyright (C) 2007-2017, and GNU GPL'd, by OpenWorks LLP et al.
+==25090== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==25090== Command: ./iothub_ll_telemetry_sample
+==25090== 
+///////////////////////////////////////////////////////
+Iteration # 0
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 1
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 2
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 3
+
+Creating IoTHub Device handle0
+-> Header (AMQP 3.1.0.0)
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 4
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 5
+
+Creating IoTHub Device handle0
+<- Header (AMQP 3.1.0.0)
+<- [SASL MECHANISMS]* {{EXTERNAL,MSSBCBS,ANONYMOUS,PLAIN}}
+-> [SASL INIT]* {MSSBCBS}
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 6
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 7
+
+Creating IoTHub Device handle0
+<- [SASL OUTCOME]* {0,<57 65 6C 63 6F 6D 65 21>}
+-> Header (AMQP 0.1.0.0)
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 8
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 9
+
+Creating IoTHub Device handle0
+<- Header (AMQP 0.1.0.0)
+-> [OPEN]* {b7d7657c-eaca-44f2-8ec5-ada06f358bf6,yosephhub.azure-devices.net,4294967295,65535,240000}
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 10
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 11
+
+Creating IoTHub Device handle0
+<- [OPEN]* {DeviceGateway_bb09f5eba6b442c2a585b623f491c3a3,10.0.20.31,65536,8191,240000,NULL,NULL,NULL,NULL,NULL}
+-> [BEGIN]* {NULL,0,4294967295,100,4294967295}
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+The device client has been disconnected
+Destroying IoTHub Device 1
+The device client has been disconnected
+Destroying IoTHub Device 2
+The device client has been disconnected
+Destroying IoTHub Device 3
+The device client has been disconnected
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 12
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+<- [BEGIN]* {0,1,5000,4294967295,262143,NULL,NULL,NULL}
+Destroying Handles...
+Destroying IoTHub Device 0
+-> [ATTACH]* {$cbs-sender,0,false,0,0,* {$cbs},* {$cbs},NULL,NULL,0,0}
+-> [ATTACH]* {$cbs-receiver,1,true,0,0,* {$cbs},* {$cbs},NULL,NULL,NULL,0}
+The device client has been disconnected
+Destroying IoTHub Device 1
+The device client has been disconnected
+Destroying IoTHub Device 2
+The device client has been disconnected
+Destroying IoTHub Device 3
+The device client has been disconnected
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 13
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+The device client has been disconnected
+Destroying IoTHub Device 1
+The device client has been disconnected
+Destroying IoTHub Device 2
+The device client has been disconnected
+Destroying IoTHub Device 3
+The device client has been disconnected
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 14
+
+Creating IoTHub Device handle0
+<- [ATTACH]* {$cbs-sender,0,true,0,0,* {$cbs,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},* {$cbs,NULL,NULL,NULL,NULL,NULL,NULL},NULL,NULL,NULL,1048576,NULL,NULL,NULL}
+<- [FLOW]* {0,5000,1,4294967295,0,0,100,0,NULL,false,NULL}
+-> [TRANSFER]* {0,0,<01 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,1,<02 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,2,<03 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,3,<04 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,4,<05 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,5,<06 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,6,<07 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,7,<08 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,8,<09 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,9,<0A 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,10,<0B 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,11,<0C 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,12,<0D 00 00 00>,0,false,false}
+<- [ATTACH]* {$cbs-receiver,1,false,0,0,* {$cbs,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},* {$cbs,NULL,NULL,NULL,NULL,NULL,NULL},NULL,NULL,0,1048576,NULL,NULL,NULL}
+-> [FLOW]* {1,4294967295,13,87,1,0,10000}
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+-> [TRANSFER]* {0,13,<0E 00 00 00>,0,false,false}
+-> [TRANSFER]* {0,14,<0F 00 00 00>,0,false,false}
+Destroying Handles...
+Destroying IoTHub Device 0
+-> [TRANSFER]* {0,15,<10 00 00 00>,0,false,false}
+The device client has been disconnected
+Destroying IoTHub Device 1
+The device client has been disconnected
+Destroying IoTHub Device 2
+The device client has been disconnected
+Destroying IoTHub Device 3
+The device client has been disconnected
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 1vex amd64->IR: unhandled instruction bytes: 0x26 0x62 0x0 0x0 0x1 0x0 0x0 0x0 0x0 0x0
+vex amd64->IR:   REX=0 REX.W=0 REX.R=0 REX.X=0 REX.B=0
+vex amd64->IR:   VEX=0 VEX.L=0 VEX.nVVVV=0x0 ESC=NONE
+vex amd64->IR:   PFX.66=0 PFX.F2=0 PFX.F3=0
+==25090== ---Thread-Announcement------------------------------------------
+==25090== 
+==25090== Thread #18 was created
+==25090==    at 0x629087E: clone (clone.S:71)
+==25090==    by 0x57AAEC4: create_thread (createthread.c:100)
+==25090==    by 0x57AAEC4: pthread_create@@GLIBC_2.2.5 (pthread_create.c:797)
+==25090==    by 0x4C36A27: ??? (in /usr/lib/valgrind/vgpreload_helgrind-amd64-linux.so)
+==25090==    by 0x191B10: ThreadAPI_Create (threadapi_pthreads.c:60)
+==25090==    by 0x1AE64B: start_worker_if_needed (iothubtransport.c:228)
+==25090==    by 0x1AEBED: IoTHubTransport_StartWorkerThread (iothubtransport.c:424)
+==25090==    by 0x1A0448: StartWorkerThreadIfNeeded (iothub_client_core.c:862)
+==25090==    by 0x1A1ABB: IoTHubClientCore_SetConnectionStatusCallback (iothub_client_core.c:1501)
+==25090==    by 0x19E5CD: IoTHubClient_SetConnectionStatusCallback (iothub_client.c:53)
+==25090==    by 0x122918: createClient (iothub_ll_telemetry_sample.c:88)
+==25090==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==25090== 
+==25090== ---Thread-Announcement------------------------------------------
+==25090== 
+==25090== Thread #1 is the program's root thread
+==25090== 
+==25090== ----------------------------------------------------------------
+==25090== 
+==25090==  Lock at 0xB704B20 was first observed
+==25090==    at 0x4C37F2A: pthread_mutex_init (in /usr/lib/valgrind/vgpreload_helgrind-amd64-linux.so)
+==25090==    by 0x198923: Lock_Init (lock_pthreads.c:19)
+==25090==    by 0x1AE074: IoTHubTransport_Create (iothubtransport.c:92)
+==25090==    by 0x122A04: main (iothub_ll_telemetry_sample.c:126)
+==25090==  Address 0xb704b20 is 0 bytes inside a block of size 40 alloc'd
+==25090==    at 0x4C30F2F: malloc (in /usr/lib/valgrind/vgpreload_helgrind-amd64-linux.so)
+==25090==    by 0x1988C0: Lock_Init (lock_pthreads.c:12)
+==25090==    by 0x1AE074: IoTHubTransport_Create (iothubtransport.c:92)
+==25090==    by 0x122A04: main (iothub_ll_telemetry_sample.c:126)
+==25090==  Block was alloc'd by thread #1
+==25090== 
+==25090== Possible data race during write of size 1 at 0xB704B22 by thread #18
+==25090== Locks held: 1, at address 0xB704B20
+==25090==    at 0xB704B22: ???
+==25090==    by 0x12CDE7: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:178)
+==25090==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==25090==    by 0x18364B: on_message_received (amqp_management.c:252)
+==25090==    by 0x1797CA: on_transfer_received (message_receiver.c:263)
+==25090==    by 0x1734A3: link_frame_received (link.c:483)
+==25090==    by 0x180DE5: on_frame_received (session.c:677)
+==25090==    by 0x16EBC3: on_amqp_frame_received (connection.c:1076)
+==25090==    by 0x182553: frame_received (amqp_frame_codec.c:124)
+==25090==    by 0x17198B: frame_codec_receive_bytes (frame_codec.c:408)
+==25090==    by 0x16DB84: connection_byte_received (connection.c:695)
+==25090==    by 0x16DC3B: connection_on_bytes_received (connection.c:720)
+==25090== 
+==25090== This conflicts with a previous read of size 4 by thread #1
+==25090== Locks held: none
+==25090==    at 0x57AD00D: pthread_mutex_lock (pthread_mutex_lock.c:78)
+==25090==    by 0x4C33FD6: ??? (in /usr/lib/valgrind/vgpreload_helgrind-amd64-linux.so)
+==25090==    by 0x1989EB: Lock (lock_pthreads.c:42)
+==25090==    by 0x1A0F81: IoTHubClientCore_Destroy (iothub_client_core.c:1176)
+==25090==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==25090==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==25090==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==25090==  Address 0xb704b22 is 2 bytes inside a block of size 40 alloc'd
+==25090==    at 0x4C30F2F: malloc (in /usr/lib/valgrind/vgpreload_helgrind-amd64-linux.so)
+==25090==    by 0x1988C0: Lock_Init (lock_pthreads.c:12)
+==25090==    by 0x1AE074: IoTHubTransport_Create (iothubtransport.c:92)
+==25090==    by 0x122A04: main (iothub_ll_telemetry_sample.c:126)
+==25090==  Block was alloc'd by thread #1
+==25090== 
+==25090== valgrind: Unrecognised instruction at address 0xb704b28.
+==25090==    at 0xB704B28: ???
+==25090==    by 0x12CDE7: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:178)
+==25090==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==25090==    by 0x18364B: on_message_received (amqp_management.c:252)
+==25090==    by 0x1797CA: on_transfer_received (message_receiver.c:263)
+==25090==    by 0x1734A3: link_frame_received (link.c:483)
+==25090==    by 0x180DE5: on_frame_received (session.c:677)
+==25090==    by 0x16EBC3: on_amqp_frame_received (connection.c:1076)
+==25090==    by 0x182553: frame_received (amqp_frame_codec.c:124)
+==25090==    by 0x17198B: frame_codec_receive_bytes (frame_codec.c:408)
+==25090==    by 0x16DB84: connection_byte_received (connection.c:695)
+==25090==    by 0x16DC3B: connection_on_bytes_received (connection.c:720)
+==25090== Your program just tried to execute an instruction that Valgrind
+==25090== did not recognise.  There are two possible reasons for this.
+==25090== 1. Your program has a bug and erroneously jumped to a non-code
+==25090==    location.  If you are running Memcheck and you just saw a
+==25090==    warning about a bad jump, it's probably your program's fault.
+==25090== 2. The instruction is legitimate but Valgrind doesn't handle it,
+==25090==    i.e. it's Valgrind's fault.  If you think this is the case or
+==25090==    you are not sure, please let us know and we'll try to fix it.
+==25090== Either way, Valgrind will now raise a SIGILL signal which will
+==25090== probably kill your program.
+==25090== 
+==25090== Process terminating with default action of signal 4 (SIGILL)
+==25090==  Illegal opcode at address 0xB704B28
+==25090==    at 0xB704B28: ???
+==25090==    by 0x12CDE7: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:178)
+==25090==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==25090==    by 0x18364B: on_message_received (amqp_management.c:252)
+==25090==    by 0x1797CA: on_transfer_received (message_receiver.c:263)
+==25090==    by 0x1734A3: link_frame_received (link.c:483)
+==25090==    by 0x180DE5: on_frame_received (session.c:677)
+==25090==    by 0x16EBC3: on_amqp_frame_received (connection.c:1076)
+==25090==    by 0x182553: frame_received (amqp_frame_codec.c:124)
+==25090==    by 0x17198B: frame_codec_receive_bytes (frame_codec.c:408)
+==25090==    by 0x16DB84: connection_byte_received (connection.c:695)
+==25090==    by 0x16DC3B: connection_on_bytes_received (connection.c:720)
+==25090== ----------------------------------------------------------------
+==25090== 
+==25090== Thread #18: Exiting thread still holds 1 lock
+==25090==    at 0xB704B28: ???
+==25090==    by 0x12CDE7: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:178)
+==25090==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==25090==    by 0x18364B: on_message_received (amqp_management.c:252)
+==25090==    by 0x1797CA: on_transfer_received (message_receiver.c:263)
+==25090==    by 0x1734A3: link_frame_received (link.c:483)
+==25090==    by 0x180DE5: on_frame_received (session.c:677)
+==25090==    by 0x16EBC3: on_amqp_frame_received (connection.c:1076)
+==25090==    by 0x182553: frame_received (amqp_frame_codec.c:124)
+==25090==    by 0x17198B: frame_codec_receive_bytes (frame_codec.c:408)
+==25090==    by 0x16DB84: connection_byte_received (connection.c:695)
+==25090==    by 0x16DC3B: connection_on_bytes_received (connection.c:720)
+==25090== 
+==25090== 
+==25090== For counts of detected and suppressed errors, rerun with: -v
+==25090== Use --history-level=approx or =none to gain increased speed, at
+==25090== the cost of reduced accuracy of conflicting-access information
+==25090== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 4997 from 114)
