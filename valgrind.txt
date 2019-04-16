@@ -1,0 +1,1006 @@
+==203338== Memcheck, a memory error detector
+==203338== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==203338== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==203338== Command: ./iothub_ll_telemetry_sample
+==203338== 
+///////////////////////////////////////////////////////
+Iteration # 0
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 1
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 2
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 3
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 4
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 5
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 6
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 7
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+-> Header (AMQP 3.1.0.0)
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 8
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 9
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 10
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+<- Header (AMQP 3.1.0.0)
+<- [SASL MECHANISMS]* {{EXTERNAL,MSSBCBS,ANONYMOUS,PLAIN}}
+Destroying Handles...
+Destroying IoTHub Device 0
+-> [SASL INIT]* {MSSBCBS}
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 11
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 12
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+<- [SASL OUTCOME]* {0,<57 65 6C 63 6F 6D 65 21>}
+Destroying Handles...
+Destroying IoTHub Device 0
+-> Header (AMQP 0.1.0.0)
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 13
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 14
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 15
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+<- Header (AMQP 0.1.0.0)
+Destroying Handles...
+Destroying IoTHub Device 0
+-> [OPEN]* {ad569166-97af-460a-803b-46b317b2bfa2,yosephhub.azure-devices.net,4294967295,65535,240000}
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 16
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 17
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+<- [OPEN]* {DeviceGateway_eda5664c4c5b41bdb0d40429629c2714,10.0.20.34,65536,8191,240000,NULL,NULL,NULL,NULL,NULL}
+Destroying Handles...
+Destroying IoTHub Device 0
+-> [BEGIN]* {NULL,0,4294967295,100,4294967295}
+Destroying IoTHub Device 1
+Destroying IoTHub Device 2
+Destroying IoTHub Device 3
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 18
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+<- [BEGIN]* {0,1,5000,4294967295,262143,NULL,NULL,NULL}
+-> [ATTACH]* {$cbs-sender,0,false,0,0,* {$cbs},* {$cbs},NULL,NULL,0,0}
+-> [ATTACH]* {$cbs-receiver,1,true,0,0,* {$cbs},* {$cbs},NULL,NULL,NULL,0}
+The device client has been disconnected
+Destroying IoTHub Device 1
+The device client has been disconnected
+Destroying IoTHub Device 2
+The device client has been disconnected
+Destroying IoTHub Device 3
+The device client has been disconnected
+Sleeping for .02 Seconds...
+///////////////////////////////////////////////////////
+Iteration # 19
+
+Creating IoTHub Device handle0
+Creating IoTHub Device handle1
+Creating IoTHub Device handle2
+Creating IoTHub Device handle3
+Destroying Handles...
+Destroying IoTHub Device 0
+The device client has been disconnected
+Destroying IoTHub Device 1
+The device client has been dis==203338== Invalid write of size 1
+==203338==    at 0x12CDCD: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:173)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==    by 0x1281B9: IoTHubTransport_AMQP_Common_Destroy (iothubtransport_amqp_common.c:2390)
+==203338==  Address 0xb8398f0 is 80 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x12CE01: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:182)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==    by 0x1281B9: IoTHubTransport_AMQP_Common_Destroy (iothubtransport_amqp_common.c:2390)
+==203338==  Address 0xb8398a0 is 0 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 1
+==203338==    at 0x4C32CF2: strlen (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x61C64D2: vfprintf (vfprintf.c:1643)
+==203338==    by 0x197C7F: consolelogger_log (consolelogger.c:221)
+==203338==    by 0x12CE40: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:182)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==  Address 0xb839100 is 0 bytes inside a block of size 6 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x145040: IoTHubClient_Auth_Destroy (iothub_client_authorization.c:210)
+==203338==    by 0x1A81B6: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1727)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x18A301: mallocAndStrcpy_s (crt_abstractions.c:710)
+==203338==    by 0x144BF4: initialize_auth_client (iothub_client_authorization.c:70)
+==203338==    by 0x144D7C: IoTHubClient_Auth_Create (iothub_client_authorization.c:104)
+==203338==    by 0x1A5C5A: initialize_iothub_client (iothub_client_core_ll.c:818)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==203338== 
+==203338== Invalid read of size 1
+==203338==    at 0x4C32D04: strlen (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x61C64D2: vfprintf (vfprintf.c:1643)
+==203338==    by 0x197C7F: consolelogger_log (consolelogger.c:221)
+==203338==    by 0x12CE40: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:182)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==  Address 0xb839101 is 1 bytes inside a block of size 6 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x145040: IoTHubClient_Auth_Destroy (iothub_client_authorization.c:210)
+==203338==    by 0x1A81B6: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1727)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x18A301: mallocAndStrcpy_s (crt_abstractions.c:710)
+==203338==    by 0x144BF4: initialize_auth_client (iothub_client_authorization.c:70)
+==203338==    by 0x144D7C: IoTHubClient_Auth_Create (iothub_client_authorization.c:104)
+==203338==    by 0x1A5C5A: initialize_iothub_client (iothub_client_core_ll.c:818)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==203338== 
+==203338== Invalid read of size 1
+==203338==    at 0x4C371B8: mempcpy (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x61F4993: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1258)
+==203338==    by 0x61C5FEA: vfprintf (vfprintf.c:1643)
+==203338==    by 0x197C7F: consolelogger_log (consolelogger.c:221)
+==203338==    by 0x12CE40: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:182)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==  Address 0xb839100 is 0 bytes inside a block of size 6 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x145040: IoTHubClient_Auth_Destroy (iothub_client_authorization.c:210)
+==203338==    by 0x1A81B6: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1727)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x18A301: mallocAndStrcpy_s (crt_abstractions.c:710)
+==203338==    by 0x144BF4: initialize_auth_client (iothub_client_authorization.c:70)
+==203338==    by 0x144D7C: IoTHubClient_Auth_Create (iothub_client_authorization.c:104)
+==203338==    by 0x1A5C5A: initialize_iothub_client (iothub_client_core_ll.c:818)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==203338== 
+==203338== Invalid read of size 1
+==203338==    at 0x4C371C6: mempcpy (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x61F4993: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1258)
+==203338==    by 0x61C5FEA: vfprintf (vfprintf.c:1643)
+==203338==    by 0x197C7F: consolelogger_log (consolelogger.c:221)
+==203338==    by 0x12CE40: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:182)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==  Address 0xb839102 is 2 bytes inside a block of size 6 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x145040: IoTHubClient_Auth_Destroy (iothub_client_authorization.c:210)
+==203338==    by 0x1A81B6: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1727)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x18A301: mallocAndStrcpy_s (crt_abstractions.c:710)
+==203338==    by 0x144BF4: initialize_auth_client (iothub_client_authorization.c:70)
+==203338==    by 0x144D7C: IoTHubClient_Auth_Create (iothub_client_authorization.c:104)
+==203338==    by 0x1A5C5A: initialize_iothub_client (iothub_client_core_ll.c:818)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==203338== 
+==203338== Invalid read of size 4
+==203338==    at 0x12C916: update_state (iothubtransport_amqp_cbs_auth.c:52)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398e0 is 64 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 4
+==203338==    at 0x12C922: update_state (iothubtransport_amqp_cbs_auth.c:54)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398e0 is 64 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid write of size 4
+==203338==    at 0x12C92F: update_state (iothubtransport_amqp_cbs_auth.c:55)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398e0 is 64 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x12C936: update_state (iothubtransport_amqp_cbs_auth.c:57)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398b8 is 24 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x12C943: update_state (iothubtransport_amqp_cbs_auth.c:59)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398b8 is 24 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x12C94B: update_state (iothubtransport_amqp_cbs_auth.c:59)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398c0 is 32 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid write of size 4
+==203338==    at 0x128E9E: on_authentication_state_changed_callback (iothubtransport_amqp_device.c:213)
+==203338==    by 0x12C959: update_state (iothubtransport_amqp_cbs_auth.c:59)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==  Address 0xb839698 is 40 bytes inside a block of size 160 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x129ADD: internal_destroy_device (iothubtransport_amqp_device.c:572)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12A13B: amqp_device_create (iothubtransport_amqp_device.c:725)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==203338== 
+==203338== Invalid write of size 8
+==203338==    at 0x128EB2: on_authentication_state_changed_callback (iothubtransport_amqp_device.c:215)
+==203338==    by 0x12C959: update_state (iothubtransport_amqp_cbs_auth.c:59)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==  Address 0xb8396a0 is 48 bytes inside a block of size 160 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x129ADD: internal_destroy_device (iothubtransport_amqp_device.c:572)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12A13B: amqp_device_create (iothubtransport_amqp_device.c:725)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x128EBA: on_authentication_state_changed_callback (iothubtransport_amqp_device.c:215)
+==203338==    by 0x12C959: update_state (iothubtransport_amqp_cbs_auth.c:59)
+==203338==    by 0x12CE55: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:185)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==  Address 0xb8396a0 is 48 bytes inside a block of size 160 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x129ADD: internal_destroy_device (iothubtransport_amqp_device.c:572)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12A13B: amqp_device_create (iothubtransport_amqp_device.c:725)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338==    by 0x122ABD: main (iothub_ll_telemetry_sample.c:142)
+==203338== 
+==203338== Invalid read of size 1
+==203338==    at 0x12CE5A: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:188)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==    by 0x1281B9: IoTHubTransport_AMQP_Common_Destroy (iothubtransport_amqp_common.c:2390)
+==203338==  Address 0xb8398f1 is 81 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x12C970: notify_error (iothubtransport_amqp_cbs_auth.c:66)
+==203338==    by 0x12CE85: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:195)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398c8 is 40 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x12C97D: notify_error (iothubtransport_amqp_cbs_auth.c:68)
+==203338==    by 0x12CE85: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:195)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398c8 is 40 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==203338==    by 0x1A07F5: create_iothub_instance (iothub_client_core.c:942)
+==203338==    by 0x1A0DBC: IoTHubClientCore_CreateWithTransport (iothub_client_core.c:1107)
+==203338==    by 0x1AB696: IoTHubDeviceClient_CreateWithTransport (iothub_device_client.c:23)
+==203338==    by 0x1228CD: createClient (iothub_ll_telemetry_sample.c:81)
+==203338== 
+==203338== Invalid read of size 8
+==203338==    at 0x12C985: notify_error (iothubtransport_amqp_cbs_auth.c:68)
+==203338==    by 0x12CE85: on_cbs_put_token_complete_callback (iothubtransport_amqp_cbs_auth.c:195)
+==203338==    by 0x16B127: on_amqp_management_execute_operation_complete (cbs.c:243)
+==203338==    by 0x18395C: on_message_send_complete (amqp_management.c:370)
+==203338==    by 0x17B92F: indicate_all_messages_as_error (message_sender.c:663)
+==203338==    by 0x17BD82: messagesender_close (message_sender.c:808)
+==203338==    by 0x184E4C: amqp_management_close (amqp_management.c:1038)
+==203338==    by 0x16AE3F: on_underlying_amqp_management_open_complete (cbs.c:131)
+==203338==    by 0x184E3C: amqp_management_close (amqp_management.c:1032)
+==203338==    by 0x16B4A7: cbs_destroy (cbs.c:348)
+==203338==    by 0x12EBAB: amqp_connection_destroy (iothubtransport_amqp_connection.c:302)
+==203338==    by 0x1255BB: internal_destroy_instance (iothubtransport_amqp_common.c:1333)
+==203338==  Address 0xb8398d0 is 48 bytes inside a block of size 104 free'd
+==203338==    at 0x4C30D3B: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D861: authentication_destroy (iothubtransport_amqp_cbs_auth.c:493)
+==203338==    by 0x129AC2: internal_destroy_device (iothubtransport_amqp_device.c:568)
+==203338==    by 0x12B43E: amqp_device_destroy (iothubtransport_amqp_device.c:1156)
+==203338==    by 0x1232B4: internal_destroy_amqp_device_instance (iothubtransport_amqp_common.c:233)
+==203338==    by 0x128140: IoTHubTransport_AMQP_Common_Unregister (iothubtransport_amqp_common.c:2373)
+==203338==    by 0x122F13: IoTHubTransportAMQP_Unregister (iothubtransportamqp.c:138)
+==203338==    by 0x1A808E: IoTHubClientCore_LL_Destroy (iothub_client_core_ll.c:1692)
+==203338==    by 0x1A1160: IoTHubClientCore_Destroy (iothub_client_core.c:1231)
+==203338==    by 0x19E51B: IoTHubClient_Destroy (iothub_client.c:33)
+==203338==    by 0x122962: destroyClient (iothub_ll_telemetry_sample.c:101)
+==203338==    by 0x122B66: main (iothub_ll_telemetry_sample.c:156)
+==203338==  Block was alloc'd at
+==203338==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==203338==    by 0x12D9F0: authentication_create (iothubtransport_amqp_cbs_auth.c:529)
+==203338==    by 0x129B1A: create_authentication_instance (iothubtransport_amqp_device.c:583)
+==203338==    by 0x12A23F: amqp_device_create (iothubtransport_amqp_device.c:745)
+==203338==    by 0x127C04: IoTHubTransport_AMQP_Common_Register (iothubtransport_amqp_common.c:2267)
+==203338==    by 0x122EF9: IoTHubTransportAMQP_Register (iothubtransportamqp.c:132)
+==203338==    by 0x1A6828: initialize_iothub_client (iothub_client_core_ll.c:1021)
+==203338==    by 0x1A804A: IoTHubClientCore_LL_CreateWithTransport (iothub_client_core_ll.c:1679)
+==20
