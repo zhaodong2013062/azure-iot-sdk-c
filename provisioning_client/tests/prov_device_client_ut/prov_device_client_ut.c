@@ -18,10 +18,10 @@ static void my_gballoc_free(void* ptr)
 }
 
 #include "testrunnerswitcher.h"
-#include "umock_c.h"
-#include "umocktypes_charptr.h"
-#include "umock_c_negative_tests.h"
-#include "umocktypes_stdint.h"
+#include "umock_c/umock_c.h"
+#include "umock_c/umocktypes_charptr.h"
+#include "umock_c/umock_c_negative_tests.h"
+#include "umock_c/umocktypes_stdint.h"
 
 #define ENABLE_MOCKS
 #include "azure_c_shared_utility/strings.h"
@@ -41,7 +41,7 @@ static void my_gballoc_free(void* ptr)
 #include "azure_prov_client/prov_device_client.h"
 
 #define ENABLE_MOCKS
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "umock_c/umock_c_prod.h"
 #undef ENABLE_MOCKS
 
 static TEST_MUTEX_HANDLE g_testByTest;
@@ -651,8 +651,9 @@ TEST_FUNCTION(Prov_Device_SetOption_success)
 
     umock_c_reset_all_calls();
 
+    STRICT_EXPECTED_CALL(Lock(IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(Prov_Device_LL_SetOption(TEST_PROV_DEVICE_LL_HANDLE, OPTION_HTTP_PROXY, &TEST_HTTP_PROXY_OPTIONS));
-
+    STRICT_EXPECTED_CALL(Unlock(IGNORED_PTR_ARG));
     //act
     PROV_DEVICE_RESULT prov_result = Prov_Device_SetOption(prov_device_handle, OPTION_HTTP_PROXY, &TEST_HTTP_PROXY_OPTIONS);
 

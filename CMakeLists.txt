@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(azure_iot_sdks)
 
-include("configs/azure_iot_sdksFunctions.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/configs/azure_iot_sdksFunctions.cmake")
 
 getIoTSDKVersion()
 message(STATUS "IoT Client SDK Version = ${IOT_SDK_VERSION}")
@@ -65,6 +65,7 @@ option(run_longhaul_tests "set run_longhaul_tests to ON to run longhaul tests (d
 option(skip_samples "set skip_samples to ON to skip building samples (default is OFF)[if possible, they are always build]" OFF)
 option(compileOption_C "passes a string to the command line of the C compiler" OFF)
 option(compileOption_CXX "passes a string to the command line of the C++ compiler" OFF)
+option(linkerOption "passes a string to the shared and exe linker options of the C compiler" OFF)
 option(build_service_client "controls whether the iothub_service_client is built or not" ON)
 option(build_provisioning_service_client "controls whether the provisioning_service_client is built or not" ON)
 option(build_python "builds the Python native iothub_client module" OFF)
@@ -87,7 +88,6 @@ if (NOT ${use_amqp} AND NOT ${use_http} AND NOT ${use_mqtt})
     message(FATAL_ERROR "CMAKE Failure: AMQP, HTTP & MQTT are all disable, iothub client must have one protocol enabled")
 endif()
 
-message(STATUS "Provisioning client ${use_prov_client}")
 if (XCODE AND ${use_prov_client})
     # The TPM module is not available on Mac, and Mac's <string.h> and <unistd.h> files collide as well
     message(FATAL_ERROR "Provisioning client is not supported on Mac")
@@ -122,6 +122,7 @@ if (${use_prov_client})
     if ("${hsm_custom_lib}" STREQUAL "")
         set(hsm_type_x509 ON)
         set(hsm_type_sastoken ON)
+        set(hsm_type_symm_key ON)
     else()
         set(hsm_type_custom ON)
     endif()
@@ -188,11 +189,13 @@ if (NOT "${compileOption_CXX}" STREQUAL "OFF")
     set(CMAKE_CXX_FLAGS "${compileOption_CXX} ${CMAKE_CXX_FLAGS}")
 endif()
 
-include("configs/azure_iot_sdksFunctions.cmake")
-
-if (${run_unittests} OR ${run_e2e_tests} OR ${run_sfc_tests})
-    include("dependencies-test.cmake")
+if (NOT "${linkerOption}" STREQUAL "OFF")
+    message("linkerOption: ${CMAKE_SHARED_LINKER_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${linkerOption}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${linkerOption}")
 endif()
+
+include("configs/azure_iot_sdksFunctions.cmake")
 
 # do not add or build any tests of the dependencies
 set(original_run_e2e_tests ${run_e2e_tests})
@@ -203,20 +206,53 @@ set(run_e2e_tests OFF)
 set(run_unittests OFF)
 set(skip_samples ON)
 
+if (NOT ${use_installed_dependencies})
+    if (NOT TARGET azure_macro_utils_c AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/deps/azure-macro-utils-c/CMakeLists.txt")
+        add_subdirectory(deps/azure-macro-utils-c)
+    endif()
+    if (NOT TARGET umock_c)
+        # Get the repo if it's not there
+        add_subdirectory(deps/umock-c)
+    endif()
+
+    if (${original_run_e2e_tests} OR ${original_run_unittests} OR ${run_sfc_tests})
+        if (NOT TARGET testrunnerswitcher)
+            add_subdirectory(deps/azure-c-testrunnerswitcher)
+        endif()
+        if (NOT TARGET ctest)
+            # Get the repo if it's not there
+            add_subdirectory(deps/azure-ctest)
+        endif()
+        enable_testing()
+    endif()
+else()
+    if (NOT azure_macro_utils_cFOUND)
+        find_package(azure_macro_utils_c REQUIRED CONFIG)
+    endif ()
+    if (NOT umock_cFOUND)
+        find_package(umock_c REQUIRED CONFIG)
+    endif ()
+endif()
+
+include_directories(${MACRO_UTILS_INC_FOLDER})
+include_directories(${UMOCK_C_INC_FOLDER})
+
 include("dependencies.cmake")
+if (${original_run_e2e_tests} OR ${original_run_unittests} OR ${run_sfc_tests})
+    # Used for serializer
+    add_subdirectory("${SHARED_UTIL_FOLDER}/testtools/sal")
+    add_subdirectory("${SHARED_UTIL_FOLDER}/testtools/micromock")
+endif()
 
 if (${original_run_e2e_tests} OR ${original_run_unittests} OR ${run_sfc_tests})
     set(SHARED_UTIL_REAL_TEST_FOLDER ${CMAKE_CURRENT_LIST_DIR}/c-utility/tests/real_test_files CACHE INTERNAL "this is what needs to be included when doing test sources" FORCE)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/c-utility/testtools)
 endif()
 
-set_platform_files(${CMAKE_CURRENT_LIST_DIR}/c-utility)
+set_platform_files(${SHARED_UTIL_FOLDER})
 
 set(run_e2e_tests ${original_run_e2e_tests})
 set(run_unittests ${original_run_unittests})
 set(skip_samples ${original_skip_samples})
-
-enable_testing()
 
 # this project uses several other projects that are build not by these CMakeFiles
 # this project also targets several OSes
@@ -306,7 +342,7 @@ if (${use_prov_client_core})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_PROV_MODULE")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_PROV_MODULE")
 
-    if (${build_provisioning_service_client})
+    if (${build_provisioning_service_client} AND ${use_prov_client})
         add_subdirectory(provisioning_service_client)
     endif()
 

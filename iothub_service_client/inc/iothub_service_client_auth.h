@@ -19,20 +19,20 @@
 #ifndef IOTHUB_SERVICE_CLIENT_AUTH_H
 #define IOTHUB_SERVICE_CLIENT_AUTH_H
 
-#include "azure_c_shared_utility/macro_utils.h"
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "azure_macro_utils/macro_utils.h"
+#include "umock_c/umock_c_prod.h"
 
 #define IOTHUB_DEVICE_STATUS_VALUES       \
     IOTHUB_DEVICE_STATUS_ENABLED,         \
     IOTHUB_DEVICE_STATUS_DISABLED         \
 
-DEFINE_ENUM(IOTHUB_DEVICE_STATUS, IOTHUB_DEVICE_STATUS_VALUES);
+MU_DEFINE_ENUM(IOTHUB_DEVICE_STATUS, IOTHUB_DEVICE_STATUS_VALUES);
 
 #define IOTHUB_DEVICE_CONNECTION_STATE_VALUES         \
     IOTHUB_DEVICE_CONNECTION_STATE_CONNECTED,         \
     IOTHUB_DEVICE_CONNECTION_STATE_DISCONNECTED       \
 
-DEFINE_ENUM(IOTHUB_DEVICE_CONNECTION_STATE, IOTHUB_DEVICE_CONNECTION_STATE_VALUES);
+MU_DEFINE_ENUM(IOTHUB_DEVICE_CONNECTION_STATE, IOTHUB_DEVICE_CONNECTION_STATE_VALUES);
 
 #ifdef __cplusplus
 extern "C"
@@ -40,7 +40,7 @@ extern "C"
 #else
 #endif
 
-#include "azure_c_shared_utility/macro_utils.h"
+#include "azure_macro_utils/macro_utils.h"
 
 /** @brief Structure to store IoTHub authentication information
 */
@@ -49,7 +49,7 @@ typedef struct IOTHUB_SERVICE_CLIENT_AUTH_TAG
     char* hostname;
     char* iothubName;
     char* iothubSuffix;
-    char* sharedAccessKey;
+    char* sharedAccessKey;  //field can contain "SharedAccessSignature" if prefixed with "sas="; Otherwise, a "SharedAccessKey" is expected.
     char* keyName;
     char* deviceId;
 } IOTHUB_SERVICE_CLIENT_AUTH;
@@ -73,6 +73,22 @@ typedef struct IOTHUB_SERVICE_CLIENT_AUTH_TAG* IOTHUB_SERVICE_CLIENT_AUTH_HANDLE
 *             invoking other functions for IoT Hub Service Client and @c NULL on failure.
 */
 extern IOTHUB_SERVICE_CLIENT_AUTH_HANDLE IoTHubServiceClientAuth_CreateFromConnectionString(const char* connectionString);
+
+/**
+* @brief    Creates a IoT Hub service client handle for use it
+*             in consequent APIs.
+*
+* @param    connectionString    Pointer to a character string
+*
+*            Sample connection string:
+*                <blockquote>
+*                    <pre>HostName=[IoT Hub name goes here].[IoT Hub suffix goes here, e.g., private.azure-devices-int.net];SharedAccessSignature=[Shared Access Signature goes here];</pre>
+*                </blockquote>
+*
+* @return    A non-NULL @c IOTHUB_SERVICE_CLIENT_AUTH_HANDLE value that is used when
+*             invoking other functions for IoT Hub Service Client and @c NULL on failure.
+*/
+extern IOTHUB_SERVICE_CLIENT_AUTH_HANDLE IoTHubServiceClientAuth_CreateFromSharedAccessSignature(const char* connectionString);
 
 /**
 * @brief    Disposes of resources allocated by the IoT Hub Service Client.

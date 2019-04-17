@@ -26,27 +26,24 @@ static void my_gballoc_free(void* ptr)
 }
 
 #include "testrunnerswitcher.h"
-#include "umock_c.h"
-#include "umocktypes_charptr.h"
-#include "umocktypes_stdint.h"
-#include "umocktypes_bool.h"
-#include "umock_c_negative_tests.h"
-#include "azure_c_shared_utility/macro_utils.h"
+#include "umock_c/umock_c.h"
+#include "umock_c/umocktypes_charptr.h"
+#include "umock_c/umocktypes_stdint.h"
+#include "umock_c/umocktypes_bool.h"
+#include "umock_c/umock_c_negative_tests.h"
+#include "azure_macro_utils/macro_utils.h"
 
 #define ENABLE_MOCKS
 #include "azure_c_shared_utility/gballoc.h"
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "umock_c/umock_c_prod.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
 #undef ENABLE_MOCKS
 
 #include "hsm_client_key.h"
 #include "hsm_client_data.h"
 
-static const char* TEST_STRING_VALUE = "Test_String_Value";
-static const unsigned char TEST_IMPORT_KEY[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10 };
-
-static const char* TEST_RSA_KEY = "1234567890";
-static unsigned char TEST_BUFFER[128];
+static const char* TEST_SYMM_KEY = "Test_symm_key";
+static const char* TEST_REG_NAME = "Test_registration_name";
 
 #define TEST_BUFFER_SIZE    128
 #define TEST_KEY_SIZE       10
@@ -60,12 +57,12 @@ static int my_mallocAndStrcpy_s(char** destination, const char* source)
     return 0;
 }
 
-DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
+MU_DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
 
 static void on_umock_c_error(UMOCK_C_ERROR_CODE error_code)
 {
     char temp_str[256];
-    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
+    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", MU_ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
     ASSERT_FAIL(temp_str);
 }
 
@@ -201,6 +198,7 @@ BEGIN_TEST_SUITE(hsm_client_key_ut)
     {
         //arrange
         HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        (void)hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
         umock_c_reset_all_calls();
 
         STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
@@ -210,6 +208,27 @@ BEGIN_TEST_SUITE(hsm_client_key_ut)
 
         //assert
         ASSERT_IS_NOT_NULL(key_value);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
+        free(key_value);
+    }
+
+    TEST_FUNCTION(hsm_client_get_symmetric_key_malloc_fail)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        (void)hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
+        umock_c_reset_all_calls();
+
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, IGNORED_PTR_ARG)).SetReturn(__LINE__);
+
+        //act
+        char* key_value = hsm_client_get_symmetric_key(sec_handle);
+
+        //assert
+        ASSERT_IS_NULL(key_value);
         ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
 
         //cleanup
@@ -235,6 +254,7 @@ BEGIN_TEST_SUITE(hsm_client_key_ut)
     {
         //arrange
         HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        (void)hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
         umock_c_reset_all_calls();
 
         STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
@@ -244,6 +264,27 @@ BEGIN_TEST_SUITE(hsm_client_key_ut)
 
         //assert
         ASSERT_IS_NOT_NULL(reg_name);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
+        free(reg_name);
+    }
+
+    TEST_FUNCTION(hsm_client_get_registration_name_malloc_fail)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        (void)hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
+        umock_c_reset_all_calls();
+
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, IGNORED_PTR_ARG)).SetReturn(__LINE__);
+
+        //act
+        char* reg_name = hsm_client_get_registration_name(sec_handle);
+
+        //assert
+        ASSERT_IS_NULL(reg_name);
         ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
 
         //cleanup
@@ -279,6 +320,124 @@ BEGIN_TEST_SUITE(hsm_client_key_ut)
         ASSERT_IS_NOT_NULL(key_interface->hsm_client_get_registration_name);
 
         //cleanup
+    }
+
+    TEST_FUNCTION(hsm_client_set_key_info_reg_name_NULL_fail)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        umock_c_reset_all_calls();
+
+        //act
+        int result = hsm_client_set_key_info(sec_handle, NULL, TEST_SYMM_KEY);
+
+        //assert
+        ASSERT_ARE_NOT_EQUAL(int, 0, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
+    }
+
+    TEST_FUNCTION(hsm_client_set_key_info_symm_key_NULL_fail)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        umock_c_reset_all_calls();
+
+        //act
+        int result = hsm_client_set_key_info(sec_handle, TEST_REG_NAME, NULL);
+
+        //assert
+        ASSERT_ARE_NOT_EQUAL(int, 0, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
+    }
+
+    TEST_FUNCTION(hsm_client_set_key_info_succeed)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        umock_c_reset_all_calls();
+
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, TEST_REG_NAME));
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, TEST_SYMM_KEY));
+
+        //act
+        int result = hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
+
+        //assert
+        ASSERT_ARE_EQUAL(int, 0, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
+    }
+
+
+    TEST_FUNCTION(hsm_client_set_key_info_2_calls_succeed)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        int result = hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
+        umock_c_reset_all_calls();
+
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, TEST_REG_NAME));
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, TEST_SYMM_KEY));
+        STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+        STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+
+        //act
+        result = hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
+
+        //assert
+        ASSERT_ARE_EQUAL(int, 0, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
+    }
+
+    TEST_FUNCTION(hsm_client_set_key_info_name_malloc_NULL_fail)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        umock_c_reset_all_calls();
+
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, TEST_REG_NAME)).SetReturn(__LINE__);
+
+        //act
+        int result = hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
+
+        //assert
+        ASSERT_ARE_NOT_EQUAL(int, 0, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
+    }
+
+    TEST_FUNCTION(hsm_client_set_key_info_key_malloc_NULL_fail)
+    {
+        //arrange
+        HSM_CLIENT_HANDLE sec_handle = hsm_client_key_create();
+        umock_c_reset_all_calls();
+
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, TEST_REG_NAME));
+        STRICT_EXPECTED_CALL(mallocAndStrcpy_s(IGNORED_PTR_ARG, TEST_SYMM_KEY)).SetReturn(__LINE__);
+        STRICT_EXPECTED_CALL(gballoc_free(IGNORED_PTR_ARG));
+
+        //act
+        int result = hsm_client_set_key_info(sec_handle, TEST_REG_NAME, TEST_SYMM_KEY);
+
+        //assert
+        ASSERT_ARE_NOT_EQUAL(int, 0, result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        hsm_client_key_destroy(sec_handle);
     }
 
     END_TEST_SUITE(hsm_client_key_ut)

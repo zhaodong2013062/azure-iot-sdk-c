@@ -7,13 +7,11 @@
 #include <stdint.h>
 #include "internal/iothub_transport_ll_private.h"
 #include "azure_uamqp_c/cbs.h"
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "umock_c/umock_c_prod.h"
 #include "azure_c_shared_utility/optionhandler.h"
 
 static const char* AUTHENTICATION_OPTION_SAVED_OPTIONS = "saved_authentication_options";
 static const char* AUTHENTICATION_OPTION_CBS_REQUEST_TIMEOUT_SECS = "cbs_request_timeout_secs";
-static const char* AUTHENTICATION_OPTION_SAS_TOKEN_REFRESH_TIME_SECS = "sas_token_refresh_time_secs";
-static const char* AUTHENTICATION_OPTION_SAS_TOKEN_LIFETIME_SECS = "sas_token_lifetime_secs";
 
 #ifdef __cplusplus
 extern "C"

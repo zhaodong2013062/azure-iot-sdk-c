@@ -20,20 +20,20 @@ static void my_gballoc_free(void* ptr)
 }
 
 #include "testrunnerswitcher.h"
-#include "umock_c.h"
-#include "umocktypes_charptr.h"
-#include "umocktypes_stdint.h"
-#include "umock_c_negative_tests.h"
-#include "azure_c_shared_utility/macro_utils.h"
+#include "umock_c/umock_c.h"
+#include "umock_c/umocktypes_charptr.h"
+#include "umock_c/umocktypes_stdint.h"
+#include "umock_c/umock_c_negative_tests.h"
+#include "azure_macro_utils/macro_utils.h"
 
 #include "azure_prov_client/internal/iothub_auth_client.h"
 
 #define ENABLE_MOCKS
 #include "azure_c_shared_utility/gballoc.h"
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "umock_c/umock_c_prod.h"
 #include "azure_c_shared_utility/strings.h"
 #include "azure_c_shared_utility/sastoken.h"
-#include "azure_c_shared_utility/base64.h"
+#include "azure_c_shared_utility/azure_base64.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
 #include "azure_c_shared_utility/urlencode.h"
 #include "azure_c_shared_utility/hmacsha256.h"
@@ -52,6 +52,7 @@ MOCKABLE_FUNCTION(, char*, hsm_client_get_certificate, HSM_CLIENT_HANDLE, handle
 MOCKABLE_FUNCTION(, char*, hsm_client_get_alias_key, HSM_CLIENT_HANDLE, handle);
 MOCKABLE_FUNCTION(, char*, hsm_client_get_symmetric_key, HSM_CLIENT_HANDLE, handle);
 MOCKABLE_FUNCTION(, char*, hsm_client_get_common_name, HSM_CLIENT_HANDLE, handle);
+MOCKABLE_FUNCTION(, int, hsm_client_set_symmetrical_key_info, HSM_CLIENT_HANDLE, handle, const char*, reg_name, const char*, symm_key);
 
 MOCKABLE_FUNCTION(, const HSM_CLIENT_TPM_INTERFACE*, hsm_client_tpm_interface);
 MOCKABLE_FUNCTION(, const HSM_CLIENT_X509_INTERFACE*, hsm_client_x509_interface);
@@ -60,7 +61,6 @@ MOCKABLE_FUNCTION(, const HSM_CLIENT_KEY_INTERFACE*, hsm_client_key_interface);
 #ifdef HSM_TYPE_HTTP_EDGE
 MOCKABLE_FUNCTION(, const HSM_CLIENT_HTTP_EDGE_INTERFACE*, hsm_client_http_edge_interface);
 #endif
-
 
 #undef ENABLE_MOCKS
 
@@ -107,7 +107,7 @@ IMPLEMENT_UMOCK_C_ENUM_TYPE(IOTHUB_SECURITY_TYPE, IOTHUB_SECURITY_TYPE_VALUES);
 TEST_DEFINE_ENUM_TYPE(HMACSHA256_RESULT, HMACSHA256_RESULT);
 IMPLEMENT_UMOCK_C_ENUM_TYPE(HMACSHA256_RESULT, HMACSHA256_RESULT);
 
-static const HSM_CLIENT_TPM_INTERFACE test_tpm_interface = 
+static const HSM_CLIENT_TPM_INTERFACE test_tpm_interface =
 {
     hsm_client_create,
     hsm_client_destroy,
@@ -150,7 +150,8 @@ static const HSM_CLIENT_KEY_INTERFACE test_key_interface =
     hsm_client_create,
     hsm_client_destroy,
     hsm_client_get_symmetric_key,
-    hsm_client_get_common_name
+    hsm_client_get_common_name,
+    hsm_client_set_symmetrical_key_info
 };
 
 #ifdef HSM_TYPE_HTTP_EDGE
@@ -163,7 +164,7 @@ static const HSM_CLIENT_HTTP_EDGE_INTERFACE test_http_edge_interface =
 };
 #endif
 
-static BUFFER_HANDLE my_Base64_Decoder(const char* source)
+static BUFFER_HANDLE my_Azure_Base64_Decode(const char* source)
 {
     (void)source;
     return (BUFFER_HANDLE)my_gballoc_malloc(1);
@@ -252,7 +253,7 @@ static int my_mallocAndStrcpy_s(char** destination, const char* source)
     return 0;
 }
 
-static STRING_HANDLE my_Base64_Encode_Bytes(const unsigned char* source, size_t length)
+static STRING_HANDLE my_Azure_Base64_Encode_Bytes(const unsigned char* source, size_t length)
 {
     (void)source;
     (void)length;
@@ -287,12 +288,12 @@ static DEVICE_AUTH_CREDENTIAL_INFO g_test_sas_cred_no_keyname;
 static DEVICE_AUTH_CREDENTIAL_INFO g_test_x509_cred;
 static DEVICE_AUTH_CREDENTIAL_INFO g_test_key_cred;
 
-DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
+MU_DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
 
 static void on_umock_c_error(UMOCK_C_ERROR_CODE error_code)
 {
     char temp_str[256];
-    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
+    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", MU_ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
     ASSERT_FAIL(temp_str);
 }
 
@@ -339,6 +340,8 @@ BEGIN_TEST_SUITE(iothub_auth_client_ut)
 
         REGISTER_GLOBAL_MOCK_HOOK(hsm_client_get_symmetric_key, my_hsm_client_get_symmetric_key);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(hsm_client_get_symmetric_key, NULL);
+        REGISTER_GLOBAL_MOCK_RETURN(hsm_client_set_symmetrical_key_info, 0);
+        REGISTER_GLOBAL_MOCK_FAIL_RETURN(hsm_client_set_symmetrical_key_info, __LINE__);
 
         REGISTER_GLOBAL_MOCK_HOOK(gballoc_malloc, my_gballoc_malloc);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(gballoc_malloc, NULL);
@@ -346,8 +349,8 @@ BEGIN_TEST_SUITE(iothub_auth_client_ut)
 
         REGISTER_GLOBAL_MOCK_HOOK(mallocAndStrcpy_s, my_mallocAndStrcpy_s);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(mallocAndStrcpy_s, __LINE__);
-        REGISTER_GLOBAL_MOCK_HOOK(Base64_Encode_Bytes, my_Base64_Encode_Bytes);
-        REGISTER_GLOBAL_MOCK_FAIL_RETURN(Base64_Encode_Bytes, NULL);
+        REGISTER_GLOBAL_MOCK_HOOK(Azure_Base64_Encode_Bytes, my_Azure_Base64_Encode_Bytes);
+        REGISTER_GLOBAL_MOCK_FAIL_RETURN(Azure_Base64_Encode_Bytes, NULL);
         REGISTER_GLOBAL_MOCK_HOOK(URL_Encode, my_URL_Encode);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(URL_Encode, NULL);
         REGISTER_GLOBAL_MOCK_RETURN(STRING_c_str, TEST_STRING_VALUE);
@@ -357,8 +360,8 @@ BEGIN_TEST_SUITE(iothub_auth_client_ut)
         REGISTER_GLOBAL_MOCK_HOOK(URL_EncodeString, my_URL_EncodeString);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(URL_EncodeString, NULL);
 
-        REGISTER_GLOBAL_MOCK_HOOK(Base64_Decoder, my_Base64_Decoder);
-        REGISTER_GLOBAL_MOCK_FAIL_RETURN(Base64_Decoder, NULL);
+        REGISTER_GLOBAL_MOCK_HOOK(Azure_Base64_Decode, my_Azure_Base64_Decode);
+        REGISTER_GLOBAL_MOCK_FAIL_RETURN(Azure_Base64_Decode, NULL);
         REGISTER_GLOBAL_MOCK_HOOK(BUFFER_new, my_BUFFER_new);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(BUFFER_new, NULL);
         REGISTER_GLOBAL_MOCK_RETURN(BUFFER_length, TEST_DATA_LEN);
@@ -370,7 +373,7 @@ BEGIN_TEST_SUITE(iothub_auth_client_ut)
 
         REGISTER_GLOBAL_MOCK_RETURN(HMACSHA256_ComputeHash, HMACSHA256_OK);
         REGISTER_GLOBAL_MOCK_FAIL_RETURN(HMACSHA256_ComputeHash, HMACSHA256_ERROR);
-        
+
 
 #if defined(HSM_TYPE_X509) || defined(HSM_AUTH_TYPE_CUSTOM)
         REGISTER_GLOBAL_MOCK_RETURN(iothub_security_type, IOTHUB_SECURITY_TYPE_SAS);
@@ -445,7 +448,7 @@ BEGIN_TEST_SUITE(iothub_auth_client_ut)
         if (use_key)
         {
             STRICT_EXPECTED_CALL(hsm_client_get_symmetric_key(IGNORED_PTR_ARG));
-            STRICT_EXPECTED_CALL(Base64_Decoder(IGNORED_PTR_ARG));
+            STRICT_EXPECTED_CALL(Azure_Base64_Decode(IGNORED_PTR_ARG));
             STRICT_EXPECTED_CALL(BUFFER_new());
             STRICT_EXPECTED_CALL(BUFFER_length(IGNORED_PTR_ARG));
             STRICT_EXPECTED_CALL(BUFFER_u_char(IGNORED_PTR_ARG));
@@ -471,7 +474,7 @@ BEGIN_TEST_SUITE(iothub_auth_client_ut)
         setup_sign_sas_data_mocks(use_key);
         if (base64_encode_signature)
         {
-            STRICT_EXPECTED_CALL(Base64_Encode_Bytes(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+            STRICT_EXPECTED_CALL(Azure_Base64_Encode_Bytes(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
         }
         else
         {
@@ -769,6 +772,30 @@ BEGIN_TEST_SUITE(iothub_auth_client_ut)
 
         //act
         void* result = iothub_device_auth_generate_credentials(xda_handle, &g_test_sas_cred);
+
+        //assert
+        ASSERT_IS_NOT_NULL(result);
+        ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+
+        //cleanup
+        my_gballoc_free(result);
+        iothub_device_auth_destroy(xda_handle);
+    }
+
+    TEST_FUNCTION(iothub_device_auth_generate_credentials_key_succeed)
+    {
+        //arrange
+        STRICT_EXPECTED_CALL(iothub_security_type()).SetReturn(IOTHUB_SECURITY_TYPE_SYMMETRIC_KEY);
+        STRICT_EXPECTED_CALL(gballoc_malloc(IGNORED_NUM_ARG));
+        STRICT_EXPECTED_CALL(hsm_client_key_interface());
+
+        IOTHUB_SECURITY_HANDLE xda_handle = iothub_device_auth_create();
+        umock_c_reset_all_calls();
+
+        setup_iothub_device_auth_generate_credentials_mocks(true, false, true);
+
+        //act
+        void* result = iothub_device_auth_generate_credentials(xda_handle, &g_test_key_cred);
 
         //assert
         ASSERT_IS_NOT_NULL(result);

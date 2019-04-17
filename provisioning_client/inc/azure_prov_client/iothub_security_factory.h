@@ -11,8 +11,8 @@ extern "C" {
 #include <stddef.h>
 #endif /* __cplusplus */
 
-#include "azure_c_shared_utility/umock_c_prod.h"
-#include "azure_c_shared_utility/macro_utils.h"
+#include "umock_c/umock_c_prod.h"
+#include "azure_macro_utils/macro_utils.h"
 #include "azure_c_shared_utility/buffer_.h"
 
 #define IOTHUB_SECURITY_TYPE_VALUES \
@@ -23,13 +23,18 @@ extern "C" {
     IOTHUB_SECURITY_TYPE_SYMMETRIC_KEY
 
 
-DEFINE_ENUM(IOTHUB_SECURITY_TYPE, IOTHUB_SECURITY_TYPE_VALUES);
+MU_DEFINE_ENUM(IOTHUB_SECURITY_TYPE, IOTHUB_SECURITY_TYPE_VALUES);
 
 MOCKABLE_FUNCTION(, int, iothub_security_init, IOTHUB_SECURITY_TYPE, sec_type);
 MOCKABLE_FUNCTION(, void, iothub_security_deinit);
 
 MOCKABLE_FUNCTION(, const void*, iothub_security_interface);
 MOCKABLE_FUNCTION(, IOTHUB_SECURITY_TYPE, iothub_security_type);
+
+// Symmetric key information
+MOCKABLE_FUNCTION(, int, iothub_security_set_symmetric_key_info, const char*, registration_name, const char*, symmetric_key);
+MOCKABLE_FUNCTION(, const char*, iothub_security_get_symmetric_key);
+MOCKABLE_FUNCTION(, const char*, iothub_security_get_symm_registration_name);
 
 #ifdef __cplusplus
 }

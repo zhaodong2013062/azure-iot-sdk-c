@@ -6,6 +6,8 @@
 
 In this document you will find information about the reliability aspects of the [Azure IoT C SDK](https://github.com/Azure/azure-iot-sdk-c) design, including details of:
 
+- Connection authentication/refresh;
+
 - How connection failures are detected;
 
 - The reconnection logic;
@@ -17,6 +19,42 @@ In this document you will find information about the reliability aspects of the 
 - What happens to previously queued and new messages;
 
 - Specific behaviors of the supported transport-protocols (AMQP, MQTT, HTTP).
+
+### Connection Authentication
+
+This is a brief note to clarify how authentication is done in the IoTHub Device/Module clients.
+
+Authentication of a client in the SDK can be done using either
+
+- [SAS tokens](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#security-tokens), or 
+
+- [x509 certificates](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#supported-x509-certificates), or
+
+- [Device Provisioning Service](https://docs.microsoft.com/en-us/azure/iot-dps/).
+
+This section does not describe the details of Device Provisioning Service (DPS), please use the link above for details.
+
+When using SAS tokens, authentication can be done by:
+
+- Providing [your own SAS token](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-security#authentication), or
+
+- Giving the device keys to the SDK (using the device connection string - see ["Alternate Device Credentials"](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-device-sdk-c-iothubclient#alternate-device-credentials) in our documentation) and lettting it create the SAS tokens for you (this is the most usual authentication method).
+
+As mentioned in the articles above, SAS tokens have an expiration time.
+
+The Azure IoT SDK connection then generates and sends new SAS tokens periodically to the IoT Hub to keep the connection authenticated.
+
+The internal behaviour is different depending on the transport protocol used:
+
+|**Transport**|**Behaviour**|
+|-|-|
+|MQTT|SAS tokens are valid for 1 hour, and a new one is sent every 48 minutes. Every time a new SAS token needs to be sent, the client will disconnect from the Azure IoT Hub and reconnect.|
+|AMQP|SAS tokens are valid for 1 hour, and a new one is sent every 48 minutes. Client is not disconnected when a new SAS token is sent.|
+|HTTP|There is no persistent connnection; a new SAS token (valid for 1 hour) is created and sent with each request to the Azure IoT Hub.|
+
+
+Both the SAS token lifetime and refresh rate are configurable on AMQP transport (see [AMQP transport section](https://github.com/Azure/azure-iot-sdk-c/blob/2019-03-18/doc/Iothub_sdk_options.md#amqp-transport) in SDK options documentation).
+
 
 ### Connection Establishment and Retry Logic
 
@@ -236,11 +274,11 @@ The [current retry policies](https://github.com/Azure/azure-iot-sdk-c/blob/2018-
 |IOTHUB_CLIENT_RETRY_NONE|No re-connections are ever attempted.|Usually this option is used along with Connection Status callbacks by users that want to implement their own connection retry logic (at the application layer).|
 |IOTHUB_CLIENT_RETRY_NONE|No re-connections are ever attempted.</br>Usually this option is used along with Connection Status callbacks by users that want to implement their own connection retry logic (at the application layer).|Device client detects a connection issue, but it never attempts to reconnect.|
 |IOTHUB_CLIENT_RETRY_IMMEDIATE|Re-connections shall be tried immediatelly, with no wait time in between attempts|Device client detects a connection issue.</br></br>The re-connection attempts happen immediatelly in a loop with no wait time until one succeeds|
-|IOTHUB_CLIENT_RETRY_INTERVAL|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a fixed-interval* wait time (5 seconds by default).</br></br>* can be set by the user|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again every 5 seconds until it succeeds|
-|IOTHUB_CLIENT_RETRY_LINEAR_BACKOFF|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a wait time that grows linearly.</br></br>Default behavior: starts from 5 seconds and grows by increments* of 5 seconds each time.</br></br>* can be set by the user|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again every 5 seconds until it succeeds|
-|IOTHUB_CLIENT_RETRY_EXPONENTIAL_BACKOFF|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a wait time that grows exponentially.</br></br>Default behavior: starts from 1 second* and doubles each time.</br></br>* can be set by the user|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again in 1 second, then again 2 seconds, 4 seconds, 8 seconds, 16, 32, 64, ... until it succeeds.|
-|IOTHUB_CLIENT_RETRY_EXPONENTIAL_BACKOFF_WITH_JITTER|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a wait time that grows exponentially but with a random jitter deduction.</br></br>Default behavior: starts from 1 second* and doubles each time minus a random jitter of zero to one-hundred percent.</br></br>* can be set by the user|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again in 1 second, then again 1 second (-100% jitter), 2 seconds (0% jitter), 3 seconds (-50% jitter), 6 (0% jitter), 10 (-67% jitter), 19 (-10% jitter), ... until it succeeds.|
-|IOTHUB_CLIENT_RETRY_RANDOM|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a random wait time.</br></br>Default behavior: the random wait time range* is from 0 to 5 seconds.</br></br>* can be set by the user|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again in 5 seconds (random multiplier of 100%), then again 2 seconds ( (random multiplier of 40%), 4 seconds (random multiplier of 80%), 0 seconds (random multiplier of 0%), 3 (60%), ... until it succeeds.|
+|IOTHUB_CLIENT_RETRY_INTERVAL|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a fixed-interval wait time (5 seconds by default).</br></br>|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again every 5 seconds until it succeeds|
+|IOTHUB_CLIENT_RETRY_LINEAR_BACKOFF|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a wait time that grows linearly.</br></br>Default behavior: starts from 5 seconds and grows by increments of 5 seconds each time.</br></br>|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again every 5 seconds until it succeeds|
+|IOTHUB_CLIENT_RETRY_EXPONENTIAL_BACKOFF|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a wait time that grows exponentially.</br></br>Default behavior: starts from 1 second and doubles each time.</br></br>|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again in 1 second, then again 2 seconds, 4 seconds, 8 seconds, 16, 32, 64, ... until it succeeds.|
+|IOTHUB_CLIENT_RETRY_EXPONENTIAL_BACKOFF_WITH_JITTER|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a wait time that grows exponentially but with a random jitter deduction.</br></br>Default behavior: starts from 1 second and doubles each time minus a random jitter of zero to one-hundred percent.</br></br>|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again in 1 second, then again 1 second (-100% jitter), 2 seconds (0% jitter), 3 seconds (-50% jitter), 6 (0% jitter), 10 (-67% jitter), 19 (-10% jitter), ... until it succeeds.|
+|IOTHUB_CLIENT_RETRY_RANDOM|First attempt should be done immediatelly.</br></br>Until the re-connection succeeds, each subsequent attempt is subject to a random wait time.</br></br>Default behavior: the random wait time range is from 0 to 5 seconds.</br></br>|Device client detects a connection issue.</br></br>The first re-connection attempt happens immediatelly, then again in 5 seconds (random multiplier of 100%), then again 2 seconds ( (random multiplier of 40%), 4 seconds (random multiplier of 80%), 0 seconds (random multiplier of 0%), 3 (60%), ... until it succeeds.|
 
 ### Connection Status Callback
 

@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include <stdlib.h>
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "umock_c/umock_c_prod.h"
 #include "azure_c_shared_utility/gballoc.h"
 #include "azure_c_shared_utility/sastoken.h"
-#include "azure_c_shared_utility/base64.h"
+#include "azure_c_shared_utility/azure_base64.h"
 #include "azure_c_shared_utility/sha.h"
 #include "azure_c_shared_utility/urlencode.h"
 #include "azure_c_shared_utility/strings.h"
@@ -33,6 +33,7 @@ typedef struct IOTHUB_SECURITY_INFO_TAG
 
     HSM_CLIENT_GET_TRUST_BUNDLE hsm_client_get_trust_bundle;
     HSM_CLIENT_GET_SYMMETRICAL_KEY hsm_client_get_symm_key;
+    HSM_CLIENT_SET_SYMMETRICAL_KEY_INFO hsm_client_set_symm_key_info;
 
     char* sas_token;
     char* x509_certificate;
@@ -54,7 +55,7 @@ static int sign_sas_data(IOTHUB_SECURITY_INFO* security_info, const char* payloa
         if (security_info->hsm_client_sign_data(security_info->hsm_client_handle, (const unsigned char*)payload, strlen(payload), output, len) != 0)
         {
             LogError("Failed signing data");
-            result = __FAILURE__;
+            result = MU_FAILURE;
         }
         else
         {
@@ -63,34 +64,34 @@ static int sign_sas_data(IOTHUB_SECURITY_INFO* security_info, const char* payloa
     }
     else
     {
+        BUFFER_HANDLE decoded_key = NULL;
+        BUFFER_HANDLE output_hash = NULL;
+
         char* symmetrical_key = security_info->hsm_client_get_symm_key(security_info->hsm_client_handle);
         if (symmetrical_key == NULL)
         {
             LogError("Failed getting asymmetrical key");
-            result = __FAILURE__;
+            result = MU_FAILURE;
+        }
+        else if ((decoded_key = Azure_Base64_Decode(symmetrical_key)) == NULL)
+        {
+            LogError("Failed decoding symmetrical key");
+            result = MU_FAILURE;
+        }
+        else if ((output_hash = BUFFER_new()) == NULL)
+        {
+            LogError("Failed allocating output hash buffer");
+            result = MU_FAILURE;
         }
         else
         {
-            BUFFER_HANDLE decoded_key;
-            BUFFER_HANDLE output_hash;
+            size_t decoded_key_len = BUFFER_length(decoded_key);
+            const unsigned char* decoded_key_bytes = BUFFER_u_char(decoded_key);
 
-            if ((decoded_key = Base64_Decoder(symmetrical_key)) == NULL)
-            {
-                LogError("Failed decoding symmetrical key");
-                result = __FAILURE__;
-            }
-            else if ((output_hash = BUFFER_new()) == NULL)
-            {
-                LogError("Failed allocating output hash buffer");
-                BUFFER_delete(decoded_key);
-                result = __FAILURE__;
-            }
-            else if (HMACSHA256_ComputeHash(BUFFER_u_char(decoded_key), BUFFER_length(decoded_key), (const unsigned char*)payload, payload_len, output_hash) != HMACSHA256_OK)
+            if (HMACSHA256_ComputeHash(decoded_key_bytes, decoded_key_len, (const unsigned char*)payload, payload_len, output_hash) != HMACSHA256_OK)
             {
                 LogError("Failed computing HMAC Hash");
-                BUFFER_delete(decoded_key);
-                BUFFER_delete(output_hash);
-                result = __FAILURE__;
+                result = MU_FAILURE;
             }
             else
             {
@@ -98,7 +99,7 @@ static int sign_sas_data(IOTHUB_SECURITY_INFO* security_info, const char* payloa
                 if ((*output = malloc(*len)) == NULL)
                 {
                     LogError("Failed allocating output buffer");
-                    result = __FAILURE__;
+                    result = MU_FAILURE;
                 }
                 else
                 {
@@ -106,12 +107,15 @@ static int sign_sas_data(IOTHUB_SECURITY_INFO* security_info, const char* payloa
                     memcpy(*output, output_data, *len);
                     result = 0;
                 }
-                BUFFER_delete(decoded_key);
-                BUFFER_delete(output_hash);
+
             }
-            free(symmetrical_key);
         }
+
+        BUFFER_delete(decoded_key);
+        BUFFER_delete(output_hash);
+        free(symmetrical_key);
     }
+
     return result;
 }
 
@@ -170,7 +174,7 @@ IOTHUB_SECURITY_HANDLE iothub_device_auth_create()
             }
         }
 #endif
-#if defined(HSM_TYPE_SYMM_KEY)
+#if defined(HSM_TYPE_SYMM_KEY) || defined(HSM_AUTH_TYPE_CUSTOM)
         if (result != NULL && iothub_security_t == IOTHUB_SECURITY_TYPE_SYMMETRIC_KEY)
         {
             result->cred_type = AUTH_TYPE_SYMM_KEY;
@@ -180,7 +184,8 @@ IOTHUB_SECURITY_HANDLE iothub_device_auth_create()
             if ((key_interface == NULL) ||
                 ((result->hsm_client_create = key_interface->hsm_client_key_create) == NULL) ||
                 ((result->hsm_client_destroy = key_interface->hsm_client_key_destroy) == NULL) ||
-                ((result->hsm_client_get_symm_key = key_interface->hsm_client_get_symm_key) == NULL)
+                ((result->hsm_client_get_symm_key = key_interface->hsm_client_get_symm_key) == NULL) ||
+                ((result->hsm_client_set_symm_key_info = key_interface->hsm_client_set_symm_key_info) == NULL)
                 )
             {
                 LogError("Invalid x509 secure device interface was specified");
@@ -227,6 +232,13 @@ IOTHUB_SECURITY_HANDLE iothub_device_auth_create()
             {
                 /* Codes_IOTHUB_DEV_AUTH_07_002: [ iothub_device_auth_create shall allocate the IOTHUB_SECURITY_INFO and shall fail if the allocation fails. ]*/
                 LogError("failed create device auth module.");
+                free(result);
+                result = NULL;
+            }
+            else if (result->cred_type == AUTH_TYPE_SYMM_KEY && result->hsm_client_set_symm_key_info(result->hsm_client_handle, iothub_security_get_symm_registration_name(), iothub_security_get_symmetric_key()) != 0)
+            {
+                LogError("Invalid x509 secure device interface was specified");
+                result->hsm_client_destroy(result->hsm_client_handle);
                 free(result);
                 result = NULL;
             }
@@ -330,7 +342,7 @@ CREDENTIAL_RESULT* iothub_device_auth_generate_credentials(IOTHUB_SECURITY_HANDL
                         STRING_HANDLE signature = NULL;
                         if (handle->base64_encode_signature == true)
                         {
-                            signature = Base64_Encode_Bytes(data_value, data_len);
+                            signature = Azure_Base64_Encode_Bytes(data_value, data_len);
                         }
                         else
                         {

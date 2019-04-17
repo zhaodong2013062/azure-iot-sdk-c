@@ -51,7 +51,6 @@
 /* Paste in your device connection string  */
 static const char* connectionString = "[device connection string]";
 
-#define MESSAGE_COUNT        5
 static bool g_continueRunning = true;
 int g_interval = 10000;  // 10 sec send interval initially
 static size_t g_message_count_send_confirmations = 0;
@@ -182,7 +181,7 @@ static void send_confirm_callback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void
     (void)userContextCallback;
     // When a message is sent this callback will get envoked
     g_message_count_send_confirmations++;
-    (void)printf("Confirmation callback received for message %lu with result %s\r\n", (unsigned long)g_message_count_send_confirmations, ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
+    (void)printf("Confirmation callback received for message %lu with result %s\r\n", (unsigned long)g_message_count_send_confirmations, MU_ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
 }
 
 

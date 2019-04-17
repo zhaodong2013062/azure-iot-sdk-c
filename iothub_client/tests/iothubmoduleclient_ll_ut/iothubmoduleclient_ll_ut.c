@@ -11,13 +11,13 @@
 #endif
 
 #include "testrunnerswitcher.h"
-#include "azure_c_shared_utility/macro_utils.h"
+#include "azure_macro_utils/macro_utils.h"
 
-#include "umock_c.h"
-#include "umock_c_negative_tests.h"
-#include "umocktypes_charptr.h"
-#include "umocktypes_bool.h"
-#include "umocktypes_stdint.h"
+#include "umock_c/umock_c.h"
+#include "umock_c/umock_c_negative_tests.h"
+#include "umock_c/umocktypes_charptr.h"
+#include "umock_c/umocktypes_bool.h"
+#include "umock_c/umocktypes_stdint.h"
 
 static void* real_malloc(size_t size)
 {
@@ -74,12 +74,12 @@ static const char* TEST_OUTPUT_NAME = "OutputQueue";
 static const char* TEST_INPUT_NAME = "InputName";
 
 static TEST_MUTEX_HANDLE test_serialize_mutex;
-DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
+MU_DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
 
 static void on_umock_c_error(UMOCK_C_ERROR_CODE error_code)
 {
     char temp_str[256];
-    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
+    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", MU_ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
     ASSERT_FAIL(temp_str);
 }
 
@@ -331,6 +331,19 @@ TEST_FUNCTION(IoTHubModuleClient_LL_SendReportedState_Test)
     //assert
     ASSERT_IS_TRUE(result == IOTHUB_CLIENT_OK);
     ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+}
+
+TEST_FUNCTION(IoTHubModuleClient_LL_GetTwinAsync_Test)
+{
+    //arrange
+    STRICT_EXPECTED_CALL(IoTHubClientCore_LL_GetTwinAsync(TEST_IOTHUB_CLIENT_CORE_LL_HANDLE, TEST_TWIN_CALLBACK, NULL));
+
+    //act
+    IOTHUB_CLIENT_RESULT result = IoTHubModuleClient_LL_GetTwinAsync(TEST_IOTHUB_MODULE_CLIENT_LL_HANDLE, TEST_TWIN_CALLBACK, NULL);
+
+    //assert
+    ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls());
+    ASSERT_IS_TRUE(result == IOTHUB_CLIENT_OK);
 }
 
 TEST_FUNCTION(IoTHubModuleClient_LL_SetDeviceMethodCallback_Test)

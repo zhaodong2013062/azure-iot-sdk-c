@@ -128,7 +128,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT ReceiveMessageCallback(IOTHUB_MESSAGE_HA
 static void SendConfirmationCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void* userContextCallback)
 {
     EVENT_INSTANCE* event_info = (EVENT_INSTANCE*)userContextCallback;
-    (void)printf("Confirmation message received from device %s with result = %s\r\n", event_info->deviceId, ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
+    (void)printf("Confirmation message received from device %s with result = %s\r\n", event_info->deviceId, MU_ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
     /* Some device specific action code goes here... */
 }
 
@@ -146,7 +146,7 @@ static IOTHUB_MESSAGE_HANDLE create_events(const EVENT_INSTANCE* event_info)
     temperature = minTemperature + (rand() % 10);
     humidity = minHumidity +  (rand() % 20);
 
-    (void)sprintf_s(msgText, sizeof(msgText), "{\"deviceId\":\"%s\",\"windSpeed\":%.2f,\"temperature\":%.2f,\"humidity\":%.2f}", event_info->deviceId, avgWindSpeed + (rand() % 4 + 2), temperature, humidity);
+    (void)sprintf_s(msgText, sizeof(msgText), "{\"deviceId\":\"%s\",\"windSpeed\":%.2f,\"temperature\":%.2f,\"humidity\":%.2f}", event_info->deviceId, avgWindSpeed + (double)(rand() % 4 + 2), temperature, humidity);
     message_handle = IoTHubMessage_CreateFromString(msgText);
     //message_handle = IoTHubMessage_CreateFromByteArray((const unsigned char*)msgText, strlen(msgText))) == NULL)
 

@@ -4,8 +4,8 @@
 #ifndef IOTHUBTRANSPORT_AMQP_TWIN_MESSENGER
 #define IOTHUBTRANSPORT_AMQP_TWIN_MESSENGER
 
-#include "azure_c_shared_utility/macro_utils.h"
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "azure_macro_utils/macro_utils.h"
+#include "umock_c/umock_c_prod.h"
 #include "azure_c_shared_utility/optionhandler.h"
 #include "azure_uamqp_c/session.h"
 #include "iothub_client_private.h"
@@ -21,14 +21,14 @@ extern "C"
         TWIN_MESSENGER_SEND_STATUS_IDLE, \
         TWIN_MESSENGER_SEND_STATUS_BUSY
 
-    DEFINE_ENUM(TWIN_MESSENGER_SEND_STATUS, TWIN_MESSENGER_SEND_STATUS_VALUES);
+    MU_DEFINE_ENUM(TWIN_MESSENGER_SEND_STATUS, TWIN_MESSENGER_SEND_STATUS_VALUES);
 
     #define TWIN_REPORT_STATE_RESULT_VALUES \
         TWIN_REPORT_STATE_RESULT_SUCCESS, \
         TWIN_REPORT_STATE_RESULT_ERROR, \
         TWIN_REPORT_STATE_RESULT_CANCELLED
 
-    DEFINE_ENUM(TWIN_REPORT_STATE_RESULT, TWIN_REPORT_STATE_RESULT_VALUES);
+    MU_DEFINE_ENUM(TWIN_REPORT_STATE_RESULT, TWIN_REPORT_STATE_RESULT_VALUES);
 
     #define TWIN_REPORT_STATE_REASON_VALUES \
         TWIN_REPORT_STATE_REASON_NONE, \
@@ -38,7 +38,7 @@ extern "C"
         TWIN_REPORT_STATE_REASON_INVALID_RESPONSE, \
         TWIN_REPORT_STATE_REASON_MESSENGER_DESTROYED
 
-    DEFINE_ENUM(TWIN_REPORT_STATE_REASON, TWIN_REPORT_STATE_REASON_VALUES);
+    MU_DEFINE_ENUM(TWIN_REPORT_STATE_REASON, TWIN_REPORT_STATE_REASON_VALUES);
 
     #define TWIN_MESSENGER_STATE_VALUES \
         TWIN_MESSENGER_STATE_STARTING, \
@@ -47,13 +47,13 @@ extern "C"
         TWIN_MESSENGER_STATE_STOPPED, \
         TWIN_MESSENGER_STATE_ERROR
 
-    DEFINE_ENUM(TWIN_MESSENGER_STATE, TWIN_MESSENGER_STATE_VALUES);
+    MU_DEFINE_ENUM(TWIN_MESSENGER_STATE, TWIN_MESSENGER_STATE_VALUES);
 
     #define TWIN_UPDATE_TYPE_VALUES \
         TWIN_UPDATE_TYPE_PARTIAL, \
         TWIN_UPDATE_TYPE_COMPLETE
 
-    DEFINE_ENUM(TWIN_UPDATE_TYPE, TWIN_UPDATE_TYPE_VALUES);
+    MU_DEFINE_ENUM(TWIN_UPDATE_TYPE, TWIN_UPDATE_TYPE_VALUES);
 
     typedef void(*TWIN_MESSENGER_STATE_CHANGED_CALLBACK)(void* context, TWIN_MESSENGER_STATE previous_state, TWIN_MESSENGER_STATE new_state);
     typedef void(*TWIN_MESSENGER_REPORT_STATE_COMPLETE_CALLBACK)(TWIN_REPORT_STATE_RESULT result, TWIN_REPORT_STATE_REASON reason, int status_code, const void* context);
@@ -73,6 +73,7 @@ extern "C"
     MOCKABLE_FUNCTION(, int, twin_messenger_report_state_async, TWIN_MESSENGER_HANDLE, twin_msgr_handle, CONSTBUFFER_HANDLE, data, TWIN_MESSENGER_REPORT_STATE_COMPLETE_CALLBACK, on_report_state_complete_callback, const void*, context);
     MOCKABLE_FUNCTION(, int, twin_messenger_subscribe, TWIN_MESSENGER_HANDLE, twin_msgr_handle, TWIN_STATE_UPDATE_CALLBACK, on_twin_state_update_callback, void*, context);
     MOCKABLE_FUNCTION(, int, twin_messenger_unsubscribe, TWIN_MESSENGER_HANDLE, twin_msgr_handle);
+    MOCKABLE_FUNCTION(, int, twin_messenger_get_twin_async, TWIN_MESSENGER_HANDLE, twin_msgr_handle, TWIN_STATE_UPDATE_CALLBACK, on_get_twin_completed_callback, void*, context);
     MOCKABLE_FUNCTION(, int, twin_messenger_get_send_status, TWIN_MESSENGER_HANDLE, twin_msgr_handle, TWIN_MESSENGER_SEND_STATUS*, send_status);
     MOCKABLE_FUNCTION(, int, twin_messenger_start, TWIN_MESSENGER_HANDLE, twin_msgr_handle, SESSION_HANDLE, session_handle);
     MOCKABLE_FUNCTION(, int, twin_messenger_stop, TWIN_MESSENGER_HANDLE, twin_msgr_handle);

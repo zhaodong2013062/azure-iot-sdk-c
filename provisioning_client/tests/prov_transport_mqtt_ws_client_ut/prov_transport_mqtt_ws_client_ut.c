@@ -20,10 +20,10 @@ static void my_gballoc_free(void* ptr)
 }
 
 #include "testrunnerswitcher.h"
-#include "umock_c.h"
-#include "umocktypes_bool.h"
-#include "umock_c_negative_tests.h"
-#include "azure_c_shared_utility/macro_utils.h"
+#include "umock_c/umock_c.h"
+#include "umock_c/umocktypes_bool.h"
+#include "umock_c/umock_c_negative_tests.h"
+#include "azure_macro_utils/macro_utils.h"
 
 #define ENABLE_MOCKS
 #include "azure_prov_client/internal/prov_transport_mqtt_common.h"
@@ -40,7 +40,7 @@ static void my_gballoc_free(void* ptr)
 #include "azure_c_shared_utility/platform.h"
 #include "azure_c_shared_utility/tlsio.h"
 
-#include "azure_c_shared_utility/umock_c_prod.h"
+#include "umock_c/umock_c_prod.h"
 MOCKABLE_FUNCTION(, void, on_transport_register_data_cb, PROV_DEVICE_TRANSPORT_RESULT, transport_result, BUFFER_HANDLE, iothub_key, const char*, assigned_hub, const char*, device_id, void*, user_ctx);
 MOCKABLE_FUNCTION(, void, on_transport_status_cb, PROV_DEVICE_TRANSPORT_STATUS, transport_status, void*, user_ctx);
 MOCKABLE_FUNCTION(, char*, on_transport_challenge_callback, const unsigned char*, nonce, size_t, nonce_len, const char*, key_name, void*, user_ctx);
@@ -102,12 +102,12 @@ static PROV_DEVICE_TRANSPORT_HANDLE my_prov_transport_common_mqtt_create(const c
     return TEST_DPS_HANDLE;
 }
 
-DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
+MU_DEFINE_ENUM_STRINGS(UMOCK_C_ERROR_CODE, UMOCK_C_ERROR_CODE_VALUES)
 
 static void on_umock_c_error(UMOCK_C_ERROR_CODE error_code)
 {
     char temp_str[256];
-    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
+    (void)snprintf(temp_str, sizeof(temp_str), "umock_c reported error :%s", MU_ENUM_TO_STRING(UMOCK_C_ERROR_CODE, error_code));
     ASSERT_FAIL(temp_str);
 }
 
@@ -226,9 +226,6 @@ BEGIN_TEST_SUITE(prov_transport_mqtt_ws_client_ut)
         STRICT_EXPECTED_CALL(wsio_get_interface_description());
         STRICT_EXPECTED_CALL(platform_get_default_tlsio());
         STRICT_EXPECTED_CALL(xio_create(TEST_INTERFACE_DESC, IGNORED_PTR_ARG));
-#ifdef USE_OPENSSL
-        STRICT_EXPECTED_CALL(xio_setoption(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG));
-#endif
 
         //act
         dps_io_info = g_transport_io(TEST_URI_VALUE, NULL);
@@ -251,9 +248,6 @@ BEGIN_TEST_SUITE(prov_transport_mqtt_ws_client_ut)
         STRICT_EXPECTED_CALL(wsio_get_interface_description());
         STRICT_EXPECTED_CALL(platform_get_default_tlsio());
         STRICT_EXPECTED_CALL(xio_create(TEST_INTERFACE_DESC, IGNORED_PTR_ARG));
-#ifdef USE_OPENSSL
-        STRICT_EXPECTED_CALL(xio_setoption(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG));
-#endif
 
         //act
         dps_io_info = g_transport_io(TEST_URI_VALUE, NULL);
@@ -317,9 +311,7 @@ BEGIN_TEST_SUITE(prov_transport_mqtt_ws_client_ut)
         STRICT_EXPECTED_CALL(platform_get_default_tlsio());
         STRICT_EXPECTED_CALL(http_proxy_io_get_interface_description());
         STRICT_EXPECTED_CALL(xio_create(TEST_INTERFACE_DESC, IGNORED_PTR_ARG));
-#ifdef USE_OPENSSL
-        STRICT_EXPECTED_CALL(xio_setoption(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG));
-#endif
+
         proxy_info.host_address = TEST_HOST_ADDRESS_VALUE;
         proxy_info.username = TEST_PRIVATE_KEY_VALUE;
         proxy_info.password = TEST_HOST_ADDRESS_VALUE;

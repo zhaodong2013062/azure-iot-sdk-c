@@ -90,7 +90,7 @@ static void send_confirm_callback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void
     (void)userContextCallback;
     // When a message is sent this callback will get envoked
     g_message_count_send_confirmations++;
-    (void)printf("Confirmation callback received for message %zu with result %s\r\n", g_message_count_send_confirmations, ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
+    (void)printf("Confirmation callback received for message %zu with result %s\r\n", g_message_count_send_confirmations, MU_ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
 }
 
 int main(void)
@@ -134,7 +134,8 @@ int main(void)
         // Set any option that are neccessary.
         // For available options please see the iothub_sdk_options.md documentation
         //bool traceOn = true;
-        //IoTHubClient_LL_SetOption(iothub_ll_handle, OPTION_LOG_TRACE, &traceOn);
+        //IoTHubDeviceClient_LL_SetOption(device_ll_handle, OPTION_LOG_TRACE, &traceOn);
+
         // Setting the Trusted Certificate.  This is only necessary on system with without
         // built in certificate stores.
 #ifdef SET_TRUSTED_CERT_IN_SAMPLES
@@ -194,7 +195,7 @@ int main(void)
     IoTHub_Deinit();
 
     printf("Press any key to continue");
-    getchar();
+    (void)getchar();
 
     return 0;
 }
