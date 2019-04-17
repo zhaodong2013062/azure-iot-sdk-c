@@ -6,22 +6,25 @@
 
 #include "hsm_client_data.h"
 
-// This sample is provided for sample only.  Please do not use this in production
+// This sample is provided for sample only.
 // For more information please see the devdoc using_custom_hsm.md
 static const char* const COMMON_NAME = "<COMMON_NAME_ON_CERT";
 static const char* const CERTIFICATE = "-----BEGIN CERTIFICATE-----""\n"
 "MIIBpDCCAUoCCQC...""\n"
-"<REST OF THE CERTIFICATE>""\n"
+"<OPENSSL Generated Zymbit Cert>""\n"
 "-----END CERTIFICATE-----";
+static const char* const PRIVATE_KEY = "unknown_key";
 
 typedef struct CUSTOM_HSM_SAMPLE_INFO_TAG
 {
     const char* certificate;
     const char* common_name;
+    const char* key;
 } CUSTOM_HSM_SAMPLE_INFO;
 
 int hsm_client_x509_init()
 {
+    // Initialize any information that you need
     return 0;
 }
 
@@ -50,6 +53,7 @@ HSM_CLIENT_HANDLE custom_hsm_create()
     else
     {
         hsm_info->certificate = CERTIFICATE;
+        hsm_info->key = PRIVATE_KEY;
         hsm_info->common_name = COMMON_NAME;
         result = hsm_info;
     }
@@ -106,10 +110,16 @@ char* custom_hsm_get_key(HSM_CLIENT_HANDLE handle)
     {
         // NOTE: The key here just needs to allocate 1 byte and sent to the
         // SDK the actual key is in the HSM and not in the SDK
-        if ((result = (char*)malloc(1)) == NULL)
+        CUSTOM_HSM_SAMPLE_INFO* hsm_info = (CUSTOM_HSM_SAMPLE_INFO*)handle;
+        size_t len = strlen(hsm_info->key);
+        if ((result = (char*)malloc(len + 1)) == NULL)
         {
             (void)printf("Failure allocating certificate\r\n");
             result = NULL;
+        }
+        else
+        {
+            strcpy(result, hsm_info->key);
         }
     }
     return result;
@@ -154,12 +164,13 @@ static const HSM_CLIENT_X509_INTERFACE x509_interface =
 
 const HSM_CLIENT_TPM_INTERFACE* hsm_client_tpm_interface()
 {
-    // tpm interface pointer
+    // unused for this example
     return NULL;
 }
 
 const HSM_CLIENT_KEY_INTERFACE* hsm_client_key_interface()
 {
+    // unused for this example
     return NULL;
 }
 
