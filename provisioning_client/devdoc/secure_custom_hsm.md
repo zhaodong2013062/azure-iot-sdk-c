@@ -2,7 +2,7 @@
 # Using Azure Provisioning Custom HSM to create a secure connection
 
 Securing your IoT hardware device is becoming more important as we see headlines of devices getting compromised.
-  Unfortunatly creating secure solutions is hard to achieve, and ensuring devices don't leak secrets to the world is
+  Unfortunately creating secure solutions is hard to achieve, and ensuring devices don't leak secrets to the world is
 is not a trivial exercise.  This is where the Azure IoT SDK will make this task a little easier.
 
 In this tutorial we will walk you through how to setup a hardware HSM with the Zymbit HSM device, provision your device
@@ -42,13 +42,13 @@ mkdir custom_hsm
 mkdir dps
 ```
 
-**Note: For simplicity we shall assume that the directory is in your home directory.  This is by no means a requirement please adjust your paths as necessary.
+**Note: For simplicity we shall assume that the directory is in your home directory.  This is by no means a requirement please adjust your paths, as necessary.
 
 ## Generating a Certificate
 
-The Azure IoTHub SDK use x.509 certificates for authentication between the device and the IoThub server. The Azure SDK accepts x.509 certificates in ECC and RSA formats.
+The Azure IoTHub SDK use x.509 certificates for authentication between the device and the IoTHub server. The Azure SDK accepts x.509 certificates in ECC and RSA formats.
   There are detailed instructions on how to create the Certificate on the [Zymbit website](https://community.zymbit.com/t/openssl-apache-setup-generating-csr/107) using OpenSSL so we won't go into detail here,
- but the general operations goe as follows here:
+ but the general operations go as follows here:
 
 - Generate a Certificate Signing Request (CSR)
 
@@ -77,9 +77,9 @@ The Azure Provisioning SDK uses a custom HSM to communicate with secure hardware
 
 The SDK ships an [example custom HSM file](https://github.com/Azure/azure-iot-sdk-c/blob/hsm_secure/provisioning_client/samples/custom_hsm_example/custom_hsm_example.c) that we will modify here to use with the zymbit system.
 
-Since the private keys for the certificate never leave the zymbit hardware in the HSM code we return a 'unknown' key value to the Azure SDK.  The SDK treats this value as a black box and will send the value unmodified to the tlsio adapter in the SDK.
+Since the private keys for the certificate never leave the zymbit hardware in the HSM code we return an 'unknown' key value to the Azure SDK.  The SDK treats this value as a black box and will send the value unmodified to the tlsio adapter in the SDK.
 
-Fire up your favorite editor and modify the custom hsm file (~/azure-iot-sdk-c/provisioning_client/samples/custom_hsm_example/custom_hsm_example.c) replacing the COMMON_NAME and CERTIFICATE variables at the top of the file.
+Fire up your favorite editor and modify the custom HSM file (~/azure-iot-sdk-c/provisioning_client/samples/custom_hsm_example/custom_hsm_example.c) replacing the COMMON_NAME and CERTIFICATE variables at the top of the file.
   You can change the PRIVATE_KEY value to anything you like, the SDK use the value.
 
 ```C
@@ -97,7 +97,7 @@ static const char* const PRIVATE_KEY = "unknown_key";
 
 ### Building the Custom HSM
 
-After you saved the custom_hsm_example file you will need to build the project.  To into the custom_hsm directory and generate the make files by issueing the cmake commands:
+After you saved the custom_hsm_example file you will need to build the project.  To into the custom_hsm directory and generate the make files by issuing the cmake commands:
 
 ```Shell
 cd ~/azure-iot-sdk-c/cmake/
@@ -105,13 +105,13 @@ cmake ../../provisioning_client/samples/custom_hsm_example
 make
 ```
 
-This will be build the custom hsm as a dynamic library (libcustom_hsm_example.a).  After this we focus on the Auzre IoT SDK.
+This will build the custom HSM as a dynamic library (libcustom_hsm_example.a).  After this we focus on the Azure IoT SDK.
 
 ## Update tlsio_openssl to use an engine
 
 The Azure SDK ships with many different TLS adapters to connect with the Azure IoTHub Server.  For this tutorial we'll be working with the OpenSSL adapter
 that is configured to use the private key from the Zymbit device for TLS communications.  This is based on the default tlsio_openssl.c and x509_openssl.c adapters that does generic TLS
-communications using Openssl.  There were two changes to these file that the SDK  requires to use the Zymbit device:
+communications using Openssl.  There were two changes to these file that the SDK requires to use the Zymbit device:
 
 In the OpenSSL TLS adapter we need to load the Zymbit OpenSSL engine into memory
 
@@ -142,7 +142,7 @@ Once the Azure SDK changes are complete you should take this opportunity to setu
   For this exercise we'll be creating an individual enrollment which means that we'll be uploading the certificate that we created in the previous steps to the DPS Portal.  You can follow
    the steps for [enrolling your device into the DPS service](https://docs.microsoft.com/en-us/azure/iot-dps/tutorial-provision-device-to-hub#enroll-the-device)
 
-## Prepare Provisioining Sample
+## Prepare Provisioning Sample
 
 The Azure SDK includes a sample to connect to the DPS Service client, register the device with the IoTHub, get back the iothub credentials and send telemetry to the IoTHub.  To enable this
 you just need to add your DPS ID Scope to the sample.  Open your editor and edit the id_scope variable in the [prov_dev_client_ll_sample.c](https://github.com/Azure/azure-iot-sdk-c/blob/master/provisioning_client/samples/prov_dev_client_ll_sample/prov_dev_client_ll_sample.c#L68) sample
