@@ -209,6 +209,7 @@ set(original_skip_samples ${skip_samples})
 set(run_e2e_tests OFF)
 set(run_unittests OFF)
 set(skip_samples ON)
+set(use_cppunittest ON)
 
 include("dependencies.cmake")
 
