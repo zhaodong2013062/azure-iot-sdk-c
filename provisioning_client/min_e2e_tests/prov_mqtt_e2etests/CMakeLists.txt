@@ -25,7 +25,6 @@ endif()
 include_directories(${IOTHUB_TEST_INC_FOLDER})
 include_directories(${DEV_AUTH_MODULES_CLIENT_INC_FOLDER})
 include_directories(${SHARED_UTIL_INC_FOLDER})
-include_directories(${PROVISIONING_SERVICE_CLIENT_INC_FOLDER})
 include_directories(../common_test_files)
 
 #file(COPY ../common_prov_e2e/prov_valgrind_suppression.supp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -52,7 +51,6 @@ endif()
 if(WIN32)
     if(TARGET ${theseTestsName}_dll)
         target_link_libraries(${theseTestsName}_dll
-            iothub_test
             prov_device_ll_client
             ${prov_transport}
             rpcrt4
@@ -61,25 +59,19 @@ if(WIN32)
 
     if(TARGET ${theseTestsName}_exe)
         target_link_libraries(${theseTestsName}_exe
-            iothub_test
             prov_device_ll_client
             ${prov_transport}
             rpcrt4
         )
     endif()
-    target_link_libraries(${theseTestsName}_dll provisioning_service_client)
 else()
-
     if(TARGET ${theseTestsName}_exe)
         target_link_libraries(${theseTestsName}_exe
             prov_device_ll_client
             ${prov_transport}
-            iothub_test
         )
     endif()
 endif()
-
-target_link_libraries(${theseTestsName}_exe provisioning_service_client)
 
 link_security_client(${theseTestsName}_exe)
 linkSharedUtil(${theseTestsName}_exe)

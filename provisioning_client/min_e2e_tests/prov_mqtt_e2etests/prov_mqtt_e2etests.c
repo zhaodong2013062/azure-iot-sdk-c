@@ -6,10 +6,11 @@
 #include "testrunnerswitcher.h"
 
 #include "azure_c_shared_utility/platform.h"
-#include "azure_c_shared_utility/threadapi.h"
+//#include "azure_c_shared_utility/threadapi.h"
 #include "azure_c_shared_utility/crt_abstractions.h"
 #include "azure_macro_utils/macro_utils.h"
 #include "azure_c_shared_utility/xlogging.h"
+#include "azure_c_shared_utility/envvariable.h"
 
 #include "azure_prov_client/prov_security_factory.h"
 #include "azure_prov_client/internal/prov_auth_client.h"
@@ -34,10 +35,10 @@ BEGIN_TEST_SUITE(prov_mqtt_e2etests)
         platform_init();
         prov_dev_security_init(SECURE_DEVICE_TYPE_X509);
 
-        g_dps_uri = getenv(DPS_GLOBAL_ENDPOINT);
+        g_dps_uri = "global.azure-devices-provisioning.net";//environment_get_variable(DPS_GLOBAL_ENDPOINT);
         ASSERT_IS_NOT_NULL(g_dps_uri, "DPS_GLOBAL_ENDPOINT is NULL");
 
-        g_dps_scope_id = getenv(DPS_ID_SCOPE);
+        g_dps_scope_id = "0ne0005093D";//environment_get_variable(DPS_ID_SCOPE);
         ASSERT_IS_NOT_NULL(g_dps_scope_id, "DPS_ID_SCOPE is NULL");
     }
 

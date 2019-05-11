@@ -19,16 +19,13 @@
 #include "azure_c_shared_utility/crt_abstractions.h"
 #include "azure_macro_utils/macro_utils.h"
 #include "azure_c_shared_utility/xlogging.h"
-#include "azure_c_shared_utility/strings.h"
+//#include "azure_c_shared_utility/strings.h"
 #include "azure_c_shared_utility/uniqueid.h"
-#include "azure_c_shared_utility/azure_base64.h"
+//#include "azure_c_shared_utility/azure_base64.h"
 
 #include "azure_prov_client/prov_device_ll_client.h"
 #include "azure_prov_client/prov_security_factory.h"
 #include "azure_prov_client/internal/prov_auth_client.h"
-
-#include "prov_service_client/provisioning_service_client.h"
-#include "prov_service_client/provisioning_sc_enrollment.h"
 
 #include "../../../certs/certs.h"
 
