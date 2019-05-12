@@ -3,4 +3,4 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-add_subdirectory(prov_mqtt_e2etests)
+add_subdirectory(prov_x509_e2etests)

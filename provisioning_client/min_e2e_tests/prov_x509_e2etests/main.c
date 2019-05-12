@@ -6,6 +6,6 @@
 int main(void)
 {
     size_t failedTestCount = 0;
-    RUN_TEST_SUITE(prov_mqtt_e2etests, failedTestCount);
+    RUN_TEST_SUITE(prov_x509_e2etests, failedTestCount);
     return failedTestCount;
 }

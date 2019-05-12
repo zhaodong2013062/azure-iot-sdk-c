@@ -26,20 +26,24 @@
 static const char* g_dps_scope_id = NULL;
 static const char* g_dps_uri = NULL;
 static const char* g_desired_iothub = NULL;
+static const char* g_desired_dev_id = NULL;
 static bool g_enable_tracing = true;
 
-BEGIN_TEST_SUITE(prov_mqtt_e2etests)
+BEGIN_TEST_SUITE(prov_x509_e2etests)
 
     TEST_SUITE_INITIALIZE(TestClassInitialize)
     {
         platform_init();
         prov_dev_security_init(SECURE_DEVICE_TYPE_X509);
 
-        g_dps_uri = "global.azure-devices-provisioning.net";//environment_get_variable(DPS_GLOBAL_ENDPOINT);
+        g_dps_uri = environment_get_variable(DPS_GLOBAL_ENDPOINT);
         ASSERT_IS_NOT_NULL(g_dps_uri, "DPS_GLOBAL_ENDPOINT is NULL");
 
-        g_dps_scope_id = "0ne0005093D";//environment_get_variable(DPS_ID_SCOPE);
+        g_dps_scope_id = environment_get_variable(DPS_ID_SCOPE);
         ASSERT_IS_NOT_NULL(g_dps_scope_id, "DPS_ID_SCOPE is NULL");
+
+        g_desired_dev_id = environment_get_variable(DPS_EXPECTED_DEV_ID);
+        g_desired_iothub = environment_get_variable(DPS_EXPECTED_HUB);
     }
 
     TEST_SUITE_CLEANUP(TestClassCleanup)
@@ -58,7 +62,7 @@ BEGIN_TEST_SUITE(prov_mqtt_e2etests)
 
     TEST_FUNCTION(dps_register_x509_device_mqtt_success)
     {
-        send_dps_test_registration(g_dps_uri, g_dps_scope_id, Prov_Device_MQTT_Protocol);
+        send_dps_test_registration(g_dps_uri, g_dps_scope_id, Prov_Device_MQTT_Protocol, g_desired_dev_id, g_desired_iothub);
     }
 
-END_TEST_SUITE(prov_mqtt_e2etests)
+END_TEST_SUITE(prov_x509_e2etests)

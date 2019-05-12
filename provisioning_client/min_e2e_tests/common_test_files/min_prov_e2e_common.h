@@ -31,8 +31,10 @@ static const char* const DPS_CONNECTION_STRING = "IOT_DPS_CONNECTION_STRING";
 static const char* const DPS_GLOBAL_ENDPOINT = "IOT_DPS_GLOBAL_ENDPOINT";
 static const char* const DPS_ID_SCOPE = "IOT_DPS_ID_SCOPE";
 static const char* const DPS_TPM_SIMULATOR_IP_ADDRESS = "IOT_DPS_TPM_SIMULATOR_IP_ADDRESS";
+static const char* const DPS_EXPECTED_HUB = "IOT_DPS_EXPECTED_HUB";
+static const char* const DPS_EXPECTED_DEV_ID = "IOT_DPS_EXPECTED_DEV_ID";
 
-extern void send_dps_test_registration(const char* global_uri, const char* scope_id, PROV_DEVICE_TRANSPORT_PROVIDER_FUNCTION protocol);
+extern void send_dps_test_registration(const char* global_uri, const char* scope_id, PROV_DEVICE_TRANSPORT_PROVIDER_FUNCTION protocol, const char* expected_dev_id, const char* expected_uri);
 
 #ifdef __cplusplus
 }

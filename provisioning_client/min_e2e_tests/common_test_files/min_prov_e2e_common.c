@@ -83,7 +83,7 @@ static void wait_for_dps_result(PROV_DEVICE_LL_HANDLE handle, PROV_CLIENT_E2E_IN
         (difftime(now_time, begin_operation) < MAX_CLOUD_TRAVEL_TIME)));
 }
 
-void send_dps_test_registration(const char* global_uri, const char* scope_id, PROV_DEVICE_TRANSPORT_PROVIDER_FUNCTION protocol)
+void send_dps_test_registration(const char* global_uri, const char* scope_id, PROV_DEVICE_TRANSPORT_PROVIDER_FUNCTION protocol, const char* expected_dev_id, const char* expected_uri)
 {
     PROV_CLIENT_E2E_INFO prov_info;
     memset(&prov_info, 0, sizeof(PROV_CLIENT_E2E_INFO));
@@ -110,6 +110,15 @@ void send_dps_test_registration(const char* global_uri, const char* scope_id, PR
 
     // Assert
     ASSERT_ARE_EQUAL(int, REG_RESULT_COMPLETE, prov_info.reg_result, "Failure calling registering device x509 http");
+
+    if (expected_uri != NULL)
+    {
+        ASSERT_ARE_EQUAL(char_ptr, expected_uri, prov_info.iothub_uri, "Failure invalid iothub uri specified");
+    }
+    if (expected_dev_id != NULL)
+    {
+        ASSERT_ARE_EQUAL(char_ptr, expected_dev_id, prov_info.device_id, "Failure calling registering device x509 http");
+    }
 
     free(prov_info.iothub_uri);
     free(prov_info.device_id);

@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 
 compileAsC11()
-set(theseTestsName prov_mqtt_e2etests)
+set(theseTestsName prov_x509_e2etests)
 
 set(${theseTestsName}_test_files
     ${theseTestsName}.c
@@ -22,7 +22,6 @@ if(${use_sample_trusted_cert})
     add_definitions(-DSET_TRUSTED_CERT_IN_SAMPLES)
 endif()
 
-include_directories(${IOTHUB_TEST_INC_FOLDER})
 include_directories(${DEV_AUTH_MODULES_CLIENT_INC_FOLDER})
 include_directories(${SHARED_UTIL_INC_FOLDER})
 include_directories(../common_test_files)
