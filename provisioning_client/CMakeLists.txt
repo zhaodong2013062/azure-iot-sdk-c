@@ -350,6 +350,9 @@ if (${use_prov_client} AND (NOT ${skip_samples}))
     add_subdirectory(tools)
 endif ()
 
+# test for now
+add_subdirectory(min_e2e_tests)
+
 if(${use_installed_dependencies})
 
     # Install Provisioning libs

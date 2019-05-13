@@ -42,6 +42,6 @@ ELSE()
 ENDIF(WIN32)
 
 add_library(prov_hsm ${source_c_files} ${source_h_files})
-target_link_libraries(prov_hsm msr_riot utpm)
+target_link_libraries(prov_hsm aziotsharedutil utpm)
 
 set_target_properties(prov_hsm PROPERTIES FOLDER "tests/azure_prov_e2e_tests")

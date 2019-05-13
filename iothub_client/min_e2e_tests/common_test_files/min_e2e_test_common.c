@@ -644,7 +644,7 @@ static int send_server_test_info(MIN_E2E_TEST_INFO* min_e2e_info, MIN_E2E_TEST_T
             case TEST_TYPE_C2D_D2C:
             {
                 char telemetry_count[16];
-                sprintf(telemetry_count, "%d", min_e2e_info->d2c_msg_count);
+                sprintf(telemetry_count, "%ld", min_e2e_info->d2c_msg_count);
                 if (!check_iothub_result(IoTHubMessage_SetProperty(event_msg, "telemetry_count", telemetry_count)))
                 {
                     LogError("Failure Setting telemetry property");
@@ -784,7 +784,7 @@ int min_e2e_execute_telemetry_tests(MIN_E2E_TEST_HANDLE handle, MESSAGE_CREATION
         {
             IoTHubDeviceClient_LL_DoWork(handle->device_handle);
         } while (msg_ctx.msg_cnt < handle->d2c_msg_count && !g_c2d_ctx.msg_recvd && !is_operation_timed_out(handle->tick_cntr_handle, initial_time, MAX_OPERATION_TIMEOUT));
-        
+
         // Check server validation
 
     }
