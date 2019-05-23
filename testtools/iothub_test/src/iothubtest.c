@@ -903,6 +903,7 @@ static AMQP_CONN_INFO* createAmqpConnection(IOTHUB_VALIDATION_INFO* devhubValInf
                     }
                     else
                     {
+                        connection_set_trace(result->connection, true);
                         {
                             filter_set filter_set;
 
