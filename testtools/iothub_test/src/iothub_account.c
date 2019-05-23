@@ -1130,10 +1130,13 @@ const size_t IoTHubAccount_GetIoTHubPartitionCount(IOTHUB_ACCOUNT_INFO_HANDLE ac
     char *envVarValue = getenv("IOTHUB_PARTITION_COUNT");
     if (envVarValue != NULL)
     {
+        LogInfo(">>>>>>>> IOTHUB_PARTITION_COUNT: %s", envVarValue);
         value = atoi(envVarValue);
+        LogInfo(">>>>>>>> IOTHUB_PARTITION_COUNT: %d", value);
     }
     else
     {
+        LogInfo(">>>>>>>> IOTHUB_PARTITION_COUNT: DEFAULT (%d)", DEFAULT_PARTITION_COUNT);
         value = DEFAULT_PARTITION_COUNT;
     }
 #endif

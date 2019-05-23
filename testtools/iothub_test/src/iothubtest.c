@@ -986,6 +986,8 @@ IOTHUB_TEST_CLIENT_RESULT IoTHubTest_ListenForEventAsync(IOTHUB_TEST_HANDLE devh
 {
     IOTHUB_TEST_CLIENT_RESULT result;
 
+    LogInfo(">>>>>>>>>>>>> IoTHubTest_ListenForEventAsync / partitionCount=%d", partitionCount);
+
     if (devhubHandle == NULL)
     {
         LogError("Invalid argument (devhubHandle=NULL)");
