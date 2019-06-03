@@ -24,7 +24,6 @@ typedef struct IOTHUB_HSM_IMPL_TAG
 int hsm_client_x509_init()
 {
     int result = 0;
-    initialize_device();
     return result;
 }
 
