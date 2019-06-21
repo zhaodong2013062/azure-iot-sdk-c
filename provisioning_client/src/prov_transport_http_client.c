@@ -1064,7 +1064,7 @@ int prov_transport_http_set_trace(PROV_DEVICE_TRANSPORT_HANDLE handle, bool trac
         else
         {
             LogError("Unable to enable logging when not using x509 certificates");
-                result = MU_FAILURE;
+                result = __FAILURE__;
         }
     }
     return result;
