@@ -275,7 +275,7 @@ static void mqtt_operation_complete_callback(MQTT_CLIENT_HANDLE handle, MQTT_CLI
 
 static int get_retry_after_property(const char* topic_name, PROV_TRANSPORT_MQTT_INFO* mqtt_info)
 {
-    int result = MU_FAILURE;
+    int result = __FAILURE__;
 
     const char* iterator = topic_name;
 
@@ -296,7 +296,7 @@ static int get_retry_after_property(const char* topic_name, PROV_TRANSPORT_MQTT_
         else
         {
             // Topic string is not there
-            result = MU_FAILURE;
+            result = __FAILURE__;
             break;
         }
         iterator++;
@@ -394,7 +394,7 @@ static int send_mqtt_message(PROV_TRANSPORT_MQTT_INFO* mqtt_info, const char* ms
     if ((prov_payload = mqtt_info->json_create_cb(NULL, NULL, mqtt_info->json_ctx)) == NULL)
     {
         LogError("Failed creating json mqtt payload");
-        result = MU_FAILURE;
+        result = __FAILURE__;
     }
     else if ((msg_handle = mqttmessage_create_in_place(get_next_packet_id(mqtt_info), msg_topic, DELIVER_AT_MOST_ONCE, (const uint8_t*)prov_payload, strlen(prov_payload))) == NULL)
     {
